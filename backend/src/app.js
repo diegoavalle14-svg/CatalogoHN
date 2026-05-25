@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const { resolveTenant } = require('./services/tenant');
 const authRoutes = require('./routes/auth');
@@ -17,6 +18,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '2mb' }));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(resolveTenant);
 
 app.get('/health', (req, res) => {

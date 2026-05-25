@@ -548,7 +548,25 @@ function Admin({ session, onLogout }) {
   }
 
   async function saveProduct(payload) {
-    const nextPayload = prepareProductPayload(payload, products, brands, categories);
+    let uploadedImageUrl = null;
+    if (payload.imageFile) {
+      try {
+        const upload = await api.adminUploadImage(session.token, payload.imageFile, 'product');
+        uploadedImageUrl = upload.url;
+      } catch {
+        uploadedImageUrl = URL.createObjectURL(payload.imageFile);
+      }
+    }
+    const nextPayload = prepareProductPayload(
+      {
+        ...payload,
+        imageFile: undefined,
+        imagenes: uploadedImageUrl ? [uploadedImageUrl] : payload.imagenes
+      },
+      products,
+      brands,
+      categories
+    );
     try {
       const saved = await api.adminSaveProduct(session.token, nextPayload);
       const product = normalizeAdminProduct(saved.producto, brands, categories);
@@ -578,13 +596,23 @@ function Admin({ session, onLogout }) {
   }
 
   async function saveBrand(payload) {
+    let logoUrl = payload.logo_url || '';
+    if (payload.logoFile) {
+      try {
+        const upload = await api.adminUploadImage(session.token, payload.logoFile, 'brand');
+        logoUrl = upload.url;
+      } catch {
+        logoUrl = URL.createObjectURL(payload.logoFile);
+      }
+    }
+    const nextPayload = { ...payload, logoFile: undefined, logo_url: logoUrl };
     try {
-      const saved = await api.adminSaveBrand(session.token, payload);
-      setBrands((current) => (payload.id ? current.map((item) => (item.id === payload.id ? saved.marca : item)) : [saved.marca, ...current]));
+      const saved = await api.adminSaveBrand(session.token, nextPayload);
+      setBrands((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? saved.marca : item)) : [saved.marca, ...current]));
     } catch {
       setBrands((current) => {
-        if (payload.id) return current.map((item) => (item.id === payload.id ? { ...item, ...payload } : item));
-        return [{ ...payload, id: Date.now(), posicion: current.length + 1 }, ...current];
+        if (nextPayload.id) return current.map((item) => (item.id === nextPayload.id ? { ...item, ...nextPayload } : item));
+        return [{ ...nextPayload, id: Date.now(), posicion: current.length + 1 }, ...current];
       });
     }
   }
@@ -613,6 +641,27 @@ function Admin({ session, onLogout }) {
       await api.adminDeleteCategory(session.token, id);
     } catch {}
     setCategories((current) => current.filter((item) => item.id !== id));
+  }
+
+  async function saveSite(payload) {
+    let logoUrl = payload.logo_url || summary.tenant.logo_url || '';
+    if (payload.logoFile) {
+      try {
+        const upload = await api.adminUploadImage(session.token, payload.logoFile, 'tenant');
+        logoUrl = upload.url;
+      } catch {
+        logoUrl = URL.createObjectURL(payload.logoFile);
+      }
+    }
+    const nextPayload = { ...payload, logo_url: logoUrl, logoFile: undefined };
+    try {
+      const saved = await api.adminUpdateSite(session.token, nextPayload);
+      setSummary((current) => ({ ...current, tenant: saved.tenant }));
+    } catch {
+      setSummary((current) => ({ ...current, tenant: { ...current.tenant, ...nextPayload } }));
+    } finally {
+      setEditor(null);
+    }
   }
 
   return (
@@ -684,6 +733,7 @@ function Admin({ session, onLogout }) {
           onSavePrice={savePrice}
           onSaveBrand={saveBrand}
           onSaveCategory={saveCategory}
+          onSaveSite={saveSite}
           onDeleteBrand={deleteBrand}
           onDeleteCategory={deleteCategory}
         />
@@ -864,16 +914,15 @@ function AdminBottomNav({ tab, setTab, pending }) {
   );
 }
 
-function AdminEditor({ editor, brands, categories, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onDeleteBrand, onDeleteCategory }) {
+function AdminEditor({ editor, brands, categories, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onSaveSite, onDeleteBrand, onDeleteCategory }) {
   const [form, setForm] = useState(() => ({ ...editor.value }));
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-  const imagePreview = (file) => file ? URL.createObjectURL(file) : '';
 
-  function save() {
-    if (editor.type === 'product') onSaveProduct({ ...form, imagenes: form.imageFile ? [imagePreview(form.imageFile)] : form.imagenes });
+  async function save() {
+    if (editor.type === 'product') await onSaveProduct(form);
     if (editor.type === 'client') onSaveClient(form);
     if (editor.type === 'price') onSavePrice(form);
-    if (editor.type === 'site') onClose();
+    if (editor.type === 'site') await onSaveSite(form);
   }
 
   return (
@@ -941,7 +990,7 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
       <div className="admin-form">
         <label>{label}<input value={name} onChange={(event) => setName(event.target.value)} /></label>
         {label === 'Marca' && <label>Logo<input type="file" accept="image/*" onChange={(event) => setLogoFile(event.target.files?.[0])} /></label>}
-        <button className="primary-button" onClick={() => { if (!name) return; onSave({ nombre: name, logo_url: logoFile ? URL.createObjectURL(logoFile) : '' }); setName(''); setLogoFile(null); }}>Agregar</button>
+        <button className="primary-button" onClick={() => { if (!name) return; onSave({ nombre: name, logoFile }); setName(''); setLogoFile(null); }}>Agregar</button>
       </div>
       {items.map((item) => (
         <div className="admin-entity-row" key={item.id}>

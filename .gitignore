@@ -20,6 +20,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.log
+uploads/
+backend/uploads/
 
 # Editor / System files
 .DS_Store

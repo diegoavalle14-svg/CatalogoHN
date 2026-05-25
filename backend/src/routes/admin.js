@@ -1,9 +1,22 @@
 const express = require('express');
+const crypto = require('crypto');
+const fs = require('fs/promises');
+const path = require('path');
 const db = require('../config/database');
 const mock = require('../services/mockData');
 const { authenticate, requireRole } = require('../middleware/auth');
+const multer = require('multer');
+const sharp = require('sharp');
 
 const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) return cb(new Error('Solo se permiten imagenes'));
+    cb(null, true);
+  }
+});
 
 router.get('/admin/summary', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
@@ -67,6 +80,28 @@ router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), a
     res.json({ tenant: result.rows[0] });
   } catch (error) {
     res.json({ tenant: { ...mock.empresa, logo_url, color_primario, color_secundario, fuente }, mode: 'mock' });
+  }
+});
+
+router.post('/admin/uploads', authenticate, requireRole('admin', 'superadmin'), upload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Imagen requerida' });
+
+  const purpose = ['product', 'brand', 'tenant'].includes(req.body?.purpose) ? req.body.purpose : 'product';
+  try {
+    const optimized = await optimizeImage(req.file.buffer);
+    const key = `${req.tenant.slug}/${purpose}/${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${optimized.ext}`;
+    const localPublicBaseUrl = process.env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`;
+    const stored = await storeImage(key, optimized.buffer, optimized.contentType, localPublicBaseUrl);
+
+    res.status(201).json({
+      url: stored.url,
+      key,
+      content_type: optimized.contentType,
+      size: optimized.buffer.length,
+      storage: stored.storage
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'No se pudo procesar la imagen' });
   }
 });
 
@@ -356,6 +391,60 @@ function mockAdminCatalog() {
     }),
     mode: 'mock'
   };
+}
+
+async function optimizeImage(buffer) {
+  const metadata = await sharp(buffer).metadata();
+  const base = sharp(buffer)
+    .rotate()
+    .resize({
+      width: Math.min(metadata.width || 1200, 1200),
+      height: Math.min(metadata.height || 1200, 1200),
+      fit: 'inside',
+      withoutEnlargement: true
+    });
+
+  const attempts = [
+    { format: 'webp', quality: 82, ext: 'webp', contentType: 'image/webp' },
+    { format: 'webp', quality: 72, ext: 'webp', contentType: 'image/webp' },
+    { format: 'jpeg', quality: 78, ext: 'jpg', contentType: 'image/jpeg' },
+    { format: 'jpeg', quality: 68, ext: 'jpg', contentType: 'image/jpeg' }
+  ];
+
+  for (const attempt of attempts) {
+    const output = attempt.format === 'webp'
+      ? await base.clone().webp({ quality: attempt.quality }).toBuffer()
+      : await base.clone().jpeg({ quality: attempt.quality, mozjpeg: true }).toBuffer();
+    if (output.length <= 300 * 1024 || attempt === attempts[attempts.length - 1]) {
+      return { buffer: output, ext: attempt.ext, contentType: attempt.contentType };
+    }
+  }
+}
+
+async function storeImage(key, buffer, contentType, localPublicBaseUrl) {
+  if (process.env.S3_BUCKET && process.env.AWS_REGION) {
+    try {
+      const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+      const client = new S3Client({ region: process.env.AWS_REGION });
+      await client.send(new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+        CacheControl: 'public, max-age=31536000, immutable'
+      }));
+      const publicBaseUrl = process.env.S3_PUBLIC_URL || `https://${process.env.S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`;
+      return { url: `${publicBaseUrl}/${key}`, storage: 's3' };
+    } catch (error) {
+      if (process.env.NODE_ENV === 'production') throw error;
+    }
+  }
+
+  const uploadRoot = path.join(__dirname, '..', '..', 'uploads');
+  const filePath = path.join(uploadRoot, key);
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, buffer);
+  return { url: `${localPublicBaseUrl}/uploads/${key.replace(/\\/g, '/')}`, storage: 'local' };
 }
 
 module.exports = router;

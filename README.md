@@ -10,10 +10,12 @@ Plataforma SaaS multi-tenant para distribuidoras en Honduras. El primer inquilin
 - Panel Admin con 4 secciones: `Pedidos`, `Catalogo`, `Clientes` y `C. Precios`.
 - Configuracion del sitio desde admin: logo, colores y fuente.
 - CRUD de admin para productos, marcas y categorias conectado a endpoints backend, con fallback local de demo.
+- Subida de imagenes desde admin con compresion a WebP/JPEG y limite objetivo de 300 KB.
+- Almacenamiento local de imagenes en desarrollo y soporte opcional para S3 en AWS.
 - CRUD visual/local pendiente de backend para clientes y precios.
 - Superadmin separado para control de empresas/inquilinos.
 
-> Nota: productos, marcas y categorias ya tienen endpoints de persistencia. Clientes, precios e imagenes en S3 son el siguiente bloque.
+> Nota: productos, marcas, categorias y subida de imagenes ya tienen endpoints base. Clientes, precios y configuracion final de S3 son el siguiente bloque.
 
 ## Roles
 
@@ -122,12 +124,12 @@ La direccion correcta del producto es que los admins suban imagenes desde el Pan
 - Logos de marcas: seccion `Catalogo` -> `Marcas`.
 - Imagenes de productos: seccion `Catalogo` -> `+ Nuevo` o `Editar`.
 
-Actualmente los formularios aceptan archivos en frontend. Falta conectar esas subidas a almacenamiento real y guardar la URL en backend.
+En desarrollo, si S3 no esta configurado, las imagenes se guardan en `backend/uploads/` y Git las ignora. En AWS, configurar `S3_BUCKET`, `AWS_REGION` y credenciales seguras para guardar en S3.
 
 ## Pendientes Tecnicos
 
 - Persistir CRUD de clientes y precios en endpoints reales.
-- Implementar subida de imagenes con almacenamiento estable.
+- Configurar bucket S3 definitivo para preview y produccion.
 - Crear flujo real de recuperacion de contrasena.
 - Agregar gestion de admins de empresa desde superadmin.
 - Reemplazar datos seed/mock por datos reales administrables desde UI.

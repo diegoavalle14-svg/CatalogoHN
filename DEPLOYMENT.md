@@ -136,6 +136,8 @@ JWT_SECRET=un-secreto-largo-y-aleatorio
 DATABASE_URL=postgres://usuario:password@host-rds:5432/catalogohn
 AWS_REGION=us-east-1
 S3_BUCKET=catalogohn-assets-preview-o-prod
+S3_PUBLIC_URL=https://cdn-o-bucket-publico
+PUBLIC_API_URL=https://api-preview-o-api-produccion.catalogohn.com
 AWS_ACCESS_KEY_ID=valor-seguro
 AWS_SECRET_ACCESS_KEY=valor-seguro
 SMTP_HOST=smtp.gmail.com
@@ -196,6 +198,7 @@ Requisitos:
 - Convertir/comprimir imagenes a WebP o JPEG.
 - Peso maximo recomendado: `300 KB` por archivo de producto.
 - Guardar la URL final en PostgreSQL.
+- Si S3 no esta configurado, el backend usa `backend/uploads/` como fallback local para desarrollo.
 - Separar buckets o prefijos por entorno:
   - `catalogohn-assets-preview`
   - `catalogohn-assets-prod`

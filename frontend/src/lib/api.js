@@ -16,6 +16,13 @@ function headers(token) {
   };
 }
 
+function authHeaders(token) {
+  return {
+    'x-tenant-slug': TENANT_SLUG,
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+}
+
 async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -120,6 +127,24 @@ export const api = {
   },
   adminDeleteCategory: async (token, id) => {
     return request(`/admin/categories/${id}`, { method: 'DELETE', token });
+  },
+  adminUploadImage: async (token, file, purpose = 'product') => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('purpose', purpose);
+    const response = await fetch(`${API_URL}/admin/uploads`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: formData
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'No se pudo subir la imagen' }));
+      throw new Error(error.message || 'No se pudo subir la imagen');
+    }
+    return response.json();
+  },
+  adminUpdateSite: async (token, payload) => {
+    return request('/admin/brand', { method: 'PATCH', token, body: JSON.stringify(payload) });
   },
   updateOrderStatus: async (token, id, estado) => {
     try {
