@@ -95,10 +95,10 @@ La guia de publicacion esta en [DEPLOYMENT.md](DEPLOYMENT.md). El camino recomen
 
 El despliegue debe manejar dos entornos:
 
-- `preview`: para revisar cambios antes de publicarlos.
-- `produccion`: dominio principal y datos reales.
+- `develop`: rama de integracion conectada a preview.
+- `main`: rama de produccion conectada al dominio principal.
 
-Regla practica: probar en `preview`, aprobar, y luego publicar a produccion.
+Regla practica: trabajar en ramas `feature/...`, fusionar a `develop`, probar en preview, aprobar y luego fusionar a `main`.
 
 ## Inquilinos
 
