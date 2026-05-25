@@ -90,6 +90,37 @@ export const api = {
       };
     }
   },
+  adminCatalog: async (token) => {
+    try {
+      return await request('/admin/catalog', { token });
+    } catch {
+      return { ...mockCatalog, mode: 'local-demo' };
+    }
+  },
+  adminSaveProduct: async (token, product) => {
+    const path = product.id ? `/admin/products/${product.id}` : '/admin/products';
+    const method = product.id ? 'PATCH' : 'POST';
+    return request(path, { method, token, body: JSON.stringify(product) });
+  },
+  adminDeleteProduct: async (token, id) => {
+    return request(`/admin/products/${id}`, { method: 'DELETE', token });
+  },
+  adminSaveBrand: async (token, brand) => {
+    const path = brand.id ? `/admin/brands/${brand.id}` : '/admin/brands';
+    const method = brand.id ? 'PATCH' : 'POST';
+    return request(path, { method, token, body: JSON.stringify(brand) });
+  },
+  adminDeleteBrand: async (token, id) => {
+    return request(`/admin/brands/${id}`, { method: 'DELETE', token });
+  },
+  adminSaveCategory: async (token, category) => {
+    const path = category.id ? `/admin/categories/${category.id}` : '/admin/categories';
+    const method = category.id ? 'PATCH' : 'POST';
+    return request(path, { method, token, body: JSON.stringify(category) });
+  },
+  adminDeleteCategory: async (token, id) => {
+    return request(`/admin/categories/${id}`, { method: 'DELETE', token });
+  },
   updateOrderStatus: async (token, id, estado) => {
     try {
       return await request(`/orders/${id}/status`, { method: 'PATCH', token, body: JSON.stringify({ estado, confirmacion: 'CONFIRMAR' }) });

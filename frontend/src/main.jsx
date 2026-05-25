@@ -521,7 +521,7 @@ function Admin({ session, onLogout }) {
   useEffect(() => {
     api.adminSummary(session.token).then(setSummary).catch(console.error);
     api.orders(session.token).then((payload) => setOrders(payload.pedidos)).catch(console.error);
-    api.catalog(session.token).then((payload) => {
+    api.adminCatalog(session.token).then((payload) => {
       setCatalog(payload);
       setProducts(payload.productos.map((product, index) => ({ ...product, posicion: product.posicion || index + 1, visible: product.visible !== false })));
       setBrands(payload.marcas || []);
@@ -535,16 +535,30 @@ function Admin({ session, onLogout }) {
   const pending = displayOrders.filter((order) => order.estado === 'pendiente').length || 3;
   const preparing = displayOrders.filter((order) => order.estado === 'preparando').length || 2;
 
-  function updateProduct(id, changes) {
-    setProducts((current) => current.map((product) => (product.id === id ? { ...product, ...changes } : product)));
+  async function updateProduct(id, changes) {
+    const currentProduct = products.find((product) => product.id === id);
+    const optimistic = { ...currentProduct, ...changes };
+    setProducts((current) => current.map((product) => (product.id === id ? optimistic : product)));
+    try {
+      const saved = await api.adminSaveProduct(session.token, changes.id ? changes : { ...changes, id });
+      setProducts((current) => current.map((product) => (product.id === id ? normalizeAdminProduct(saved.producto, brands, categories) : product)));
+    } catch {
+      setProducts((current) => current.map((product) => (product.id === id ? optimistic : product)));
+    }
   }
 
-  function saveProduct(payload) {
-    setProducts((current) => {
-      if (payload.id) return current.map((product) => (product.id === payload.id ? { ...product, ...payload } : product));
-      return [{ ...payload, id: Date.now(), visible: true, posicion: current.length + 1, imagenes: payload.imagenes || ['/kolben-part.svg'] }, ...current];
-    });
-    setEditor(null);
+  async function saveProduct(payload) {
+    const nextPayload = prepareProductPayload(payload, products, brands, categories);
+    try {
+      const saved = await api.adminSaveProduct(session.token, nextPayload);
+      const product = normalizeAdminProduct(saved.producto, brands, categories);
+      setProducts((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? product : item)) : [product, ...current]));
+    } catch {
+      const fallback = normalizeAdminProduct({ ...nextPayload, id: nextPayload.id || Date.now() }, brands, categories);
+      setProducts((current) => (nextPayload.id ? current.map((product) => (product.id === nextPayload.id ? fallback : product)) : [fallback, ...current]));
+    } finally {
+      setEditor(null);
+    }
   }
 
   function saveClient(payload) {
@@ -563,18 +577,42 @@ function Admin({ session, onLogout }) {
     setEditor(null);
   }
 
-  function saveBrand(payload) {
-    setBrands((current) => {
-      if (payload.id) return current.map((item) => (item.id === payload.id ? { ...item, ...payload } : item));
-      return [{ ...payload, id: Date.now(), posicion: current.length + 1 }, ...current];
-    });
+  async function saveBrand(payload) {
+    try {
+      const saved = await api.adminSaveBrand(session.token, payload);
+      setBrands((current) => (payload.id ? current.map((item) => (item.id === payload.id ? saved.marca : item)) : [saved.marca, ...current]));
+    } catch {
+      setBrands((current) => {
+        if (payload.id) return current.map((item) => (item.id === payload.id ? { ...item, ...payload } : item));
+        return [{ ...payload, id: Date.now(), posicion: current.length + 1 }, ...current];
+      });
+    }
   }
 
-  function saveCategory(payload) {
-    setCategories((current) => {
-      if (payload.id) return current.map((item) => (item.id === payload.id ? { ...item, ...payload } : item));
-      return [{ ...payload, id: Date.now(), color: payload.color || '#F5C200' }, ...current];
-    });
+  async function saveCategory(payload) {
+    try {
+      const saved = await api.adminSaveCategory(session.token, payload);
+      setCategories((current) => (payload.id ? current.map((item) => (item.id === payload.id ? saved.categoria : item)) : [saved.categoria, ...current]));
+    } catch {
+      setCategories((current) => {
+        if (payload.id) return current.map((item) => (item.id === payload.id ? { ...item, ...payload } : item));
+        return [{ ...payload, id: Date.now(), color: payload.color || '#F5C200' }, ...current];
+      });
+    }
+  }
+
+  async function deleteBrand(id) {
+    try {
+      await api.adminDeleteBrand(session.token, id);
+    } catch {}
+    setBrands((current) => current.filter((item) => item.id !== id));
+  }
+
+  async function deleteCategory(id) {
+    try {
+      await api.adminDeleteCategory(session.token, id);
+    } catch {}
+    setCategories((current) => current.filter((item) => item.id !== id));
   }
 
   return (
@@ -646,8 +684,8 @@ function Admin({ session, onLogout }) {
           onSavePrice={savePrice}
           onSaveBrand={saveBrand}
           onSaveCategory={saveCategory}
-          onDeleteBrand={(id) => setBrands((current) => current.filter((item) => item.id !== id))}
-          onDeleteCategory={(id) => setCategories((current) => current.filter((item) => item.id !== id))}
+          onDeleteBrand={deleteBrand}
+          onDeleteCategory={deleteCategory}
         />
       )}
     </div>
@@ -918,6 +956,36 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
 
 function stateLabel(state) {
   return ({ pendiente: 'Pendiente', preparando: 'Preparando', enviado: 'Enviado' })[state] || state;
+}
+
+function prepareProductPayload(product, products, brands, categories) {
+  return normalizeAdminProduct(
+    {
+      ...product,
+      marca_id: product.marca_id || brands[0]?.id || null,
+      categoria_id: product.categoria_id || categories[0]?.id || null,
+      visible: product.visible !== false,
+      posicion: product.posicion || (products.length + 1),
+      imagenes: product.imagenes?.length ? product.imagenes : ['/kolben-part.svg'],
+      precio: Number(product.precio || product.precio_final || 0)
+    },
+    brands,
+    categories
+  );
+}
+
+function normalizeAdminProduct(product, brands = [], categories = []) {
+  const brand = brands.find((item) => Number(item.id) === Number(product.marca_id));
+  const category = categories.find((item) => Number(item.id) === Number(product.categoria_id));
+  return {
+    ...product,
+    marca: product.marca || brand?.nombre || '',
+    categoria: product.categoria || category?.nombre || '',
+    specs: product.specs || {},
+    imagenes: product.imagenes?.length ? product.imagenes : ['/kolben-part.svg'],
+    precio: Number(product.precio || product.precio_final || 0),
+    precio_final: Number(product.precio_final || product.precio || 0)
+  };
 }
 
 function AdminOrder({ order, token }) {

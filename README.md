@@ -9,10 +9,11 @@ Plataforma SaaS multi-tenant para distribuidoras en Honduras. El primer inquilin
 - Panel Admin Kolben separado del catalogo del cliente.
 - Panel Admin con 4 secciones: `Pedidos`, `Catalogo`, `Clientes` y `C. Precios`.
 - Configuracion del sitio desde admin: logo, colores y fuente.
-- CRUD visual/local para productos, marcas, categorias, clientes y precios.
+- CRUD de admin para productos, marcas y categorias conectado a endpoints backend, con fallback local de demo.
+- CRUD visual/local pendiente de backend para clientes y precios.
 - Superadmin separado para control de empresas/inquilinos.
 
-> Nota: varios CRUD del panel admin ya estan maquetados y funcionan en estado local del frontend. La persistencia completa en backend para productos, marcas, categorias, clientes, precios e imagenes es el siguiente paso.
+> Nota: productos, marcas y categorias ya tienen endpoints de persistencia. Clientes, precios e imagenes en S3 son el siguiente bloque.
 
 ## Roles
 
@@ -25,7 +26,7 @@ Accede al catalogo privado del inquilino, busca productos, filtra por marca, agr
 Administra el sitio de su empresa/inquilino. Para KOLBEN puede:
 
 - Revisar pedidos y cambiar estados.
-- Gestionar catalogo, productos, marcas y categorias.
+- Gestionar catalogo, productos, marcas y categorias con persistencia en backend.
 - Subir imagenes/logos desde formularios del panel.
 - Gestionar clientes y condiciones.
 - Revisar y editar precios por cliente/lista.
@@ -125,7 +126,7 @@ Actualmente los formularios aceptan archivos en frontend. Falta conectar esas su
 
 ## Pendientes Tecnicos
 
-- Persistir CRUD admin en endpoints reales.
+- Persistir CRUD de clientes y precios en endpoints reales.
 - Implementar subida de imagenes con almacenamiento estable.
 - Crear flujo real de recuperacion de contrasena.
 - Agregar gestion de admins de empresa desde superadmin.
