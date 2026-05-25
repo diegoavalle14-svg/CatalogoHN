@@ -38,7 +38,54 @@ Para mantenerlo simple al inicio:
 
 Esta arquitectura separa el sitio estatico, la API y la base de datos.
 
-## 3. Frontend en Amplify
+## 3. Entornos
+
+CatalogoHN debe manejar dos entornos desde el inicio:
+
+### Preview
+
+Entorno para revisar cambios antes de publicarlos al dominio principal.
+
+- Rama Git sugerida: `preview`
+- Frontend: una app/rama de Amplify para preview.
+- Backend: entorno Elastic Beanstalk separado, por ejemplo `catalogohn-api-preview`.
+- Base de datos: idealmente una RDS separada o una base `catalogohn_preview`.
+- Dominio sugerido: `preview.catalogohn.com` o el subdominio temporal de Amplify.
+
+Variables ejemplo:
+
+```text
+VITE_API_URL=https://api-preview.catalogohn.com/api
+VITE_TENANT_SLUG=kolben
+NODE_ENV=production
+CORS_ORIGIN=https://preview.catalogohn.com
+DATABASE_URL=postgres://usuario:password@host-preview:5432/catalogohn_preview
+```
+
+### Produccion
+
+Entorno estable conectado al dominio principal.
+
+- Rama Git sugerida: `main`
+- Frontend: Amplify conectado al dominio principal.
+- Backend: entorno Elastic Beanstalk separado, por ejemplo `catalogohn-api-prod`.
+- Base de datos: RDS de produccion.
+- Dominio principal sugerido: `catalogohn.com`
+- Dominio de inquilino sugerido: `kolben.catalogohn.com`
+
+Variables ejemplo:
+
+```text
+VITE_API_URL=https://api.catalogohn.com/api
+VITE_TENANT_SLUG=kolben
+NODE_ENV=production
+CORS_ORIGIN=https://kolben.catalogohn.com
+DATABASE_URL=postgres://usuario:password@host-prod:5432/catalogohn
+```
+
+Regla practica: todo cambio entra primero a `preview`; cuando se aprueba, se fusiona a `main` y pasa a produccion.
+
+## 4. Frontend en Amplify
 
 Configuracion:
 
@@ -53,9 +100,9 @@ VITE_API_URL=https://api.tu-dominio.com/api
 VITE_TENANT_SLUG=kolben
 ```
 
-Si primero despliegas sin dominio propio, `VITE_API_URL` puede apuntar temporalmente a la URL publica del backend.
+Configura variables distintas por rama/entorno. Si primero despliegas sin dominio propio, `VITE_API_URL` puede apuntar temporalmente a la URL publica del backend.
 
-## 4. Backend en Elastic Beanstalk
+## 5. Backend en Elastic Beanstalk
 
 El backend se despliega desde la carpeta `backend`.
 
@@ -75,7 +122,9 @@ Elastic Beanstalk usa el script:
 npm start
 ```
 
-## 5. Base de datos RDS PostgreSQL
+Crear dos entornos separados: uno para preview y otro para produccion. No reutilices la misma `DATABASE_URL` de produccion en preview.
+
+## 6. Base de datos RDS PostgreSQL
 
 Crear una instancia PostgreSQL en RDS y guardar:
 
@@ -98,9 +147,9 @@ cd backend
 npm run db:setup
 ```
 
-En produccion conviene ejecutar esta tarea una sola vez y con cuidado.
+En produccion conviene ejecutar esta tarea una sola vez y con cuidado. Para preview se puede resetear con mas libertad.
 
-## 6. Checklist antes de produccion
+## 7. Checklist antes de produccion
 
 - Cambiar `JWT_SECRET` por un valor largo y privado.
 - Configurar `CORS_ORIGIN` con la URL real del frontend.
@@ -108,8 +157,9 @@ En produccion conviene ejecutar esta tarea una sola vez y con cuidado.
 - Activar backups en RDS.
 - Revisar reglas de red para que la base no quede publica innecesariamente.
 - Conectar dominio propio cuando Amplify y backend esten estables.
+- Validar primero en preview antes de fusionar a `main`.
 
-## 7. Pendiente para CatalogoHN
+## 8. Pendiente para CatalogoHN
 
 - Persistir CRUD del panel admin en endpoints reales.
 - Implementar subida de imagenes a almacenamiento estable.

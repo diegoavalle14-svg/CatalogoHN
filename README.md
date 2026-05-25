@@ -93,6 +93,13 @@ La guia de publicacion esta en [DEPLOYMENT.md](DEPLOYMENT.md). El camino recomen
 - AWS Elastic Beanstalk para el backend Node/Express.
 - Amazon RDS PostgreSQL para la base de datos.
 
+El despliegue debe manejar dos entornos:
+
+- `preview`: para revisar cambios antes de publicarlos.
+- `produccion`: dominio principal y datos reales.
+
+Regla practica: probar en `preview`, aprobar, y luego publicar a produccion.
+
 ## Inquilinos
 
 KOLBEN es el inquilino inicial. En produccion deberia operar como:
