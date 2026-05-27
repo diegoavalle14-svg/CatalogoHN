@@ -129,10 +129,13 @@ button {
 .logo-mark b {
   position: relative;
   z-index: 1;
-  margin-top: -6px;
-  font-size: 28px;
-  font-style: italic;
+  margin-top: 0;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .2px;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .logo-mark b svg {
@@ -157,10 +160,7 @@ button {
 }
 
 .tenant-logo-mark.needs-logo small {
-  bottom: 5px;
-  font-size: 4px;
-  letter-spacing: .1px;
-  text-transform: uppercase;
+  display: none;
 }
 
 .tenant-logo-mark.has-logo {

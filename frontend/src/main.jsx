@@ -151,8 +151,7 @@ function TenantLogoMark({ tenant, size = 'normal' }) {
         <img src={tenant.logo_url} alt={`Logo de ${label}`} />
       ) : (
         <>
-          <b><Plus size={size === 'small' ? 14 : 18} strokeWidth={3} /></b>
-          <small>Colocar logo</small>
+          <b>Logo</b>
         </>
       )}
     </span>
@@ -1176,7 +1175,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, on
                 Logo de la empresa
                 <span>
                   <TenantLogoMark tenant={sitePreviewTenant} />
-                  <em>{sitePreviewTenant.logo_url ? 'Cambiar logo' : 'Colocar logo'}</em>
+                  <em>{sitePreviewTenant.logo_url ? 'Cambiar logo' : 'Logo'}</em>
                 </span>
                 <input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} />
               </label>
