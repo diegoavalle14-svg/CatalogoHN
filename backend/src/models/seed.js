@@ -6,7 +6,6 @@ async function seedData(client) {
     console.log('Hashing passwords...');
     const superadminPass = await bcrypt.hash('SuperAdminPassword123', 10);
     const adminPass = await bcrypt.hash('KolbenAdminPassword123', 10);
-    const clientPass = await bcrypt.hash('ClientPassword123', 10);
 
     // 2. Insert Empresa (Tenant)
     console.log('Inserting tenant (KOLBEN)...');
@@ -28,44 +27,13 @@ async function seedData(client) {
 
     // 3. Insert Users
     console.log('Inserting users...');
-    const usersRes = await client.query(`
+    await client.query(`
       INSERT INTO usuarios (empresa_id, nombre, username, email, password_hash, rol)
       VALUES 
         (NULL, 'Super Administrador', 'superadmin', 'superadmin@catalogohn.com', $1, 'superadmin'),
-        ($2, 'Administrador Kolben', 'admin', 'admin@kolben.com', $3, 'admin'),
-        ($2, 'Auto Repuestos El Centro', 'cliente1', 'cliente1@autorepuestos.com', $4, 'cliente'),
-        ($2, 'Repuestos El Triunfo', 'cliente2', 'cliente2@repuestoseltriunfo.com', $4, 'cliente')
+        ($2, 'Administrador Kolben', 'admin', 'admin@kolben.com', $3, 'admin')
       RETURNING id, email, rol
-    `, [superadminPass, kolbenId, adminPass, clientPass]);
-
-    const adminUser = usersRes.rows.find(u => u.rol === 'admin');
-    const clientUser1 = usersRes.rows.find(u => u.email === 'cliente1@autorepuestos.com');
-    const clientUser2 = usersRes.rows.find(u => u.email === 'cliente2@repuestoseltriunfo.com');
-
-    // 4. Insert Clientes Mayoristas
-    console.log('Inserting clients...');
-    const clientRes = await client.query(`
-      INSERT INTO clientes (usuario_id, empresa_id, condicion_credito, activo)
-      VALUES 
-        ($1, $2, 'Crédito 30 Días', true),
-        ($3, $2, 'Crédito 60 Días', true)
-      RETURNING id, usuario_id
-    `, [clientUser1.id, kolbenId, clientUser2.id]);
-
-    const client1 = clientRes.rows.find(c => c.usuario_id === clientUser1.id);
-    const client2 = clientRes.rows.find(c => c.usuario_id === clientUser2.id);
-
-    // 5. Insert Sucursales (Branches)
-    console.log('Inserting customer branches...');
-    await client.query(`
-      INSERT INTO sucursales (cliente_id, nombre, direccion)
-      VALUES 
-        ($1, 'Sucursal Centro', 'Barrio El Centro, 3 Ave, entre 4 y 5 Calle, San Pedro Sula'),
-        ($1, 'Sucursal Circunvalación', 'Bulevar Circunvalación, frente a Monumento a la Madre, San Pedro Sula'),
-        ($2, 'Sucursal Tegucigalpa - Centro', 'Avenida Jerez, Edificio El Triunfo, Tegucigalpa'),
-        ($2, 'Sucursal Tegucigalpa - Comayagüela', '5 Avenida, 11 Calle, Comayagüela'),
-        ($2, 'Sucursal Tegucigalpa - Kennedy', 'Bulevar Centroamérica, entrada principal Col. Kennedy, Tegucigalpa')
-    `, [client1.id, client2.id]);
+    `, [superadminPass, kolbenId, adminPass]);
 
     // 6. Insert Marcas (Brands)
     console.log('Inserting brands...');
@@ -185,14 +153,6 @@ async function seedData(client) {
     const listMayorista = listsRes.rows.find(l => l.nombre === 'Distribuidor Mayorista');
     const listVip = listsRes.rows.find(l => l.nombre === 'Distribuidor VIP');
 
-    // 11. Assign Clients to Lists
-    console.log('Assigning clients to pricing lists...');
-    await client.query(`
-      INSERT INTO cliente_lista_precio (cliente_id, lista_precio_id)
-      VALUES 
-        ($1, $3),
-        ($2, $4)
-    `, [client1.id, client2.id, listMayorista.id, listVip.id]);
 
     // 12. Insert Precios (Segmentados por lista)
     // VIP has a ~15% discount generally, and special promos
@@ -236,34 +196,6 @@ async function seedData(client) {
       listMayorista.id, listVip.id
     ]);
 
-    // 13. Insert standard mock Pedido (to have historic data)
-    console.log('Inserting historic mock order...');
-    const pedidoRes = await client.query(`
-      INSERT INTO pedidos (empresa_id, cliente_id, numero, estado, total, isv, fecha)
-      VALUES (
-        $1, 
-        $2, 
-        'PED-10001', 
-        'pendiente', 
-        3047.50, 
-        397.50, 
-        NOW() - INTERVAL '1 day'
-      )
-      RETURNING id
-    `, [kolbenId, client1.id]);
-    const pedidoId = pedidoRes.rows[0].id;
-
-    // Insert items for historic order
-    // Client 1 has sucursales. Let's find one.
-    const sucRes = await client.query(`SELECT id FROM sucursales WHERE cliente_id = $1 LIMIT 1`, [client1.id]);
-    const sucId = sucRes.rows[0].id;
-
-    await client.query(`
-      INSERT INTO pedido_items (pedido_id, producto_id, sucursal_id, cantidad, precio_unitario)
-      VALUES 
-        ($1, $2, $3, 2, 850.00), -- 2x BC-4211
-        ($1, $4, $3, 2, 450.00)  -- 2x CF-6802
-    `, [pedidoId, pBc4211.id, sucId, pCf6802.id]);
 
     console.log('All seed data inserted successfully!');
   } catch (err) {

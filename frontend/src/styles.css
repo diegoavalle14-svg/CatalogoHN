@@ -2197,6 +2197,35 @@ button {
   color: #8b8e98;
 }
 
+.admin-empty-state {
+  display: grid;
+  gap: 5px;
+  border: 1px dashed #d6d6d6;
+  border-radius: 10px;
+  background: #fafafa;
+  padding: 18px 14px;
+  color: #777;
+  text-align: center;
+}
+
+.admin-empty-state strong {
+  color: #111;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-empty-state span,
+.admin-empty-inline {
+  color: #8b8e98;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-empty-inline {
+  margin: 12px 0;
+  text-align: center;
+}
+
 .admin-client-card {
   margin-top: 20px;
   padding: 4px 14px;

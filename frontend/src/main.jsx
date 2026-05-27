@@ -6,6 +6,14 @@ import { clearCart, clearSession, loadCart, loadSession, saveCart, saveSession }
 import './styles.css';
 
 const money = (value) => `L. ${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2 })}`;
+const isToday = (value) => {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return false;
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear()
+    && date.getMonth() === now.getMonth()
+    && date.getDate() === now.getDate();
+};
 const SITE_SUBNAME_OPTIONS = [
   'Repuestos mayoristas',
   'Ferreteria industrial',
@@ -152,8 +160,8 @@ function TenantLogoMark({ tenant, size = 'normal' }) {
 }
 
 function Login({ onLogin }) {
-  const [username, setUsername] = useState('cliente1');
-  const [password, setPassword] = useState('ClientPassword123');
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('KolbenAdminPassword123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -578,7 +586,7 @@ function Admin({ session, onLogout, onTenantUpdated }) {
   useEffect(() => {
     api.adminSummary(session.token).then(setSummary).catch(console.error);
     api.orders(session.token).then((payload) => setOrders(payload.pedidos)).catch(console.error);
-    api.adminClients(session.token).then((payload) => setClients((payload.clientes || []).map(normalizeAdminClient))).catch(() => setClients(adminSeedClients));
+    api.adminClients(session.token).then((payload) => setClients((payload.clientes || []).map(normalizeAdminClient))).catch(() => setClients([]));
     api.adminPrices(session.token).then((payload) => setPriceData(normalizeAdminPriceData(payload))).catch(() => setPriceData(normalizeAdminPriceData({ listas: adminSeedPriceLists, productos: mockPriceProducts })));
     api.adminCatalog(session.token).then((payload) => {
       setCatalog(payload);
@@ -590,9 +598,10 @@ function Admin({ session, onLogout, onTenantUpdated }) {
 
   if (!summary || !catalog || !priceData) return <Loading label="Cargando panel admin" />;
 
-  const displayOrders = orders.length ? orders : adminSeedOrders;
-  const pending = displayOrders.filter((order) => order.estado === 'pendiente').length || 3;
-  const preparing = displayOrders.filter((order) => order.estado === 'preparando').length || 2;
+  const displayOrders = orders;
+  const pending = displayOrders.filter((order) => order.estado === 'pendiente').length;
+  const preparing = displayOrders.filter((order) => order.estado === 'preparando').length;
+  const sentToday = displayOrders.filter((order) => order.estado === 'enviado' && isToday(order.fecha)).length;
   const priceLists = priceData.listas || [];
   const priceProducts = priceData.productos || [];
 
@@ -816,6 +825,7 @@ function Admin({ session, onLogout, onTenantUpdated }) {
             orders={displayOrders}
             pending={pending}
             preparing={preparing}
+            sentToday={sentToday}
             clients={clients}
             onState={updateOrderState}
             onDelete={deleteOrder}
@@ -880,19 +890,6 @@ function Admin({ session, onLogout, onTenantUpdated }) {
   );
 }
 
-const adminSeedOrders = [
-  { id: 9041, numero: '#9041', cliente_nombre: 'Repuestos Garcia', estado: 'pendiente', fecha_label: 'Hoy 3:45 pm', total: 3850 },
-  { id: 9040, numero: '#9040', cliente_nombre: 'Dist. Ramirez', estado: 'pendiente', fecha_label: 'Hoy 1:12 pm', total: 1200 },
-  { id: 9039, numero: '#9039', cliente_nombre: 'Auto Partes Sosa', estado: 'preparando', fecha_label: 'Ayer 4:30 pm', total: 5640 },
-  { id: 9037, numero: '#9037', cliente_nombre: 'Taller El Buen Precio', estado: 'enviado', fecha_label: '21/05/2026', total: 890 }
-];
-
-const adminSeedClients = [
-  { id: 1, nombre: 'Repuestos Garcia', usuario: 'rgarcia', lista: 'Lista A', credito: '60 dias', tipo: 'ISV · Multi-sucursal', acceso: 'iPhone · Hoy 3:45 pm · Tegucigalpa', iniciales: 'RG', activo: true },
-  { id: 2, nombre: 'Dist. Ramirez', usuario: 'dramirez', lista: 'Lista B', credito: '30 dias', tipo: 'Estandar', acceso: 'Chrome · Hoy 1:12 pm · SPS', iniciales: 'DR', activo: true },
-  { id: 3, nombre: 'Auto Partes Sosa', usuario: 'apsosa', lista: 'Lista A', credito: '30 dias', tipo: 'ISV', acceso: 'Android · Ayer 4:30 pm', iniciales: 'AP', activo: true },
-  { id: 4, nombre: 'Taller El Buen Precio', usuario: 'tbprecio', lista: 'Lista C', credito: '30 dias', tipo: 'Estandar', acceso: 'Chrome · Hace 5 dias', iniciales: 'TB', activo: false }
-];
 
 const adminSeedPrices = [
   { id: 1, numero: 1, cliente: 'Auto Rep. Navarro', contacto: '9832-1315', credito: '60d', mFrenos: 720, mFrGrande: 820, mClutch: 420, pMes: 8, pAno: 62, lMes: 24800, lAno: '192k' },
@@ -921,17 +918,23 @@ const adminSeedPriceLists = [
   }
 ];
 
-function AdminOrdersSection({ orders, pending, preparing, clients = [], onState, onDelete }) {
+function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete }) {
   return (
     <>
       <AdminSectionTitle title="Pedidos" subtitle="Gestiona los pedidos recibidos" />
       <div className="admin-stat-grid">
         <AdminStat value={pending} label="Pendientes" tone="orange" />
         <AdminStat value={preparing} label="Preparando" tone="blue" />
-        <AdminStat value="5" label="Enviados hoy" tone="green" />
-        <AdminStat value="38" label="Pedidos" helper="mes 50 año" />
+        <AdminStat value={sentToday} label="Enviados hoy" tone="green" />
+        <AdminStat value={orders.length} label="Pedidos" helper="total preview" />
       </div>
       <div className="admin-order-list">
+        {orders.length === 0 && (
+          <div className="admin-empty-state">
+            <strong>Aun no hay pedidos</strong>
+            <span>Los pedidos apareceran aqui cuando un cliente creado por Kolben haga una compra.</span>
+          </div>
+        )}
         {orders.map((order) => (
           <article className="admin-order-card" key={order.id}>
             <div className="admin-order-card-head">
@@ -954,7 +957,8 @@ function AdminOrdersSection({ orders, pending, preparing, clients = [], onState,
       <h2 className="admin-small-heading">Ranking de clientes</h2>
       <div className="admin-ranking-card">
         <div><span>Cliente</span><span>Lista</span><span>Credito</span><span>Estado</span><span>Acceso</span></div>
-        {(clients.length ? clients : adminSeedClients).slice(0, 5).map((client) => (
+        {clients.length === 0 && <p className="admin-empty-inline">Sin clientes creados todavia.</p>}
+        {clients.slice(0, 5).map((client) => (
           <button key={client.id}>
             <strong>{client.nombre}</strong>
             <b>{client.lista || 'Sin lista'}</b><b>{client.credito}</b><b>{client.activo ? 'Activo' : 'Inactivo'}</b><span>{client.acceso_corto || client.acceso}</span>
@@ -1007,6 +1011,12 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle }) {
         <button className="admin-new-button" onClick={onNew}><Plus size={13} /> Nuevo</button>
       </div>
       <div className="admin-client-card">
+        {clients.length === 0 && (
+          <div className="admin-empty-state">
+            <strong>No hay clientes creados</strong>
+            <span>Usa Nuevo para crear el primer acceso mayorista de Kolben.</span>
+          </div>
+        )}
         {clients.map((client) => (
           <button className="admin-client-row" key={client.id} onClick={() => onEdit(client)}>
             <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
