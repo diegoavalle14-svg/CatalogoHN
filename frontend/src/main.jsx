@@ -40,6 +40,10 @@ function App() {
   const [session, setSession] = useState(() => loadSession());
   const [view, setView] = useState('catalog');
 
+  useEffect(() => {
+    api.setTenantSlug(session?.tenant?.slug || 'kolben');
+  }, [session?.tenant?.slug]);
+
   const handleLogin = (nextSession) => {
     saveSession(nextSession);
     setSession(nextSession);
@@ -47,6 +51,7 @@ function App() {
   };
 
   const logout = () => {
+    api.setTenantSlug('kolben');
     clearSession();
     setSession(null);
     setView('catalog');
@@ -181,7 +186,7 @@ function Login({ onLogin }) {
     setLoading(true);
     setError('');
     try {
-      onLogin(await api.login({ username, password }));
+      onLogin(await api.login({ username, password, tenantSlug: selectedTenant }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -586,7 +591,7 @@ function Admin({ session, onLogout, onTenantUpdated }) {
     api.adminSummary(session.token).then(setSummary).catch(console.error);
     api.orders(session.token).then((payload) => setOrders(payload.pedidos)).catch(console.error);
     api.adminClients(session.token).then((payload) => setClients((payload.clientes || []).map(normalizeAdminClient))).catch(() => setClients([]));
-    api.adminPrices(session.token).then((payload) => setPriceData(normalizeAdminPriceData(payload))).catch(() => setPriceData(normalizeAdminPriceData({ listas: adminSeedPriceLists, productos: mockPriceProducts })));
+    api.adminPrices(session.token).then((payload) => setPriceData(normalizeAdminPriceData(payload))).catch(() => setPriceData(normalizeAdminPriceData({ listas: [], productos: [] })));
     api.adminCatalog(session.token).then((payload) => {
       setCatalog(payload);
       setProducts(payload.productos.map((product, index) => ({ ...product, posicion: product.posicion || index + 1, visible: product.visible !== false })));

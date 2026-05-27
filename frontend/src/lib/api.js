@@ -1,7 +1,8 @@
 import { mockCatalog, mockOrders, mockPasswords, mockTenant, mockUsers } from './mock';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-const TENANT_SLUG = import.meta.env.VITE_TENANT_SLUG || 'kolben';
+const DEFAULT_TENANT_SLUG = import.meta.env.VITE_TENANT_SLUG || 'kolben';
+let activeTenantSlug = DEFAULT_TENANT_SLUG;
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const LOGIN_ALIASES = {
   cliente1: 'cliente1@autorepuestos.com',
@@ -37,14 +38,14 @@ function uniqueDemoSlug(base) {
 function headers(token) {
   return {
     'Content-Type': 'application/json',
-    'x-tenant-slug': TENANT_SLUG,
+    'x-tenant-slug': activeTenantSlug,
     ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 }
 
 function authHeaders(token) {
   return {
-    'x-tenant-slug': TENANT_SLUG,
+    'x-tenant-slug': activeTenantSlug,
     ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 }
@@ -71,12 +72,16 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  setTenantSlug: (slug) => {
+    activeTenantSlug = String(slug || '').trim() || DEFAULT_TENANT_SLUG;
+  },
   login: async (credentials) => {
     const loginId = String(credentials.username || credentials.email || '').trim().toLowerCase();
     const email = LOGIN_ALIASES[loginId] || loginId;
+    const loginTenantSlug = String(credentials.tenantSlug || '').trim() || activeTenantSlug;
     const payload = { email, username: loginId, password: credentials.password };
     try {
-      return await request('/auth/login', { method: 'POST', body: JSON.stringify(payload) });
+      return await request('/auth/login', { method: 'POST', body: JSON.stringify(payload), headers: { 'x-tenant-slug': loginTenantSlug } });
     } catch (error) {
       if (error.status) throw error;
       const user = mockUsers[email];
@@ -234,6 +239,10 @@ export const api = {
         nombre: String(payload?.nombre || '').trim(),
         subnombre: String(payload?.subnombre || '').trim(),
         slug,
+        logo_url: '',
+        color_primario: '#F5C200',
+        color_secundario: '#111111',
+        fuente: 'Barlow',
         activa: true,
         created_at: new Date().toISOString()
       };

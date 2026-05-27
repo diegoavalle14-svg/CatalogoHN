@@ -84,8 +84,8 @@ router.post('/superadmin/tenants', authenticate, requireRole('superadmin'), asyn
   const safeSubname = normalizeName(subnombre || '').slice(0, 140);
 
   const result = await db.query(
-    `INSERT INTO empresas (nombre, subnombre, slug, activa)
-     VALUES ($1, $2, $3, true)
+    `INSERT INTO empresas (nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa)
+     VALUES ($1, $2, $3, '', '#F5C200', '#111111', 'Barlow', true)
      RETURNING id, nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa, created_at, updated_at`,
     [String(nombre).trim(), safeSubname, safeSlug]
   );
