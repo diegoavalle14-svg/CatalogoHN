@@ -21,9 +21,9 @@ CREATE TABLE empresas (
     subnombre VARCHAR(140) DEFAULT '',
     slug VARCHAR(50) UNIQUE NOT NULL,
     logo_url TEXT,
-    color_primario VARCHAR(7) DEFAULT '#F5C200', -- Hex colors
+    color_primario VARCHAR(7) DEFAULT '#fac400', -- Hex colors
     color_secundario VARCHAR(7) DEFAULT '#111111',
-    fuente VARCHAR(50) DEFAULT 'Barlow',
+    fuente VARCHAR(50) DEFAULT 'Aptos',
     activa BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

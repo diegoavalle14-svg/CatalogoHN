@@ -45,6 +45,7 @@ function App() {
   }, [session?.tenant?.slug]);
 
   const handleLogin = (nextSession) => {
+    api.setTenantSlug(nextSession?.tenant?.slug || 'kolben');
     saveSession(nextSession);
     setSession(nextSession);
     setView(nextSession.user.rol === 'superadmin' ? 'superadmin' : nextSession.user.rol === 'cliente' ? 'catalog' : 'admin');
@@ -66,6 +67,7 @@ function App() {
   if (session.user.rol === 'admin') {
     return <Admin session={session} onLogout={logout} onTenantUpdated={(tenant) => {
       const nextSession = { ...session, tenant };
+      api.setTenantSlug(tenant?.slug || session?.tenant?.slug || 'kolben');
       saveSession(nextSession);
       setSession(nextSession);
     }} />;
@@ -170,23 +172,39 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState('kolben');
-  const tenantTiles = [
-    { slug: 'kolben', name: 'KOLBEN', sector: 'Repuestos mayoristas', domain: 'kolben.catalogohn.com', status: 'ACTIVO', available: true },
-    ...Array.from({ length: 3 }, (_, index) => ({
-      slug: `reserve-${index + 1}`,
-      name: 'Disponible',
-      sector: '',
-      domain: 'Reserva tu espacio',
-      status: 'RESERVA TU ESPACIO'
-    }))
-  ];
+  const [selectedTenantName, setSelectedTenantName] = useState('KOLBEN');
+  const [superadminMode, setSuperadminMode] = useState(false);
+  const [tenantTiles, setTenantTiles] = useState([
+    { slug: 'kolben', name: 'KOLBEN', sector: 'Repuestos mayoristas', domain: 'kolben.catalogohn.com', status: 'ACTIVO', available: true }
+  ]);
+
+  useEffect(() => {
+    api.publicTenants()
+      .then((payload) => {
+        const activeTenants = (payload.tenants || [])
+          .filter((tenant) => tenant.activa !== false)
+          .map((tenant) => ({
+            slug: tenant.slug,
+            name: tenant.nombre || tenant.slug?.toUpperCase() || 'Empresa',
+            sector: tenant.subnombre || '',
+            domain: `${tenant.slug}.catalogohn.com`,
+            status: 'ACTIVO',
+            available: true
+          }));
+        if (activeTenants.length) {
+          setTenantTiles(activeTenants);
+          setSelectedTenant((current) => (activeTenants.some((tenant) => tenant.slug === current) ? current : activeTenants[0].slug));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function submit(event) {
     event.preventDefault();
     setLoading(true);
     setError('');
     try {
-      onLogin(await api.login({ username, password, tenantSlug: selectedTenant }));
+      onLogin(await api.login({ username, password, tenantSlug: superadminMode ? 'kolben' : selectedTenant }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -204,18 +222,16 @@ function Login({ onLogin }) {
       <section className="tenant-picker">
         <h1>CatalogoHN</h1>
         <p>Catalogos digitales para distribuidoras en Honduras</p>
-        <span className="status-pill">1 empresa activa en la plataforma</span>
+        <span className="status-pill">{tenantTiles.length} empresas activas en la plataforma</span>
         <div className="tenant-grid">
           {tenantTiles.map((tenant) => (
             <button
               className={`tenant-tile ${tenant.available ? 'active' : 'disabled'}`}
               key={tenant.slug}
               onClick={() => {
-                if (!tenant.available) {
-                  window.alert('Empresa no disponible aun');
-                  return;
-                }
                 setSelectedTenant(tenant.slug);
+                setSelectedTenantName(tenant.name);
+                setSuperadminMode(false);
                 setLoginOpen(true);
               }}
               aria-label={`Seleccionar ${tenant.name}`}
@@ -228,9 +244,16 @@ function Login({ onLogin }) {
           ))}
         </div>
 
-        <button className="primary-button login-start-button" onClick={() => setLoginOpen(true)}>
-          <span>Iniciar sesion</span>
-          <small>Clientes y administradores</small>
+        <button
+          className="secondary-button superadmin-login-button"
+          onClick={() => {
+            setSuperadminMode(true);
+            setUsername('superadmin');
+            setPassword('SuperAdminPassword123');
+            setLoginOpen(true);
+          }}
+        >
+          Superadministrador
         </button>
 
         <div className="tenant-footer">
@@ -245,12 +268,12 @@ function Login({ onLogin }) {
         <div className="login-modal-backdrop" onClick={() => !loading && setLoginOpen(false)}>
           <section className="login-modal" onClick={(e) => e.stopPropagation()}>
             <div className="login-modal-head">
-              <h2>Ingreso privado</h2>
+              <h2>{superadminMode ? 'Ingreso superadministrador' : `Ingreso ${selectedTenantName}`}</h2>
               <button className="icon-button" onClick={() => !loading && setLoginOpen(false)} aria-label="Cerrar">
                 <X size={18} />
               </button>
             </div>
-            <p>Acceso privado para clientes y administradores</p>
+            <p>{superadminMode ? 'Acceso exclusivo de plataforma' : `Acceso privado de ${selectedTenantName}`}</p>
             <form onSubmit={submit} className="login-modal-form">
               <label>Usuario<input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label>
               <label>Contrasena<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" /></label>
@@ -1185,7 +1208,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, on
                 <input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} />
               </label>
               <div className="admin-color-grid">
-                <label>Color primario<input type="color" value={form.color_primario || '#F5C200'} onChange={(event) => update('color_primario', event.target.value)} /></label>
+                <label>Color primario<input type="color" value={form.color_primario || '#fac400'} onChange={(event) => update('color_primario', event.target.value)} /></label>
                 <label>Color secundario<input type="color" value={form.color_secundario || '#111111'} onChange={(event) => update('color_secundario', event.target.value)} /></label>
               </div>
             </div>

@@ -5,6 +5,23 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
+router.get('/tenants/public', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT id, nombre, subnombre, slug, activa
+       FROM empresas
+       WHERE activa = true
+       ORDER BY created_at ASC`
+    );
+    res.json({ tenants: result.rows });
+  } catch (error) {
+    res.json({
+      tenants: [{ id: mock.empresa.id, nombre: mock.empresa.nombre, subnombre: mock.empresa.subnombre, slug: mock.empresa.slug, activa: true }],
+      mode: 'mock'
+    });
+  }
+});
+
 router.get('/tenant', (req, res) => {
   res.json({ tenant: req.tenant });
 });

@@ -15,6 +15,9 @@ let demoTenants = [{ ...mockTenant, subnombre: 'Repuestos mayoristas' }];
 const demoAdminsByTenant = {
   1: [{ id: 1, empresa_id: 1, nombre: 'Administrador Kolben', username: 'admin', email: 'admin@kolben.com', rol: 'admin', created_at: new Date().toISOString() }]
 };
+const demoAdminPasswordsById = {
+  1: 'KolbenAdminPassword123'
+};
 
 function slugifyTenant(name) {
   const base = String(name || '')
@@ -33,6 +36,29 @@ function uniqueDemoSlug(base) {
   let suffix = 2;
   while (existing.has(`${base}-${suffix}`)) suffix += 1;
   return `${base}-${suffix}`;
+}
+
+function resolveDemoLogin(loginValue, tenantSlug) {
+  if (loginValue === 'superadmin@catalogohn.com' || loginValue === 'superadmin') {
+    return { user: mockUsers['superadmin@catalogohn.com'], password: mockPasswords['superadmin@catalogohn.com'], tenant: mockTenant };
+  }
+
+  const tenant = demoTenants.find((item) => item.slug === tenantSlug);
+  if (!tenant) return null;
+  const admins = demoAdminsByTenant[tenant.id] || [];
+  const normalizedLogin = String(loginValue || '').trim().toLowerCase();
+  const matchedAdmin = admins.find((admin) => {
+    const username = String(admin.username || '').trim().toLowerCase();
+    const email = String(admin.email || '').trim().toLowerCase();
+    return username === normalizedLogin || email === normalizedLogin;
+  });
+  if (!matchedAdmin) return null;
+
+  return { user: matchedAdmin, password: demoAdminPasswordsById[matchedAdmin.id], tenant };
+}
+
+function currentDemoTenant() {
+  return demoTenants.find((tenant) => tenant.slug === activeTenantSlug) || mockTenant;
 }
 
 function headers(token) {
@@ -81,26 +107,47 @@ export const api = {
     const loginTenantSlug = String(credentials.tenantSlug || '').trim() || activeTenantSlug;
     const payload = { email, username: loginId, password: credentials.password };
     try {
-      return await request('/auth/login', { method: 'POST', body: JSON.stringify(payload), headers: { 'x-tenant-slug': loginTenantSlug } });
+      const result = await request('/auth/login', { method: 'POST', body: JSON.stringify(payload), headers: { 'x-tenant-slug': loginTenantSlug } });
+      activeTenantSlug = result?.tenant?.slug || loginTenantSlug;
+      return result;
     } catch (error) {
       if (error.status) throw error;
-      const user = mockUsers[email];
-      const password = mockPasswords[email];
-      if (!user || credentials.password !== password) throw error;
-      return { token: 'demo-token', user, tenant: mockTenant, mode: 'local-demo' };
+      const demoLogin = resolveDemoLogin(email, loginTenantSlug) || resolveDemoLogin(loginId, loginTenantSlug);
+      if (!demoLogin || credentials.password !== demoLogin.password) throw error;
+      activeTenantSlug = demoLogin.tenant?.slug || loginTenantSlug;
+      return { token: 'demo-token', user: demoLogin.user, tenant: demoLogin.tenant, mode: 'local-demo' };
+    }
+  },
+  publicTenants: async () => {
+    try {
+      return await request('/tenants/public');
+    } catch {
+      return { tenants: demoTenants.filter((tenant) => tenant.activa !== false), mode: 'local-demo' };
     }
   },
   catalog: async (token) => {
     try {
       return await request('/catalog', { token });
     } catch {
-      return { ...mockCatalog, mode: 'local-demo' };
+      const tenant = currentDemoTenant();
+      if (tenant.slug === mockTenant.slug) {
+        return { ...mockCatalog, mode: 'local-demo' };
+      }
+      return {
+        tenant,
+        marcas: [],
+        categorias: [],
+        productos: [],
+        sucursales: [],
+        mode: 'local-demo'
+      };
     }
   },
   orders: async (token) => {
     try {
       return await request('/orders', { token });
     } catch {
+      if (activeTenantSlug !== mockTenant.slug) return { pedidos: [], mode: 'local-demo' };
       return { pedidos: mockOrders, mode: 'local-demo' };
     }
   },
@@ -115,6 +162,15 @@ export const api = {
     try {
       return await request('/admin/summary', { token });
     } catch {
+      const tenant = currentDemoTenant();
+      if (tenant.slug !== mockTenant.slug) {
+        return {
+          totals: { productos: 0, clientes: 0, pedidos: 0 },
+          accesos: [],
+          tenant,
+          mode: 'local-demo'
+        };
+      }
       return {
         totals: { productos: mockCatalog.productos.length, clientes: 1, pedidos: mockOrders.length },
         accesos: [
@@ -127,7 +183,7 @@ export const api = {
             geolocalizacion: 'Tegucigalpa, Honduras'
           }
         ],
-        tenant: mockTenant,
+        tenant,
         mode: 'local-demo'
       };
     }
@@ -136,6 +192,10 @@ export const api = {
     try {
       return await request('/admin/catalog', { token });
     } catch {
+      const tenant = currentDemoTenant();
+      if (tenant.slug !== mockTenant.slug) {
+        return { tenant, marcas: [], categorias: [], productos: [], sucursales: [], mode: 'local-demo' };
+      }
       return { ...mockCatalog, mode: 'local-demo' };
     }
   },
@@ -240,9 +300,9 @@ export const api = {
         subnombre: String(payload?.subnombre || '').trim(),
         slug,
         logo_url: '',
-        color_primario: '#F5C200',
+        color_primario: '#fac400',
         color_secundario: '#111111',
-        fuente: 'Barlow',
+        fuente: 'Aptos',
         activa: true,
         created_at: new Date().toISOString()
       };
@@ -288,9 +348,10 @@ export const api = {
         rol: 'admin',
         created_at: new Date().toISOString()
       };
+      demoAdminPasswordsById[admin.id] = String(payload?.password || '').trim() || 'Tmp1234!';
       const current = demoAdminsByTenant[id] || [];
       demoAdminsByTenant[id] = [admin, ...current];
-      return { admin, temp_password: payload?.password || 'Tmp1234!', mode: 'local-demo' };
+      return { admin, temp_password: demoAdminPasswordsById[admin.id], mode: 'local-demo' };
     }
   },
   superadminResetAdminPassword: async (token, adminId, payload = {}) => {
@@ -298,7 +359,8 @@ export const api = {
       return await request(`/superadmin/admins/${adminId}/reset-password`, { method: 'POST', token, body: JSON.stringify(payload) });
     } catch (error) {
       if (error.status) throw error;
-      return { temp_password: payload.password || 'Tmp1234!', mode: 'local-demo' };
+      demoAdminPasswordsById[Number(adminId)] = String(payload.password || '').trim() || 'Tmp1234!';
+      return { temp_password: demoAdminPasswordsById[Number(adminId)], mode: 'local-demo' };
     }
   },
   superadminUpdateAdmin: async (token, adminId, payload) => {
@@ -314,8 +376,12 @@ export const api = {
             ...current,
             nombre: String(payload?.nombre || current.nombre).trim(),
             username: String(payload?.username || current.username).trim().toLowerCase(),
+            email: `${String(payload?.username || current.username).trim().toLowerCase()}@${demoTenants.find((item) => Number(item.id) === Number(tenantId))?.slug || 'empresa'}.local`,
             updated_at: new Date().toISOString()
           };
+          if (String(payload?.password || '').trim()) {
+            demoAdminPasswordsById[Number(adminId)] = String(payload.password).trim();
+          }
           demoAdminsByTenant[tenantId][index] = updated;
           return { admin: updated, mode: 'local-demo' };
         }
@@ -331,6 +397,7 @@ export const api = {
       for (const tenantId of Object.keys(demoAdminsByTenant)) {
         demoAdminsByTenant[tenantId] = (demoAdminsByTenant[tenantId] || []).filter((admin) => Number(admin.id) !== Number(adminId));
       }
+      delete demoAdminPasswordsById[Number(adminId)];
       return null;
     }
   }
