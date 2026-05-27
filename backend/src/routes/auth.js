@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
     admin: 'admin@kolben.com',
     superadmin: 'superadmin@catalogohn.com'
   };
-  const email = aliases[login] || login;
+  const loginValue = aliases[login] || login;
 
   if (!login || !password) {
     return res.status(400).json({ message: 'Usuario y contrasena son requeridos' });
@@ -22,17 +22,20 @@ router.post('/login', async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT u.*, c.id AS cliente_id, c.condicion_credito
+      `SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo
        FROM usuarios u
        LEFT JOIN clientes c ON c.usuario_id = u.id
-       WHERE lower(u.email) = lower($1)
+       WHERE (lower(u.email) = lower($1) OR lower(COALESCE(u.username, '')) = lower($1))
          AND (u.empresa_id = $2 OR u.rol = 'superadmin')
        LIMIT 1`,
-      [email, req.tenant.id]
+      [loginValue, req.tenant.id]
     );
     const user = result.rows[0];
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ message: 'Credenciales invalidas' });
+    }
+    if (user.rol === 'cliente' && user.cliente_activo === false) {
+      return res.status(403).json({ message: 'Cliente inactivo. Contacte al administrador.' });
     }
 
     await db.query(
@@ -42,7 +45,7 @@ router.post('/login', async (req, res) => {
 
     return res.json({ token: signToken(user), user: sanitizeUser(user), tenant: req.tenant });
   } catch (error) {
-    const user = mock.usuarios.find((candidate) => candidate.email.toLowerCase() === email.toLowerCase());
+    const user = mock.usuarios.find((candidate) => candidate.email.toLowerCase() === loginValue.toLowerCase());
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ message: 'Credenciales invalidas' });
     }

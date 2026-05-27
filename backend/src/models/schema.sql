@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS empresas CASCADE;
 CREATE TABLE empresas (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
+    subnombre VARCHAR(140) DEFAULT '',
     slug VARCHAR(50) UNIQUE NOT NULL,
     logo_url TEXT,
     color_primario VARCHAR(7) DEFAULT '#F5C200', -- Hex colors
@@ -33,12 +34,14 @@ CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
     empresa_id INT REFERENCES empresas(id) ON DELETE CASCADE,
     nombre VARCHAR(100) NOT NULL,
+    username VARCHAR(60),
     email VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     rol VARCHAR(20) NOT NULL CHECK (rol IN ('superadmin', 'admin', 'cliente')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_email_per_tenant UNIQUE (empresa_id, email)
+    CONSTRAINT unique_email_per_tenant UNIQUE (empresa_id, email),
+    CONSTRAINT unique_username_per_tenant UNIQUE (empresa_id, username)
 );
 
 -- 3. Clientes Mayoristas

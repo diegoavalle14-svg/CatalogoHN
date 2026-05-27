@@ -11,9 +11,10 @@ async function seedData(client) {
     // 2. Insert Empresa (Tenant)
     console.log('Inserting tenant (KOLBEN)...');
     const empresaRes = await client.query(`
-      INSERT INTO empresas (nombre, slug, logo_url, color_primario, color_secundario, fuente, activa)
+      INSERT INTO empresas (nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa)
       VALUES (
         'KOLBEN HONDURAS', 
+        'Repuestos mayoristas',
         'kolben', 
         'https://catalogoproyectokolben.netlify.app/img/logo-kolben.png', -- From Netlify prototype
         '#F5C200', 
@@ -28,12 +29,12 @@ async function seedData(client) {
     // 3. Insert Users
     console.log('Inserting users...');
     const usersRes = await client.query(`
-      INSERT INTO usuarios (empresa_id, nombre, email, password_hash, rol)
+      INSERT INTO usuarios (empresa_id, nombre, username, email, password_hash, rol)
       VALUES 
-        (NULL, 'Super Administrador', 'superadmin@catalogohn.com', $1, 'superadmin'),
-        ($2, 'Administrador Kolben', 'admin@kolben.com', $3, 'admin'),
-        ($2, 'Auto Repuestos El Centro', 'cliente1@autorepuestos.com', $4, 'cliente'),
-        ($2, 'Repuestos El Triunfo', 'cliente2@repuestoseltriunfo.com', $4, 'cliente')
+        (NULL, 'Super Administrador', 'superadmin', 'superadmin@catalogohn.com', $1, 'superadmin'),
+        ($2, 'Administrador Kolben', 'admin', 'admin@kolben.com', $3, 'admin'),
+        ($2, 'Auto Repuestos El Centro', 'cliente1', 'cliente1@autorepuestos.com', $4, 'cliente'),
+        ($2, 'Repuestos El Triunfo', 'cliente2', 'cliente2@repuestoseltriunfo.com', $4, 'cliente')
       RETURNING id, email, rol
     `, [superadminPass, kolbenId, adminPass, clientPass]);
 
@@ -102,17 +103,27 @@ async function seedData(client) {
 
     // 8. Insert Productos (Vehicles/specs are JSON)
     console.log('Inserting products...');
+    const productSpecs = {
+      bf3129: { medida: '15/16"', aplicacion: 'Toyota Corolla AE100 1.6L (1993 - 1997)', origen: 'Japon', material: 'Aluminio' },
+      bc4211: { medida: '5/8"', aplicacion: 'Nissan Frontier D22 TD27 (1998 - 2005)', origen: 'Japon', material: 'Hierro' },
+      cf6802: { medida: '11/16"', aplicacion: 'Toyota Hilux 4x4 KUN25 (2005 - 2015)', origen: 'Taiwan', lado: 'Derecho / Izquierdo' },
+      bf7210: { medida: '7/8"', aplicacion: 'Hyundai Elantra MD 1.8L (2011 - 2016)', origen: 'Corea' },
+      cc1804: { medida: '3/4"', aplicacion: 'Isuzu D-Max 3.0L 4JJ1 (2007 - 2012)', origen: 'Japon' },
+      bf9180: { medida: '1"', aplicacion: 'Mitsubishi L200 Triton 2.5L (2006 - 2015)', origen: 'Taiwan' },
+      cf3044: { medida: '3/4"', aplicacion: 'Mazda BT-50 2.5L (2008 - 2012)', origen: 'Corea' },
+      bf8822: { medida: '13/16"', aplicacion: 'Honda Civic DX/LX (2006 - 2011)', origen: 'Japon' }
+    };
     const productsRes = await client.query(`
       INSERT INTO productos (empresa_id, marca_id, categoria_id, sku, descripcion, specs, visible, en_promocion, posicion)
       VALUES 
-        ($1, $2, $3, 'BF-3129', 'Bomba de Freno Principal con Depósito', '{"medida": "15/16\\"", "aplicacion": "Toyota Corolla AE100 1.6L (1993 - 1997)", "origen": "Japón", "material": "Aluminio"}', true, true, 1),
-        ($1, $2, $4, 'BC-4211', 'Bomba de Clutch Superior', '{"medida": "5/8\\"", "aplicacion": "Nissan Frontier D22 TD27 (1998 - 2005)", "origen": "Japón", "material": "Hierro"}', true, false, 2),
-        ($1, $5, $6, 'CF-6802', 'Cilindro de Rueda Auxiliar Trasero', '{"medida": "11/16\\"", "aplicacion": "Toyota Hilux 4x4 KUN25 (2005 - 2015)", "origen": "Taiwán", "lado": "Derecho / Izquierdo"}', true, false, 3),
-        ($1, $7, $3, 'BF-7210', 'Bomba de Freno Principal', '{"medida": "7/8\\"", "aplicacion": "Hyundai Elantra MD 1.8L (2011 - 2016)", "origen": "Corea"}', true, true, 4),
-        ($1, $2, $7, 'CC-1804', 'Cilindro de Clutch Auxiliar (Bajo)', '{"medida": "3/4\\"", "aplicacion": "Isuzu D-Max 3.0L 4JJ1 (2007 - 2012)", "origen": "Japón"}', true, false, 5),
-        ($1, $5, $3, 'BF-9180', 'Bomba de Freno con Sensor', '{"medida": "1\\"", "aplicacion": "Mitsubishi L200 Triton 2.5L (2006 - 2015)", "origen": "Taiwán"}', true, false, 6),
-        ($1, $6, $6, 'CF-3044', 'Cilindro de Freno Trasero', '{"medida": "3/4\\"", "aplicacion": "Mazda BT-50 2.5L (2008 - 2012)", "origen": "Corea"}', true, false, 7),
-        ($1, $2, $3, 'BF-8822', 'Bomba de Freno Premium', '{"medida": "13/16\\"", "aplicacion": "Honda Civic DX/LX (2006 - 2011)", "origen": "Japón"}', true, true, 8)
+        ($1, $2, $3, 'BF-3129', 'Bomba de Freno Principal con Deposito', $10, true, true, 1),
+        ($1, $2, $4, 'BC-4211', 'Bomba de Clutch Superior', $11, true, false, 2),
+        ($1, $5, $6, 'CF-6802', 'Cilindro de Rueda Auxiliar Trasero', $12, true, false, 3),
+        ($1, $7, $3, 'BF-7210', 'Bomba de Freno Principal', $13, true, true, 4),
+        ($1, $2, $8, 'CC-1804', 'Cilindro de Clutch Auxiliar (Bajo)', $14, true, false, 5),
+        ($1, $5, $3, 'BF-9180', 'Bomba de Freno con Sensor', $15, true, false, 6),
+        ($1, $9, $6, 'CF-3044', 'Cilindro de Freno Trasero', $16, true, false, 7),
+        ($1, $2, $3, 'BF-8822', 'Bomba de Freno Premium', $17, true, true, 8)
       RETURNING id, sku
     `, [
       kolbenId, 
@@ -123,7 +134,15 @@ async function seedData(client) {
       catCilindroFreno.id, 
       brandLpr.id, 
       catCilindroClutch.id, 
-      brandSmc.id
+      brandSmc.id,
+      JSON.stringify(productSpecs.bf3129),
+      JSON.stringify(productSpecs.bc4211),
+      JSON.stringify(productSpecs.cf6802),
+      JSON.stringify(productSpecs.bf7210),
+      JSON.stringify(productSpecs.cc1804),
+      JSON.stringify(productSpecs.bf9180),
+      JSON.stringify(productSpecs.cf3044),
+      JSON.stringify(productSpecs.bf8822)
     ]);
 
     const pBf3129 = productsRes.rows.find(p => p.sku === 'BF-3129');
@@ -243,8 +262,8 @@ async function seedData(client) {
       INSERT INTO pedido_items (pedido_id, producto_id, sucursal_id, cantidad, precio_unitario)
       VALUES 
         ($1, $2, $3, 2, 850.00), -- 2x BC-4211
-        ($1, $3, $3, 2, 450.00)  -- 2x CF-6802
-    `, [pedidoId, pBc4211.id, sucId]);
+        ($1, $4, $3, 2, 450.00)  -- 2x CF-6802
+    `, [pedidoId, pBc4211.id, sucId, pCf6802.id]);
 
     console.log('All seed data inserted successfully!');
   } catch (err) {

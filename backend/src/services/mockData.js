@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const empresa = {
   id: 1,
   nombre: 'KOLBEN HONDURAS',
+  subnombre: 'Repuestos mayoristas',
   slug: 'kolben',
   logo_url: '',
   color_primario: '#F5C200',

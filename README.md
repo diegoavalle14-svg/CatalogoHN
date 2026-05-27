@@ -8,11 +8,11 @@ Plataforma SaaS multi-tenant para distribuidoras en Honduras. El primer inquilin
 - Login por `usuario` y `contrasena`, con boton visual de recuperacion de contrasena.
 - Panel Admin Kolben separado del catalogo del cliente.
 - Panel Admin con 4 secciones: `Pedidos`, `Catalogo`, `Clientes` y `C. Precios`.
-- Configuracion del sitio desde admin: logo, colores y fuente.
+- Configuracion del inquilino desde admin: nombre, subnombre, logo, colores, fuente y vista previa.
 - CRUD de admin para productos, marcas y categorias conectado a endpoints backend, con fallback local de demo.
 - Subida de imagenes desde admin con compresion a WebP/JPEG y limite objetivo de 300 KB.
 - Almacenamiento local de imagenes en desarrollo y soporte opcional para S3 en AWS.
-- CRUD visual/local pendiente de backend para clientes y precios.
+- CRUD de clientes, listas de precios y precios conectado al backend.
 - Superadmin separado para control de empresas/inquilinos.
 
 > Nota: productos, marcas, categorias y subida de imagenes ya tienen endpoints base. Clientes, precios y configuracion final de S3 son el siguiente bloque.
@@ -89,7 +89,7 @@ VITE_TENANT_SLUG=kolben
 
 ## GitHub y AWS
 
-La guia de publicacion esta en [DEPLOYMENT.md](DEPLOYMENT.md). El camino recomendado por ahora es:
+La guia de publicacion esta en [DEPLOYMENT.md](DEPLOYMENT.md) y el runbook inicial esta en [docs/AWS_PREVIEW.md](docs/AWS_PREVIEW.md). El camino recomendado por ahora es:
 
 - GitHub para versionar el monorepo.
 - AWS Amplify Hosting para el frontend.
@@ -120,7 +120,7 @@ En desarrollo el inquilino se resuelve con:
 
 La direccion correcta del producto es que los admins suban imagenes desde el Panel Admin de su empresa:
 
-- Logo de empresa: boton `Logo` del header admin.
+- Logo de empresa y personalizacion: boton `Configurar` del header admin.
 - Logos de marcas: seccion `Catalogo` -> `Marcas`.
 - Imagenes de productos: seccion `Catalogo` -> `+ Nuevo` o `Editar`.
 
@@ -128,7 +128,6 @@ En desarrollo, si S3 no esta configurado, las imagenes se guardan en `backend/up
 
 ## Pendientes Tecnicos
 
-- Persistir CRUD de clientes y precios en endpoints reales.
 - Configurar bucket S3 definitivo para preview y produccion.
 - Crear flujo real de recuperacion de contrasena.
 - Agregar gestion de admins de empresa desde superadmin.

@@ -2,8 +2,37 @@ const express = require('express');
 const db = require('../config/database');
 const mock = require('../services/mockData');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { sendMail } = require('../services/mailer');
+const { buildAdminNewOrderEmail, buildClientStatusEmail } = require('../services/orderEmails');
 
 const router = express.Router();
+
+async function queryOrderEmailContext(tenantId, orderId) {
+  const orderRes = await db.query(
+    `SELECT p.*, u.nombre AS cliente_nombre, u.email AS cliente_email, e.nombre AS tenant_nombre
+     FROM pedidos p
+     JOIN clientes c ON c.id = p.cliente_id
+     JOIN usuarios u ON u.id = c.usuario_id
+     JOIN empresas e ON e.id = p.empresa_id
+     WHERE p.empresa_id = $1 AND p.id = $2
+     LIMIT 1`,
+    [tenantId, orderId]
+  );
+  const order = orderRes.rows[0];
+  if (!order) return null;
+
+  const itemsRes = await db.query(
+    `SELECT pi.*, pr.sku, pr.descripcion, s.nombre AS sucursal
+     FROM pedido_items pi
+     JOIN productos pr ON pr.id = pi.producto_id
+     JOIN sucursales s ON s.id = pi.sucursal_id
+     WHERE pi.pedido_id = $1
+     ORDER BY pi.id`,
+    [orderId]
+  );
+
+  return { order, items: itemsRes.rows };
+}
 
 router.get('/orders', authenticate, async (req, res) => {
   try {
@@ -120,6 +149,31 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
 
       await created.query('COMMIT');
       res.status(201).json({ pedido: order.rows[0] });
+
+      // Notify admins asynchronously (do not block the checkout UX).
+      (async () => {
+        try {
+          const ctx = await queryOrderEmailContext(req.tenant.id, order.rows[0].id);
+          if (!ctx) return;
+          const admins = await db.query(
+            `SELECT email
+             FROM usuarios
+             WHERE empresa_id = $1 AND rol IN ('admin')
+             ORDER BY id`,
+            [req.tenant.id]
+          );
+          const to = admins.rows.map((row) => row.email).filter(Boolean);
+          const email = buildAdminNewOrderEmail({
+            tenantName: ctx.order.tenant_nombre,
+            order: ctx.order,
+            clientName: ctx.order.cliente_nombre,
+            items: ctx.items
+          });
+          await sendMail({ to, subject: email.subject, html: email.html });
+        } catch (err) {
+          console.warn('[orders] admin email failed:', err.message || err);
+        }
+      })();
     } catch (error) {
       await created.query('ROLLBACK');
       throw error;
@@ -162,6 +216,26 @@ router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmi
       [estado, req.params.id, req.tenant.id]
     );
     res.json({ pedido: result.rows[0] });
+
+    // Notify client when state changes to preparing/shipped.
+    if (['preparando', 'enviado'].includes(estado)) {
+      (async () => {
+        try {
+          const ctx = await queryOrderEmailContext(req.tenant.id, result.rows[0].id);
+          if (!ctx) return;
+          if (!ctx.order.cliente_email) return;
+          const email = buildClientStatusEmail({
+            tenantName: ctx.order.tenant_nombre,
+            order: ctx.order,
+            clientName: ctx.order.cliente_nombre,
+            items: ctx.items
+          });
+          await sendMail({ to: ctx.order.cliente_email, subject: email.subject, html: email.html });
+        } catch (err) {
+          console.warn('[orders] client email failed:', err.message || err);
+        }
+      })();
+    }
   } catch (error) {
     res.json({ pedido: mock.updatePedido(Number(req.params.id), { estado }), mode: 'mock' });
   }

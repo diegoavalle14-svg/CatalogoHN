@@ -2,6 +2,8 @@
 
 Guia inicial para publicar CatalogoHN usando GitHub y AWS, siguiendo la especificacion tecnica del proyecto.
 
+Para ejecutar el primer preview, usar tambien el runbook operativo en [docs/AWS_PREVIEW.md](docs/AWS_PREVIEW.md).
+
 ## 1. GitHub
 
 El proyecto ya esta conectado al repositorio privado:
@@ -51,7 +53,7 @@ Luego se abre Pull Request hacia `develop`. Cuando preview queda aprobado, se fu
 Arquitectura objetivo segun el documento tecnico:
 
 - Frontend React/Vite: AWS Amplify Hosting.
-- Backend Node/Express: AWS EC2 `t3.micro`.
+- Backend Node/Express: AWS Elastic Beanstalk o EC2 `t3.micro`.
 - Base de datos: Amazon RDS PostgreSQL.
 - Imagenes y logos: AWS S3.
 - CDN y HTTPS: CloudFront + ACM.
@@ -119,13 +121,15 @@ Variables de entorno en Amplify:
 ```text
 VITE_API_URL=https://api.tu-dominio.com/api
 VITE_TENANT_SLUG=kolben
+VITE_DEMO_MODE=false
 ```
 
 Configura variables distintas por rama/entorno. Si primero despliegas sin dominio propio, `VITE_API_URL` puede apuntar temporalmente a la URL publica del backend.
+Si todavia no hay backend preview, `VITE_DEMO_MODE=true` permite publicar el frontend de pruebas con datos demo sin llamadas a `localhost`.
 
-## 5. Backend en EC2
+## 5. Backend en AWS
 
-El backend se despliega desde la carpeta `backend` en una instancia AWS EC2 `t3.micro`.
+El backend se despliega desde la carpeta `backend`. Para preview se puede usar Elastic Beanstalk con el `Procfile` incluido, o EC2 `t3.micro` con PM2/systemd.
 
 Variables de entorno necesarias:
 
@@ -148,7 +152,7 @@ EMAIL_FROM="CatalogoHN <correo@gmail.com>"
 EMAIL_ADMIN_NOTIFY=admin@kolben.com
 ```
 
-Comandos base en EC2:
+Comandos base:
 
 ```bash
 cd backend
@@ -157,6 +161,12 @@ npm start
 ```
 
 Para mantener el proceso activo se debe usar un process manager como PM2 o un servicio `systemd`.
+
+Si se usa Elastic Beanstalk desde `backend`, el archivo `Procfile` ejecuta:
+
+```text
+web: npm start
+```
 
 Crear dos entornos separados: uno para preview y otro para produccion. No reutilices la misma `DATABASE_URL` ni el mismo bucket S3 de produccion en preview.
 
@@ -242,9 +252,7 @@ Tambien se debe preparar wildcard DNS para futuros inquilinos:
 
 ## 10. Pendiente para CatalogoHN
 
-- Persistir CRUD del panel admin en endpoints reales.
-- Implementar subida de imagenes a S3 con compresion.
 - Agregar flujo real de recuperacion de contrasena.
-- Permitir al superadmin asignar admins por empresa.
-- Enviar correos HTML estructurados con Nodemailer.
+- Conectar preview real de AWS y validar RDS/S3/Amplify.
+- Configurar dominio/subdominios con Route 53, ACM y CloudFront.
 - Fortalecer auditoria de accesos por cliente.

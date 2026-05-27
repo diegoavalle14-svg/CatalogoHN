@@ -1,11 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BadgeDollarSign, Check, ClipboardList, Folder, Image, LogOut, Menu, Package, PackageSearch, Plus, Search, ShoppingCart, Tags, Users, X } from 'lucide-react';
+import { BadgeDollarSign, Check, ClipboardList, Folder, LogOut, Menu, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Tags, Users, X } from 'lucide-react';
 import { api } from './lib/api';
 import { clearCart, clearSession, loadCart, loadSession, saveCart, saveSession } from './lib/storage';
 import './styles.css';
 
 const money = (value) => `L. ${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2 })}`;
+const SITE_SUBNAME_OPTIONS = [
+  'Repuestos mayoristas',
+  'Ferreteria industrial',
+  'Distribucion automotriz',
+  'Suministros electricos',
+  'Importadora y repuestos',
+  'Distribuidora mayorista',
+  'Catalogo B2B'
+];
+const SITE_FONT_OPTIONS = [
+  { value: 'Aptos', label: 'Aptos' },
+  { value: 'Segoe UI', label: 'Segoe UI' },
+  { value: 'Bahnschrift', label: 'Bahnschrift' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Verdana', label: 'Verdana' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Trebuchet MS', label: 'Trebuchet MS' },
+  { value: 'Courier New', label: 'Courier New' },
+  { value: 'Roboto Condensed', label: 'Roboto Condensed' },
+  { value: 'Barlow', label: 'Barlow' }
+];
 
 function App() {
   const [session, setSession] = useState(() => loadSession());
@@ -30,7 +51,11 @@ function App() {
   }
 
   if (session.user.rol === 'admin') {
-    return <Admin session={session} onLogout={logout} />;
+    return <Admin session={session} onLogout={logout} onTenantUpdated={(tenant) => {
+      const nextSession = { ...session, tenant };
+      saveSession(nextSession);
+      setSession(nextSession);
+    }} />;
   }
 
   return (
@@ -44,6 +69,7 @@ function App() {
 
 function Shell({ session, view, setView, onLogout, children }) {
   const [cartCount, setCartCount] = useState(0);
+  const tenant = session.tenant || {};
 
   useEffect(() => {
     const updateCartCount = (event) => setCartCount(event.detail?.count || 0);
@@ -61,11 +87,14 @@ function Shell({ session, view, setView, onLogout, children }) {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={tenantBrandStyle(tenant)}>
       <header className="topbar">
         <button className="brand-lockup" onClick={() => setView('catalog')} aria-label="Abrir catalogo">
-          <span className="logo-mark"><b>K</b><small>KOLBEN</small></span>
-          <strong>KOLBEN</strong>
+          <TenantLogoMark tenant={tenant} />
+          <span>
+            <strong>{tenant.nombre || 'Empresa'}</strong>
+            <small>{tenant.subnombre || 'Catalogo privado'}</small>
+          </span>
         </button>
 
         <div className="welcome-line">
@@ -97,21 +126,21 @@ function Shell({ session, view, setView, onLogout, children }) {
 
 function SuperAdminShell({ session, onLogout }) {
   return (
-    <div className="app-shell superadmin-shell">
-      <header className="topbar">
-        <span />
-        <div>
-          <strong className="brand-word">CatalogoHN</strong>
-          <span>Super Admin</span>
-        </div>
-        <button className="icon-button" onClick={onLogout} aria-label="Cerrar sesion">
-          <LogOut size={20} />
-        </button>
-      </header>
-      <main>
-        <SuperAdmin token={session.token} />
+    <div className="superadmin-shell">
+      <main className="login-screen superadmin-screen">
+        <SuperAdmin token={session.token} onLogout={onLogout} />
       </main>
     </div>
+  );
+}
+
+function TenantLogoMark({ tenant, size = 'normal' }) {
+  const label = tenant?.nombre || 'Empresa';
+  return (
+    <span className={`logo-mark tenant-logo-mark ${size === 'small' ? 'small' : ''}`}>
+      {tenant?.logo_url ? <img src={tenant.logo_url} alt="" /> : <b>{initials(label).slice(0, 1) || 'E'}</b>}
+      <small>{label.split(/\s+/)[0] || 'SITE'}</small>
+    </span>
   );
 }
 
@@ -122,6 +151,16 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState('kolben');
+  const tenantTiles = [
+    { slug: 'kolben', name: 'KOLBEN', sector: 'Repuestos mayoristas', domain: 'kolben.catalogohn.com', status: 'ACTIVO', available: true },
+    ...Array.from({ length: 3 }, (_, index) => ({
+      slug: `reserve-${index + 1}`,
+      name: 'Disponible',
+      sector: '',
+      domain: 'Reserva tu espacio',
+      status: 'RESERVA TU ESPACIO'
+    }))
+  ];
 
   async function submit(event) {
     event.preventDefault();
@@ -138,36 +177,41 @@ function Login({ onLogin }) {
 
   return (
     <main className="login-screen">
+      <header className="login-header">
+        <strong>CatalogoHN</strong>
+        <span>Catalogos mayoristas privados</span>
+      </header>
+
       <section className="tenant-picker">
         <h1>CatalogoHN</h1>
         <p>Catalogos digitales para distribuidoras en Honduras</p>
         <span className="status-pill">1 empresa activa en la plataforma</span>
         <div className="tenant-grid">
-          <button
-            className="tenant-tile active"
-            onClick={() => {
-              setSelectedTenant('kolben');
-              setLoginOpen(true);
-            }}
-            aria-label="Seleccionar KOLBEN"
-          >
-            <span>ACTIVO</span>
-            KOLBEN
-          </button>
-          {['EMP B', 'EMP C', 'EMP D', 'EMP E', 'EMP F'].map((item) => (
+          {tenantTiles.map((tenant) => (
             <button
-              className="tenant-tile"
-              key={item}
-              onClick={() => window.alert('Empresa no disponible aun')}
-              aria-label={`Seleccionar ${item}`}
+              className={`tenant-tile ${tenant.available ? 'active' : 'disabled'}`}
+              key={tenant.slug}
+              onClick={() => {
+                if (!tenant.available) {
+                  window.alert('Empresa no disponible aun');
+                  return;
+                }
+                setSelectedTenant(tenant.slug);
+                setLoginOpen(true);
+              }}
+              aria-label={`Seleccionar ${tenant.name}`}
             >
-              {item}
+              <span className="tenant-tile-status">{tenant.status}</span>
+              <strong className="tenant-tile-name">{tenant.name}</strong>
+              {tenant.sector && <small className="tenant-tile-meta">{tenant.sector}</small>}
+              <em className="tenant-tile-domain">{tenant.domain}</em>
             </button>
           ))}
         </div>
 
-        <button className="primary-button" onClick={() => setLoginOpen(true)}>
-          Iniciar sesion
+        <button className="primary-button login-start-button" onClick={() => setLoginOpen(true)}>
+          <span>Iniciar sesion</span>
+          <small>Clientes y administradores</small>
         </button>
 
         <div className="tenant-footer">
@@ -202,6 +246,12 @@ function Login({ onLogin }) {
           </section>
         </div>
       )}
+
+      <footer className="login-page-footer">
+        <span>Honduras</span>
+        <a href="mailto:contacto@catalogohn.com">contacto@catalogohn.com</a>
+        <span>Soporte y registro de empresas</span>
+      </footer>
     </main>
   );
 }
@@ -506,7 +556,7 @@ function History({ session }) {
   );
 }
 
-function Admin({ session, onLogout }) {
+function Admin({ session, onLogout, onTenantUpdated }) {
   const [summary, setSummary] = useState(null);
   const [orders, setOrders] = useState([]);
   const [catalog, setCatalog] = useState(null);
@@ -514,13 +564,15 @@ function Admin({ session, onLogout }) {
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [clients, setClients] = useState(() => adminSeedClients);
-  const [prices, setPrices] = useState(() => adminSeedPrices);
+  const [clients, setClients] = useState([]);
+  const [priceData, setPriceData] = useState(null);
   const [editor, setEditor] = useState(null);
 
   useEffect(() => {
     api.adminSummary(session.token).then(setSummary).catch(console.error);
     api.orders(session.token).then((payload) => setOrders(payload.pedidos)).catch(console.error);
+    api.adminClients(session.token).then((payload) => setClients((payload.clientes || []).map(normalizeAdminClient))).catch(() => setClients(adminSeedClients));
+    api.adminPrices(session.token).then((payload) => setPriceData(normalizeAdminPriceData(payload))).catch(() => setPriceData(normalizeAdminPriceData({ listas: adminSeedPriceLists, productos: mockPriceProducts })));
     api.adminCatalog(session.token).then((payload) => {
       setCatalog(payload);
       setProducts(payload.productos.map((product, index) => ({ ...product, posicion: product.posicion || index + 1, visible: product.visible !== false })));
@@ -529,11 +581,13 @@ function Admin({ session, onLogout }) {
     }).catch(console.error);
   }, [session.token]);
 
-  if (!summary || !catalog) return <Loading label="Cargando panel admin" />;
+  if (!summary || !catalog || !priceData) return <Loading label="Cargando panel admin" />;
 
   const displayOrders = orders.length ? orders : adminSeedOrders;
   const pending = displayOrders.filter((order) => order.estado === 'pendiente').length || 3;
   const preparing = displayOrders.filter((order) => order.estado === 'preparando').length || 2;
+  const priceLists = priceData.listas || [];
+  const priceProducts = priceData.productos || [];
 
   async function updateProduct(id, changes) {
     const currentProduct = products.find((product) => product.id === id);
@@ -579,20 +633,86 @@ function Admin({ session, onLogout }) {
     }
   }
 
-  function saveClient(payload) {
-    setClients((current) => {
-      if (payload.id) return current.map((client) => (client.id === payload.id ? { ...client, ...payload } : client));
-      return [{ ...payload, id: Date.now(), activo: true, iniciales: initials(payload.nombre || 'Cliente') }, ...current];
-    });
-    setEditor(null);
+  async function saveClient(payload) {
+    const nextPayload = prepareClientPayload(payload);
+    try {
+      const saved = await api.adminSaveClient(session.token, nextPayload);
+      const client = normalizeAdminClient(saved.cliente);
+      setClients((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? client : item)) : [client, ...current]));
+    } catch {
+      const fallback = normalizeAdminClient({ ...nextPayload, id: nextPayload.id || Date.now(), lista_precio: priceLists.find((item) => Number(item.id) === Number(nextPayload.lista_precio_id))?.nombre });
+      setClients((current) => (nextPayload.id ? current.map((client) => (client.id === nextPayload.id ? fallback : client)) : [fallback, ...current]));
+    } finally {
+      setEditor(null);
+    }
   }
 
-  function savePrice(payload) {
-    setPrices((current) => {
-      if (payload.id) return current.map((price) => (price.id === payload.id ? { ...price, ...payload } : price));
-      return [{ ...payload, id: Date.now() }, ...current];
-    });
-    setEditor(null);
+  async function savePrice(payload) {
+    if (editor?.type === 'price-list') {
+      try {
+        const saved = await api.adminSavePriceList(session.token, payload);
+        setPriceData((current) => ({
+          ...current,
+          listas: payload.id
+            ? current.listas.map((item) => (item.id === payload.id ? { ...item, ...saved.lista } : item))
+            : [{ ...saved.lista, precios: [] }, ...current.listas]
+        }));
+      } finally {
+        setEditor(null);
+      }
+      return;
+    }
+
+    const precios = priceProducts.map((product) => ({
+      producto_id: product.id,
+      precio: Number(payload[`precio_${product.id}`] || 0),
+      precio_promocion: payload[`promo_${product.id}`] === '' ? null : Number(payload[`promo_${product.id}`] || 0) || null
+    }));
+    try {
+      const saved = await api.adminSaveListPrices(session.token, payload.id, precios);
+      setPriceData((current) => ({
+        ...current,
+        listas: current.listas.map((list) => (list.id === payload.id ? { ...list, precios: saved.precios } : list))
+      }));
+    } finally {
+      setEditor(null);
+    }
+  }
+
+  async function toggleClient(client) {
+    const nextActive = !client.activo;
+    setClients((current) => current.map((item) => (item.id === client.id ? { ...item, activo: nextActive } : item)));
+    try {
+      const saved = await api.adminSetClientActive(session.token, client.id, nextActive);
+      setClients((current) => current.map((item) => (item.id === client.id ? normalizeAdminClient(saved.cliente) : item)));
+    } catch {
+      setClients((current) => current.map((item) => (item.id === client.id ? client : item)));
+    }
+  }
+
+  async function updateOrderState(id, estado) {
+    const ok = window.confirm(`Confirmar cambio a "${stateLabel(estado)}"`) && window.confirm('Segunda confirmacion requerida');
+    if (!ok) return;
+    const previous = orders;
+    setOrders((current) => current.map((order) => (order.id === id ? { ...order, estado } : order)));
+    try {
+      const saved = await api.updateOrderStatus(session.token, id, estado);
+      setOrders((current) => current.map((order) => (order.id === id ? { ...order, ...saved.pedido } : order)));
+    } catch {
+      setOrders(previous);
+    }
+  }
+
+  async function deleteOrder(id) {
+    const ok = window.confirm('Confirmar eliminacion del pedido') && window.confirm('Segunda confirmacion requerida');
+    if (!ok) return;
+    const previous = orders;
+    setOrders((current) => current.filter((order) => order.id !== id));
+    try {
+      await api.deleteOrder(session.token, id);
+    } catch {
+      setOrders(previous);
+    }
   }
 
   async function saveBrand(payload) {
@@ -656,23 +776,29 @@ function Admin({ session, onLogout }) {
     const nextPayload = { ...payload, logo_url: logoUrl, logoFile: undefined };
     try {
       const saved = await api.adminUpdateSite(session.token, nextPayload);
-      setSummary((current) => ({ ...current, tenant: saved.tenant }));
+      const nextTenant = saved.tenant;
+      setSummary((current) => ({ ...current, tenant: nextTenant }));
+      saveSession({ ...session, tenant: nextTenant });
+      onTenantUpdated?.(nextTenant);
     } catch {
+      const fallbackTenant = { ...summary.tenant, ...nextPayload };
       setSummary((current) => ({ ...current, tenant: { ...current.tenant, ...nextPayload } }));
+      saveSession({ ...session, tenant: fallbackTenant });
+      onTenantUpdated?.(fallbackTenant);
     } finally {
       setEditor(null);
     }
   }
 
   return (
-    <div className="admin-mobile-shell">
+    <div className="admin-mobile-shell" style={tenantBrandStyle(summary.tenant)}>
       <header className="admin-mobile-topbar">
         <button className="admin-brand-button" onClick={() => setEditor({ type: 'site', title: 'Configuracion del sitio', value: summary.tenant })}>
-          <span className="logo-mark"><b>K</b><small>KOLBEN</small></span>
-          <span><strong>KOLBEN</strong><small>Panel Admin</small></span>
+          <TenantLogoMark tenant={summary.tenant} size="small" />
+          <span><strong>{summary.tenant?.nombre || 'Empresa'}</strong><small>{summary.tenant?.subnombre || 'Panel Admin'}</small></span>
         </button>
         <button className="admin-logo-button" onClick={() => setEditor({ type: 'site', title: 'Configuracion del sitio', value: summary.tenant })}>
-          <Image size={14} /> Logo
+          <Settings2 size={14} /> Configurar
         </button>
         <button className="admin-exit-button" onClick={onLogout}>Salir</button>
       </header>
@@ -683,8 +809,9 @@ function Admin({ session, onLogout }) {
             orders={displayOrders}
             pending={pending}
             preparing={preparing}
-            onState={(id, estado) => setOrders((current) => current.map((order) => (order.id === id ? { ...order, estado } : order)))}
-            onDelete={(id) => setOrders((current) => current.filter((order) => order.id !== id))}
+            clients={clients}
+            onState={updateOrderState}
+            onDelete={deleteOrder}
           />
         )}
 
@@ -707,15 +834,17 @@ function Admin({ session, onLogout }) {
             clients={clients}
             onNew={() => setEditor({ type: 'client', title: 'Nuevo cliente', value: {} })}
             onEdit={(client) => setEditor({ type: 'client', title: 'Editar cliente', value: client })}
-            onToggle={(client) => setClients((current) => current.map((item) => (item.id === client.id ? { ...item, activo: !item.activo } : item)))}
+            onToggle={toggleClient}
           />
         )}
 
         {tab === 'prices' && (
           <AdminPricesSection
-            prices={prices}
-            onNew={() => setEditor({ type: 'price', title: 'Nuevo precio', value: {} })}
-            onEdit={(price) => setEditor({ type: 'price', title: 'Editar precios', value: price })}
+            lists={priceLists}
+            products={priceProducts}
+            onNew={() => setEditor({ type: 'price-list', title: 'Nueva lista de precios', value: {} })}
+            onEditList={(list) => setEditor({ type: 'price-list', title: 'Editar lista', value: list })}
+            onEditPrices={(list) => setEditor({ type: 'price', title: `Precios: ${list.nombre}`, value: list })}
           />
         )}
       </main>
@@ -727,6 +856,8 @@ function Admin({ session, onLogout }) {
           editor={editor}
           brands={brands}
           categories={categories}
+          priceLists={priceLists}
+          priceProducts={priceProducts}
           onClose={() => setEditor(null)}
           onSaveProduct={saveProduct}
           onSaveClient={saveClient}
@@ -763,7 +894,27 @@ const adminSeedPrices = [
   { id: 30, numero: 30, cliente: 'Multi Auto Comayaguela', contacto: '9725-3866', credito: '30d', mFrenos: 710, mFrGrande: 810, mClutch: 360, pMes: 1, pAno: 9, lMes: 890, lAno: '22k' }
 ];
 
-function AdminOrdersSection({ orders, pending, preparing, onState, onDelete }) {
+const mockPriceProducts = [
+  { id: 1, sku: 'BF-3129', descripcion: 'Bomba de Freno Principal', marca: 'KOLBEN', categoria: 'Bomba de Freno' },
+  { id: 2, sku: 'BC-4211', descripcion: 'Bomba de Clutch Superior', marca: 'KOLBEN', categoria: 'Bomba de Clutch' },
+  { id: 3, sku: 'CF-6802', descripcion: 'Cilindro de Rueda Auxiliar', marca: 'FIC', categoria: 'Cilindro de Freno' }
+];
+
+const adminSeedPriceLists = [
+  {
+    id: 1,
+    nombre: 'Distribuidor Mayorista',
+    clientes: 1,
+    productos_con_precio: 3,
+    precios: [
+      { producto_id: 1, lista_precio_id: 1, precio: 1250, precio_promocion: 1050 },
+      { producto_id: 2, lista_precio_id: 1, precio: 850, precio_promocion: null },
+      { producto_id: 3, lista_precio_id: 1, precio: 450, precio_promocion: null }
+    ]
+  }
+];
+
+function AdminOrdersSection({ orders, pending, preparing, clients = [], onState, onDelete }) {
   return (
     <>
       <AdminSectionTitle title="Pedidos" subtitle="Gestiona los pedidos recibidos" />
@@ -776,12 +927,14 @@ function AdminOrdersSection({ orders, pending, preparing, onState, onDelete }) {
       <div className="admin-order-list">
         {orders.map((order) => (
           <article className="admin-order-card" key={order.id}>
-            <div className="admin-order-main">
+            <div className="admin-order-card-head">
+              <div className="admin-order-main">
               <span>Pedido</span>
               <strong>{order.cliente_nombre || 'Cliente mayorista'}</strong>
               <small>{order.fecha_label || new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })} · {money(order.total)}</small>
             </div>
-            <b className={`admin-state ${order.estado}`}>• {stateLabel(order.estado)}</b>
+              <b className={`admin-state ${order.estado}`}>{stateLabel(order.estado)}</b>
+            </div>
             <footer>
               <span className="admin-ticket">{order.numero}</span>
               {order.estado !== 'preparando' && order.estado !== 'enviado' && <button className="pill-blue" onClick={() => onState(order.id, 'preparando')}>Preparando</button>}
@@ -793,11 +946,11 @@ function AdminOrdersSection({ orders, pending, preparing, onState, onDelete }) {
       </div>
       <h2 className="admin-small-heading">Ranking de clientes</h2>
       <div className="admin-ranking-card">
-        <div><span>Cliente</span><span>P/mes</span><span>P/año</span><span>L./mes</span><span>L./año</span></div>
-        {adminSeedPrices.map((row) => (
-          <button key={row.id}>
-            <strong>{row.cliente.replace('Auto Rep. Navarro', 'Repuestos Garcia').replace('Auto Rep. OYM', 'Auto Partes Sosa').replace('Inv. Y Carwash Tabora', 'Dist. Ramirez').replace('Multi Auto Comayaguela', 'Taller El Buen Precio')}</strong>
-            <b>{row.pMes}</b><b>{row.pAno}</b><b>{Number(row.lMes).toLocaleString('es-HN')}</b><span>{row.lAno}</span>
+        <div><span>Cliente</span><span>Lista</span><span>Credito</span><span>Estado</span><span>Acceso</span></div>
+        {(clients.length ? clients : adminSeedClients).slice(0, 5).map((client) => (
+          <button key={client.id}>
+            <strong>{client.nombre}</strong>
+            <b>{client.lista || 'Sin lista'}</b><b>{client.credito}</b><b>{client.activo ? 'Activo' : 'Inactivo'}</b><span>{client.acceso_corto || client.acceso}</span>
           </button>
         ))}
       </div>
@@ -863,25 +1016,35 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle }) {
   );
 }
 
-function AdminPricesSection({ prices, onNew, onEdit }) {
+function AdminPricesSection({ lists, products, onNew, onEditList, onEditPrices }) {
   return (
     <>
       <div className="admin-title-row">
-        <AdminSectionTitle title="Clientes y precios" subtitle="Todos los clientes con sus precios y condiciones" />
-        <button className="admin-new-button" onClick={onNew}><Plus size={13} /> Nuevo</button>
+        <AdminSectionTitle title="Listas de precios" subtitle="Precios por producto y segmento" />
+        <button className="admin-new-button" onClick={onNew}><Plus size={13} /> Nueva lista</button>
       </div>
       <div className="admin-price-card">
         <table>
-          <thead><tr><th>#</th><th>Cliente</th><th>Contacto</th><th>Credito</th><th>M.Frenos</th><th>M.Fr.Grande</th><th>M.Clutch</th></tr></thead>
+          <thead><tr><th>Lista</th><th>Clientes</th><th>Productos</th><th>Precio base</th><th>Promo</th><th>Accion</th></tr></thead>
           <tbody>
-            {prices.map((price) => (
-              <tr key={price.id} onClick={() => onEdit(price)}>
-                <td>{price.numero}</td><td>{price.cliente}</td><td>{price.contacto}</td><td><span>{price.credito}</span></td><td>{price.mFrenos}</td><td>{price.mFrGrande}</td><td>{price.mClutch}</td>
-              </tr>
-            ))}
+            {lists.map((list) => {
+              const filledPrices = list.precios?.filter((price) => Number(price.precio) > 0) || [];
+              const promoCount = filledPrices.filter((price) => price.precio_promocion).length;
+              const firstPrice = filledPrices[0];
+              return (
+                <tr key={list.id}>
+                  <td onClick={() => onEditPrices(list)}><strong>{list.nombre}</strong></td>
+                  <td>{list.clientes || 0}</td>
+                  <td>{filledPrices.length}/{products.length}</td>
+                  <td>{firstPrice ? money(firstPrice.precio) : 'L. 0.00'}</td>
+                  <td><span>{promoCount} promo</span></td>
+                  <td><button type="button" onClick={() => onEditList(list)}>Nombre</button></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-        <p>Toca una fila para editar · Desliza para ver todos los precios</p>
+        <p>Toca una lista para editar precios por producto.</p>
       </div>
     </>
   );
@@ -914,14 +1077,47 @@ function AdminBottomNav({ tab, setTab, pending }) {
   );
 }
 
-function AdminEditor({ editor, brands, categories, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onSaveSite, onDeleteBrand, onDeleteCategory }) {
-  const [form, setForm] = useState(() => ({ ...editor.value }));
+function AdminSitePreview({ tenant }) {
+  return (
+    <section className="admin-site-preview" style={tenantBrandStyle(tenant)}>
+      <header>
+        <TenantLogoMark tenant={tenant} size="small" />
+        <span>
+          <strong>{tenant?.nombre || 'Nombre de empresa'}</strong>
+          <small>{tenant?.subnombre || 'Subnombre del catalogo'}</small>
+        </span>
+      </header>
+      <div>
+        <span>Catalogo privado</span>
+        <strong>Productos destacados</strong>
+        <button type="button">Ver pedido</button>
+      </div>
+    </section>
+  );
+}
+
+function AdminEditor({ editor, brands, categories, priceLists, priceProducts, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onSaveSite, onDeleteBrand, onDeleteCategory }) {
+  const [form, setForm] = useState(() => buildAdminEditorForm(editor));
+  const [previewLogoUrl, setPreviewLogoUrl] = useState('');
+  const [customSubnameMode, setCustomSubnameMode] = useState(() => Boolean(editor.value?.subnombre && !SITE_SUBNAME_OPTIONS.includes(editor.value.subnombre)));
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const selectedSubname = customSubnameMode ? '__custom__' : SITE_SUBNAME_OPTIONS.includes(form.subnombre) ? form.subnombre : '';
+  const sitePreviewTenant = { ...(editor.value || {}), ...form, logo_url: previewLogoUrl || form.logo_url };
+
+  useEffect(() => {
+    if (!form.logoFile) {
+      setPreviewLogoUrl('');
+      return undefined;
+    }
+    const url = URL.createObjectURL(form.logoFile);
+    setPreviewLogoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [form.logoFile]);
 
   async function save() {
     if (editor.type === 'product') await onSaveProduct(form);
-    if (editor.type === 'client') onSaveClient(form);
-    if (editor.type === 'price') onSavePrice(form);
+    if (editor.type === 'client') await onSaveClient(form);
+    if (editor.type === 'price' || editor.type === 'price-list') await onSavePrice(form);
     if (editor.type === 'site') await onSaveSite(form);
   }
 
@@ -931,12 +1127,41 @@ function AdminEditor({ editor, brands, categories, onClose, onSaveProduct, onSav
         <header><h2>{editor.title}</h2><button onClick={onClose}><X size={18} /></button></header>
 
         {editor.type === 'site' && (
-          <div className="admin-form">
-            <label>Logo de la empresa<input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} /></label>
-            <label>Color primario<input type="color" value={form.color_primario || '#F5C200'} onChange={(event) => update('color_primario', event.target.value)} /></label>
-            <label>Color secundario<input type="color" value={form.color_secundario || '#111111'} onChange={(event) => update('color_secundario', event.target.value)} /></label>
-            <label>Fuente<input value={form.fuente || ''} onChange={(event) => update('fuente', event.target.value)} /></label>
-          </div>
+          <>
+            <AdminSitePreview tenant={sitePreviewTenant} />
+            <div className="admin-form admin-site-form">
+              <label>Nombre comercial<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
+              <label>
+                Subnombre
+                <select
+                  value={selectedSubname}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setCustomSubnameMode(value === '__custom__');
+                    update('subnombre', value === '__custom__' ? '' : value);
+                  }}
+                >
+                  <option value="">Seleccionar subnombre</option>
+                  {SITE_SUBNAME_OPTIONS.map((option) => <option value={option} key={option}>{option}</option>)}
+                  <option value="__custom__">Agregar otro</option>
+                </select>
+              </label>
+              {customSubnameMode && (
+                <label>Nuevo subnombre<input value={form.subnombre || ''} onChange={(event) => update('subnombre', event.target.value)} /></label>
+              )}
+              <label>
+                Fuente
+                <select value={form.fuente || 'Aptos'} onChange={(event) => update('fuente', event.target.value)}>
+                  {SITE_FONT_OPTIONS.map((font) => <option value={font.value} key={font.value}>{font.label}</option>)}
+                </select>
+              </label>
+              <label>Logo de la empresa<input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} /></label>
+              <div className="admin-color-grid">
+                <label>Color primario<input type="color" value={form.color_primario || '#F5C200'} onChange={(event) => update('color_primario', event.target.value)} /></label>
+                <label>Color secundario<input type="color" value={form.color_secundario || '#111111'} onChange={(event) => update('color_secundario', event.target.value)} /></label>
+              </div>
+            </div>
+          </>
         )}
 
         {editor.type === 'product' && (
@@ -955,21 +1180,36 @@ function AdminEditor({ editor, brands, categories, onClose, onSaveProduct, onSav
         {editor.type === 'client' && (
           <div className="admin-form">
             <label>Nombre<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
-            <label>Usuario<input value={form.usuario || ''} onChange={(event) => update('usuario', event.target.value)} /></label>
-            <label>Lista<input value={form.lista || ''} onChange={(event) => update('lista', event.target.value)} /></label>
-            <label>Credito<input value={form.credito || ''} onChange={(event) => update('credito', event.target.value)} /></label>
-            <label>Tipo<input value={form.tipo || ''} onChange={(event) => update('tipo', event.target.value)} /></label>
+            <label>Correo<input value={form.email || form.usuario || ''} onChange={(event) => update('email', event.target.value)} /></label>
+            <label>Contrasena<input type="password" placeholder={form.id ? 'Dejar igual' : 'ClientPassword123'} value={form.password || ''} onChange={(event) => update('password', event.target.value)} /></label>
+            <label>Lista<select value={form.lista_precio_id || ''} onChange={(event) => update('lista_precio_id', Number(event.target.value) || '')}>
+              <option value="">Sin lista</option>
+              {priceLists.map((list) => <option value={list.id} key={list.id}>{list.nombre}</option>)}
+            </select></label>
+            <label>Credito<input value={form.condicion_credito || form.credito || ''} onChange={(event) => update('condicion_credito', event.target.value)} /></label>
+            <label>Estado<select value={form.activo === false ? 'inactivo' : 'activo'} onChange={(event) => update('activo', event.target.value === 'activo')}>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select></label>
+            <label>Sucursales<textarea value={form.sucursales_text || ''} onChange={(event) => update('sucursales_text', event.target.value)} placeholder="Sucursal Centro | San Pedro Sula" /></label>
+          </div>
+        )}
+
+        {editor.type === 'price-list' && (
+          <div className="admin-form">
+            <label>Nombre de lista<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
           </div>
         )}
 
         {editor.type === 'price' && (
-          <div className="admin-form">
-            <label>Cliente<input value={form.cliente || ''} onChange={(event) => update('cliente', event.target.value)} /></label>
-            <label>Contacto<input value={form.contacto || ''} onChange={(event) => update('contacto', event.target.value)} /></label>
-            <label>Credito<input value={form.credito || ''} onChange={(event) => update('credito', event.target.value)} /></label>
-            <label>M.Frenos<input type="number" value={form.mFrenos || ''} onChange={(event) => update('mFrenos', Number(event.target.value))} /></label>
-            <label>M.Fr.Grande<input type="number" value={form.mFrGrande || ''} onChange={(event) => update('mFrGrande', Number(event.target.value))} /></label>
-            <label>M.Clutch<input type="number" value={form.mClutch || ''} onChange={(event) => update('mClutch', Number(event.target.value))} /></label>
+          <div className="admin-form admin-price-editor">
+            {priceProducts.map((product) => (
+              <div className="admin-price-editor-row" key={product.id}>
+                <span><strong>{product.sku}</strong><small>{product.marca} · {product.descripcion}</small></span>
+                <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
+                <label>Promo<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
+              </div>
+            ))}
           </div>
         )}
 
@@ -1037,6 +1277,66 @@ function normalizeAdminProduct(product, brands = [], categories = []) {
   };
 }
 
+function normalizeAdminClient(client) {
+  const branches = Array.isArray(client.sucursales) ? client.sucursales : [];
+  const accessDate = client.ultimo_acceso ? new Date(client.ultimo_acceso) : null;
+  const accessLabel = accessDate && !Number.isNaN(accessDate.getTime())
+    ? `${client.ultimo_user_agent || 'Acceso'} · ${accessDate.toLocaleString('es-HN')} · ${client.ultimo_geolocalizacion || client.ultimo_ip || 'Sin ubicacion'}`
+    : 'Sin accesos registrados';
+  return {
+    ...client,
+    usuario: client.email || client.usuario || '',
+    lista: client.lista_precio || client.lista || 'Sin lista',
+    credito: client.condicion_credito || client.credito || 'Contado',
+    tipo: branches.length > 1 ? 'Multi-sucursal' : 'Estandar',
+    acceso: accessLabel,
+    acceso_corto: accessDate && !Number.isNaN(accessDate.getTime()) ? accessDate.toLocaleDateString('es-HN') : 'Sin acceso',
+    iniciales: initials(client.nombre || 'Cliente'),
+    sucursales: branches,
+    sucursales_text: branches.map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n')
+  };
+}
+
+function normalizeAdminPriceData(payload) {
+  return {
+    listas: (payload.listas || []).map((list) => ({ ...list, precios: list.precios || [] })),
+    productos: payload.productos || []
+  };
+}
+
+function buildAdminEditorForm(editor) {
+  const form = { ...editor.value };
+  if (editor.type === 'price') {
+    for (const price of editor.value.precios || []) {
+      form[`precio_${price.producto_id}`] = price.precio ?? '';
+      form[`promo_${price.producto_id}`] = price.precio_promocion ?? '';
+    }
+  }
+  if (editor.type === 'client') {
+    form.sucursales_text = form.sucursales_text || (form.sucursales || []).map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n');
+  }
+  return form;
+}
+
+function prepareClientPayload(client) {
+  return {
+    id: client.id,
+    nombre: String(client.nombre || '').trim(),
+    email: String(client.email || client.usuario || '').trim().toLowerCase(),
+    password: client.password || undefined,
+    condicion_credito: String(client.condicion_credito || client.credito || 'Contado').trim(),
+    activo: client.activo !== false,
+    lista_precio_id: client.lista_precio_id || null,
+    sucursales: String(client.sucursales_text || '')
+      .split('\n')
+      .map((line) => {
+        const [name, ...addressParts] = line.split('|');
+        return { nombre: name?.trim(), direccion: addressParts.join('|').trim() };
+      })
+      .filter((branch) => branch.nombre)
+  };
+}
+
 function AdminOrder({ order, token }) {
   const [state, setState] = useState(order.estado);
 
@@ -1057,13 +1357,25 @@ function AdminOrder({ order, token }) {
   );
 }
 
-function SuperAdmin({ token }) {
-  const [session] = useState(() => loadSession());
+function SuperAdmin({ token, onLogout }) {
   const [tenants, setTenants] = useState(null);
-  const [nombre, setNombre] = useState('Nueva Empresa');
-  const [slug, setSlug] = useState('nueva-empresa');
+  const [nombre, setNombre] = useState('');
+  const [subnombre, setSubnombre] = useState('');
+  const [subnombreSeleccionado, setSubnombreSeleccionado] = useState('');
+  const [nuevoSubnombre, setNuevoSubnombre] = useState('');
+  const [subnombreOptions, setSubnombreOptions] = useState(SITE_SUBNAME_OPTIONS);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [adminPanel, setAdminPanel] = useState(null);
+  const [adminNombre, setAdminNombre] = useState('');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [editingAdminId, setEditingAdminId] = useState(null);
+  const [editAdminNombre, setEditAdminNombre] = useState('');
+  const [editAdminUsername, setEditAdminUsername] = useState('');
+  const [editAdminPassword, setEditAdminPassword] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
+  const subdominioPreview = useMemo(() => slugifyValue(nombre) || 'empresa', [nombre]);
 
   useEffect(() => {
     if (!token) return;
@@ -1072,15 +1384,122 @@ function SuperAdmin({ token }) {
       .catch((err) => setError(err.message));
   }, [token]);
 
+  async function openAdmins(tenant) {
+    setError('');
+    setTempPassword('');
+    setAdminNombre('');
+    setAdminUsername('');
+    setAdminPassword('');
+    setEditingAdminId(null);
+    setEditAdminNombre('');
+    setEditAdminUsername('');
+    setEditAdminPassword('');
+    setAdminPanel({ tenant, admins: null, loading: true });
+    try {
+      const payload = await api.superadminAdmins(token, tenant.id);
+      setAdminPanel({ tenant: payload.tenant || tenant, admins: payload.admins || [], loading: false });
+    } catch (err) {
+      setError(err.message);
+      setAdminPanel({ tenant, admins: [], loading: false });
+    }
+  }
+
+  function closeAdmins() {
+    setAdminPanel(null);
+    setTempPassword('');
+    setEditingAdminId(null);
+    setEditAdminNombre('');
+    setEditAdminUsername('');
+    setEditAdminPassword('');
+  }
+
+  async function createAdmin(event) {
+    event.preventDefault();
+    if (!adminPanel?.tenant?.id) return;
+    setError('');
+    setTempPassword('');
+    try {
+      const payload = await api.superadminCreateAdmin(token, adminPanel.tenant.id, {
+        nombre: adminNombre,
+        username: adminUsername,
+        password: adminPassword || undefined
+      });
+      setTempPassword(payload.temp_password || '');
+      setAdminPanel((current) => ({ ...current, admins: [payload.admin, ...(current?.admins || [])] }));
+      setAdminNombre('');
+      setAdminUsername('');
+      setAdminPassword('');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function startEditAdmin(admin) {
+    setError('');
+    setTempPassword('');
+    setEditingAdminId(admin.id);
+    setEditAdminNombre(admin.nombre || '');
+    setEditAdminUsername(admin.username || '');
+    setEditAdminPassword('');
+  }
+
+  function cancelEditAdmin() {
+    setEditingAdminId(null);
+    setEditAdminNombre('');
+    setEditAdminUsername('');
+    setEditAdminPassword('');
+  }
+
+  async function saveAdminChanges(admin) {
+    if (!admin?.id) return;
+    const payload = {
+      nombre: editAdminNombre,
+      username: editAdminUsername,
+      password: editAdminPassword || undefined
+    };
+    setError('');
+    setTempPassword('');
+    try {
+      const result = await api.superadminUpdateAdmin(token, admin.id, payload);
+      setAdminPanel((current) => ({
+        ...current,
+        admins: (current?.admins || []).map((item) => (item.id === admin.id ? result.admin : item))
+      }));
+      cancelEditAdmin();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function removeAdmin(admin) {
+    if (!admin?.id) return;
+    const ok = window.confirm(`Eliminar admin "${admin.username || admin.nombre}"`) && window.confirm('Segunda confirmacion requerida');
+    if (!ok) return;
+    setError('');
+    setTempPassword('');
+    try {
+      await api.superadminDeleteAdmin(token, admin.id);
+      setAdminPanel((current) => ({
+        ...current,
+        admins: (current?.admins || []).filter((item) => item.id !== admin.id)
+      }));
+      if (editingAdminId === admin.id) cancelEditAdmin();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function createTenant(event) {
     event.preventDefault();
     setSaving(true);
     setError('');
     try {
-      const created = await api.superadminCreateTenant(token, { nombre, slug });
+      const created = await api.superadminCreateTenant(token, { nombre, subnombre });
       setTenants((current) => [created.tenant, ...(current || [])]);
       setNombre('');
-      setSlug('');
+      setSubnombre('');
+      setSubnombreSeleccionado('');
+      setNuevoSubnombre('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1101,19 +1520,66 @@ function SuperAdmin({ token }) {
     }
   }
 
+  function handleSubnombreChange(value) {
+    setSubnombreSeleccionado(value);
+    if (value === '__nuevo__') {
+      setSubnombre('');
+      return;
+    }
+    setSubnombre(value);
+    setNuevoSubnombre('');
+  }
+
+  function agregarSubnombre() {
+    const value = String(nuevoSubnombre || '').trim();
+    if (!value) return;
+    setSubnombreOptions((current) => (current.includes(value) ? current : [...current, value]));
+    setSubnombreSeleccionado(value);
+    setSubnombre(value);
+    setNuevoSubnombre('');
+  }
+
   return (
     <section className="superadmin-page">
+      <header className="login-header superadmin-top-header">
+        <div className="superadmin-header-text">
+          <strong>CatalogoHN</strong>
+          <span>Super Admin · Gestor central de empresas</span>
+        </div>
+        <button className="icon-button superadmin-logout" onClick={onLogout} aria-label="Cerrar sesion">
+          <LogOut size={18} />
+        </button>
+      </header>
+
       <section className="superadmin-box">
         <div className="superadmin-head">
           <h1>Empresas</h1>
-          <span className="status-pill">Control central SaaS</span>
+          <span className="status-pill">{(tenants || []).filter((item) => item.activa).length} activas</span>
         </div>
 
-        <form className="superadmin-form" onSubmit={createTenant}>
-          <label>Nombre<input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="KOLBEN HONDURAS" /></label>
-          <label>Slug<input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="kolben" /></label>
+        <form className="superadmin-form superadmin-create-form" onSubmit={createTenant}>
+          <label>Nombre comercial<input value={nombre} onChange={(e) => setNombre(e.target.value)} /></label>
+          <label>
+            Subnombre
+            <select value={subnombreSeleccionado} onChange={(e) => handleSubnombreChange(e.target.value)}>
+              <option value="">Seleccionar subnombre</option>
+              {subnombreOptions.map((option) => (
+                <option value={option} key={option}>{option}</option>
+              ))}
+              <option value="__nuevo__">+ Agregar subnombre</option>
+            </select>
+          </label>
+          {subnombreSeleccionado === '__nuevo__' && (
+            <div className="superadmin-subname-add">
+              <input value={nuevoSubnombre} onChange={(e) => setNuevoSubnombre(e.target.value)} placeholder="Nuevo subnombre" />
+              <button type="button" className="secondary-button" onClick={agregarSubnombre} disabled={!nuevoSubnombre.trim()}>
+                Agregar
+              </button>
+            </div>
+          )}
+          <small className="superadmin-hint">Subdominio: <b>{subdominioPreview}.catalogohn.com</b></small>
           {error && <small className="form-error">{error}</small>}
-          <button className="primary-button" disabled={saving || !nombre || !slug}>{saving ? 'Creando...' : 'Crear empresa'}</button>
+          <button className="primary-button" disabled={saving || !nombre}>{saving ? 'Creando...' : 'Crear empresa'}</button>
         </form>
 
         {!tenants && <Loading label="Cargando empresas" />}
@@ -1123,14 +1589,19 @@ function SuperAdmin({ token }) {
             {tenants.map((tenant) => (
               <article className="tenant-card" key={tenant.id}>
                 <div className="tenant-card-head">
-                  <strong>{tenant.slug}</strong>
+                  <strong>{tenant.slug}.catalogohn.com</strong>
                   <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'}>{tenant.activa ? 'Activa' : 'Suspendida'}</b>
                 </div>
                 <p>{tenant.nombre}</p>
-                <small>{tenant.slug}.catalogohn.com</small>
-                <button className="secondary-button" type="button" onClick={() => toggleActive(tenant)}>
-                  {tenant.activa ? 'Suspender' : 'Activar'}
-                </button>
+                <small>{tenant.subnombre || 'Sin subnombre configurado'}</small>
+                <div className="tenant-card-actions">
+                  <button className="secondary-button" type="button" onClick={() => openAdmins(tenant)}>
+                    Crear admin
+                  </button>
+                  <button className="secondary-button" type="button" onClick={() => toggleActive(tenant)}>
+                    {tenant.activa ? 'Suspender' : 'Activar'}
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -1138,9 +1609,68 @@ function SuperAdmin({ token }) {
       </section>
 
       <section className="superadmin-footer">
-        <strong>Kolben</strong>
-        <span>kolben.catalogohn.com</span>
+        <strong>CatalogoHN</strong>
+        <span>Control central de empresas</span>
       </section>
+
+      {adminPanel && (
+        <div className="superadmin-admins-backdrop" onClick={() => closeAdmins()}>
+          <section className="superadmin-admins-modal" onClick={(event) => event.stopPropagation()}>
+            <header className="superadmin-admins-head">
+              <div>
+                <strong>Admins</strong>
+                <small>{adminPanel.tenant?.nombre || adminPanel.tenant?.slug}</small>
+              </div>
+              <button className="icon-button" type="button" onClick={closeAdmins} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </header>
+
+            <form className="superadmin-admins-form" onSubmit={createAdmin}>
+              <label>Nombre<input value={adminNombre} onChange={(e) => setAdminNombre(e.target.value)} placeholder="Administrador" /></label>
+              <label>Usuario<input value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} placeholder="admin.empresa" /></label>
+              <label>Contrasena<input value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Vacio = temporal" /></label>
+              <button className="primary-button" disabled={!adminNombre || !adminUsername}>
+                Crear admin
+              </button>
+              {tempPassword && <small className="temp-password">Temp password: <b>{tempPassword}</b></small>}
+            </form>
+
+            {error && <small className="form-error">{error}</small>}
+
+            <div className="superadmin-admins-list">
+              {!adminPanel.admins && <Loading label="Cargando admins" />}
+              {adminPanel.admins && adminPanel.admins.length === 0 && <small className="admin-empty">Sin admins aun.</small>}
+              {adminPanel.admins && adminPanel.admins.map((admin) => (
+                <div className="superadmin-admin-row" key={admin.id}>
+                  {editingAdminId === admin.id ? (
+                    <div className="superadmin-admin-edit">
+                      <label>Nombre<input value={editAdminNombre} onChange={(e) => setEditAdminNombre(e.target.value)} /></label>
+                      <label>Usuario<input value={editAdminUsername} onChange={(e) => setEditAdminUsername(e.target.value)} /></label>
+                      <label>Nueva contrasena<input value={editAdminPassword} onChange={(e) => setEditAdminPassword(e.target.value)} placeholder="Opcional" /></label>
+                      <div className="superadmin-admin-edit-actions">
+                        <button type="button" onClick={() => saveAdminChanges(admin)} disabled={!editAdminNombre || !editAdminUsername}>Guardar</button>
+                        <button type="button" onClick={cancelEditAdmin}>Cancelar</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <span>
+                        <strong>{admin.nombre}</strong>
+                        <small>@{admin.username || 'sin-usuario'}</small>
+                      </span>
+                      <div className="superadmin-admin-actions">
+                        <button type="button" onClick={() => startEditAdmin(admin)}>Editar</button>
+                        <button type="button" onClick={() => removeAdmin(admin)}>Eliminar</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }
@@ -1171,6 +1701,28 @@ function ConfirmModal({ title, children, onCancel, onConfirm, confirmLabel, canc
 
 function initials(name) {
   return name.split(/\s+/).map((part) => part[0]).join('').slice(0, 3);
+}
+
+function tenantBrandStyle(tenant = {}) {
+  const primary = tenant.color_primario || '#fac400';
+  const secondary = tenant.color_secundario || '#111111';
+  const fuente = tenant.fuente || 'Aptos';
+  return {
+    '--yellow': primary,
+    '--tenant-primary': primary,
+    '--tenant-secondary': secondary,
+    fontFamily: `"${fuente}", "Aptos", "Segoe UI", sans-serif`
+  };
+}
+
+function slugifyValue(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50);
 }
 
 function flattenCart(cart, data) {

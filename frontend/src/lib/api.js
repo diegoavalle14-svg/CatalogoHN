@@ -2,11 +2,37 @@ import { mockCatalog, mockOrders, mockPasswords, mockTenant, mockUsers } from '.
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const TENANT_SLUG = import.meta.env.VITE_TENANT_SLUG || 'kolben';
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const LOGIN_ALIASES = {
   cliente1: 'cliente1@autorepuestos.com',
   admin: 'admin@kolben.com',
   superadmin: 'superadmin@catalogohn.com'
 };
+let demoTenantSeq = 2;
+let demoAdminSeq = 2;
+let demoTenants = [{ ...mockTenant, subnombre: 'Repuestos mayoristas' }];
+const demoAdminsByTenant = {
+  1: [{ id: 1, empresa_id: 1, nombre: 'Administrador Kolben', username: 'admin', email: 'admin@kolben.com', rol: 'admin', created_at: new Date().toISOString() }]
+};
+
+function slugifyTenant(name) {
+  const base = String(name || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return base || `empresa-${Date.now().toString().slice(-4)}`;
+}
+
+function uniqueDemoSlug(base) {
+  const existing = new Set(demoTenants.map((tenant) => tenant.slug));
+  if (!existing.has(base)) return base;
+  let suffix = 2;
+  while (existing.has(`${base}-${suffix}`)) suffix += 1;
+  return `${base}-${suffix}`;
+}
 
 function headers(token) {
   return {
@@ -24,6 +50,10 @@ function authHeaders(token) {
 }
 
 async function request(path, options = {}) {
+  if (DEMO_MODE) {
+    throw new Error('Modo demo activo');
+  }
+
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: { ...headers(options.token), ...(options.headers || {}) }
@@ -104,6 +134,31 @@ export const api = {
       return { ...mockCatalog, mode: 'local-demo' };
     }
   },
+  adminClients: async (token) => {
+    return request('/admin/clients', { token });
+  },
+  adminSaveClient: async (token, client) => {
+    const path = client.id ? `/admin/clients/${client.id}` : '/admin/clients';
+    const method = client.id ? 'PATCH' : 'POST';
+    return request(path, { method, token, body: JSON.stringify(client) });
+  },
+  adminSetClientActive: async (token, id, activo) => {
+    return request(`/admin/clients/${id}/status`, { method: 'PATCH', token, body: JSON.stringify({ activo }) });
+  },
+  adminPriceLists: async (token) => {
+    return request('/admin/price-lists', { token });
+  },
+  adminPrices: async (token) => {
+    return request('/admin/prices', { token });
+  },
+  adminSavePriceList: async (token, list) => {
+    const path = list.id ? `/admin/price-lists/${list.id}` : '/admin/price-lists';
+    const method = list.id ? 'PATCH' : 'POST';
+    return request(path, { method, token, body: JSON.stringify(list) });
+  },
+  adminSaveListPrices: async (token, listId, precios) => {
+    return request(`/admin/price-lists/${listId}/prices`, { method: 'PUT', token, body: JSON.stringify({ precios }) });
+  },
   adminSaveProduct: async (token, product) => {
     const path = product.id ? `/admin/products/${product.id}` : '/admin/products';
     const method = product.id ? 'PATCH' : 'POST';
@@ -165,13 +220,109 @@ export const api = {
       return await request('/superadmin/tenants', { token });
     } catch (error) {
       if (error.status) throw error;
-      return { tenants: [mockTenant], mode: 'local-demo' };
+      return { tenants: demoTenants, mode: 'local-demo' };
     }
   },
   superadminCreateTenant: async (token, payload) => {
-    return request('/superadmin/tenants', { method: 'POST', token, body: JSON.stringify(payload) });
+    try {
+      return await request('/superadmin/tenants', { method: 'POST', token, body: JSON.stringify(payload) });
+    } catch (error) {
+      if (error.status) throw error;
+      const slug = uniqueDemoSlug(slugifyTenant(payload?.nombre));
+      const tenant = {
+        id: demoTenantSeq++,
+        nombre: String(payload?.nombre || '').trim(),
+        subnombre: String(payload?.subnombre || '').trim(),
+        slug,
+        activa: true,
+        created_at: new Date().toISOString()
+      };
+      demoTenants = [tenant, ...demoTenants];
+      demoAdminsByTenant[tenant.id] = [];
+      return { tenant, mode: 'local-demo' };
+    }
   },
   superadminSetTenantActive: async (token, id, activa) => {
-    return request(`/superadmin/tenants/${id}`, { method: 'PATCH', token, body: JSON.stringify({ activa }) });
+    try {
+      return await request(`/superadmin/tenants/${id}`, { method: 'PATCH', token, body: JSON.stringify({ activa }) });
+    } catch (error) {
+      if (error.status) throw error;
+      const tenantId = Number(id);
+      demoTenants = demoTenants.map((tenant) => (tenant.id === tenantId ? { ...tenant, activa: Boolean(activa) } : tenant));
+      return { tenant: demoTenants.find((tenant) => tenant.id === tenantId), mode: 'local-demo' };
+    }
+  },
+  superadminAdmins: async (token, tenantId) => {
+    try {
+      return await request(`/superadmin/tenants/${tenantId}/admins`, { token });
+    } catch (error) {
+      if (error.status) throw error;
+      const id = Number(tenantId);
+      const tenant = demoTenants.find((item) => item.id === id);
+      return { tenant, admins: demoAdminsByTenant[id] || [], mode: 'local-demo' };
+    }
+  },
+  superadminCreateAdmin: async (token, tenantId, payload) => {
+    try {
+      return await request(`/superadmin/tenants/${tenantId}/admins`, { method: 'POST', token, body: JSON.stringify(payload) });
+    } catch (error) {
+      if (error.status) throw error;
+      const id = Number(tenantId);
+      const tenant = demoTenants.find((item) => item.id === id) || { slug: 'empresa' };
+      const username = String(payload?.username || '').trim().toLowerCase();
+      const admin = {
+        id: demoAdminSeq++,
+        empresa_id: id,
+        nombre: String(payload?.nombre || '').trim(),
+        username,
+        email: `${username}@${tenant.slug}.local`,
+        rol: 'admin',
+        created_at: new Date().toISOString()
+      };
+      const current = demoAdminsByTenant[id] || [];
+      demoAdminsByTenant[id] = [admin, ...current];
+      return { admin, temp_password: payload?.password || 'Tmp1234!', mode: 'local-demo' };
+    }
+  },
+  superadminResetAdminPassword: async (token, adminId, payload = {}) => {
+    try {
+      return await request(`/superadmin/admins/${adminId}/reset-password`, { method: 'POST', token, body: JSON.stringify(payload) });
+    } catch (error) {
+      if (error.status) throw error;
+      return { temp_password: payload.password || 'Tmp1234!', mode: 'local-demo' };
+    }
+  },
+  superadminUpdateAdmin: async (token, adminId, payload) => {
+    try {
+      return await request(`/superadmin/admins/${adminId}`, { method: 'PATCH', token, body: JSON.stringify(payload) });
+    } catch (error) {
+      if (error.status) throw error;
+      for (const tenantId of Object.keys(demoAdminsByTenant)) {
+        const index = (demoAdminsByTenant[tenantId] || []).findIndex((admin) => Number(admin.id) === Number(adminId));
+        if (index >= 0) {
+          const current = demoAdminsByTenant[tenantId][index];
+          const updated = {
+            ...current,
+            nombre: String(payload?.nombre || current.nombre).trim(),
+            username: String(payload?.username || current.username).trim().toLowerCase(),
+            updated_at: new Date().toISOString()
+          };
+          demoAdminsByTenant[tenantId][index] = updated;
+          return { admin: updated, mode: 'local-demo' };
+        }
+      }
+      throw new Error('Admin no encontrado');
+    }
+  },
+  superadminDeleteAdmin: async (token, adminId) => {
+    try {
+      return await request(`/superadmin/admins/${adminId}`, { method: 'DELETE', token });
+    } catch (error) {
+      if (error.status) throw error;
+      for (const tenantId of Object.keys(demoAdminsByTenant)) {
+        demoAdminsByTenant[tenantId] = (demoAdminsByTenant[tenantId] || []).filter((admin) => Number(admin.id) !== Number(adminId));
+      }
+      return null;
+    }
   }
 };

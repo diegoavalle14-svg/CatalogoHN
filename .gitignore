@@ -22,6 +22,8 @@ pnpm-debug.log*
 *.log
 uploads/
 backend/uploads/
+.elasticbeanstalk/
+.aws-sam/
 
 # Editor / System files
 .DS_Store

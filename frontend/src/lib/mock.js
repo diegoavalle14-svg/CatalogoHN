@@ -1,6 +1,7 @@
 export const mockTenant = {
   id: 1,
   nombre: 'KOLBEN HONDURAS',
+  subnombre: 'Repuestos mayoristas',
   slug: 'kolben',
   color_primario: '#F5C200',
   color_secundario: '#111111',

@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
@@ -9,6 +10,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 
 const router = express.Router();
+let tenantProfileColumnsReady = false;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -64,22 +66,36 @@ router.get('/admin/summary', authenticate, requireRole('admin', 'superadmin'), a
 });
 
 router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const { logo_url, color_primario, color_secundario, fuente } = req.body;
+  const { nombre, subnombre, logo_url, color_primario, color_secundario, fuente } = req.body;
   try {
+    if (!tenantProfileColumnsReady) {
+      await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre VARCHAR(140) DEFAULT ''`);
+      tenantProfileColumnsReady = true;
+    }
     const result = await db.query(
       `UPDATE empresas
-       SET logo_url = COALESCE($1, logo_url),
-           color_primario = COALESCE($2, color_primario),
-           color_secundario = COALESCE($3, color_secundario),
-           fuente = COALESCE($4, fuente),
+       SET nombre = COALESCE($1, nombre),
+           subnombre = COALESCE($2, subnombre),
+           logo_url = COALESCE($3, logo_url),
+           color_primario = COALESCE($4, color_primario),
+           color_secundario = COALESCE($5, color_secundario),
+           fuente = COALESCE($6, fuente),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5
+       WHERE id = $7
        RETURNING *`,
-      [logo_url, color_primario, color_secundario, fuente, req.tenant.id]
+      [
+        nombre ? String(nombre).trim() : null,
+        subnombre === undefined ? null : String(subnombre || '').trim(),
+        logo_url,
+        color_primario,
+        color_secundario,
+        fuente,
+        req.tenant.id
+      ]
     );
     res.json({ tenant: result.rows[0] });
   } catch (error) {
-    res.json({ tenant: { ...mock.empresa, logo_url, color_primario, color_secundario, fuente }, mode: 'mock' });
+    res.json({ tenant: { ...mock.empresa, nombre, subnombre, logo_url, color_primario, color_secundario, fuente }, mode: 'mock' });
   }
 });
 
@@ -121,6 +137,272 @@ router.get('/admin/catalog', authenticate, requireRole('admin', 'superadmin'), a
     });
   } catch (error) {
     res.json(mockAdminCatalog());
+  }
+});
+
+router.get('/admin/clients', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const clients = await queryAdminClients(req.tenant.id);
+    res.json({ clientes: clients.rows });
+  } catch (error) {
+    res.json({
+      clientes: mockAdminClients(),
+      mode: 'mock'
+    });
+  }
+});
+
+router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  const payload = normalizeClientPayload(req.body || {});
+  if (!payload.nombre || !payload.email) {
+    return res.status(400).json({ message: 'Nombre y correo son requeridos' });
+  }
+
+  let client;
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+    const passwordHash = await bcrypt.hash(payload.password || 'ClientPassword123', 10);
+    const userResult = await client.query(
+      `INSERT INTO usuarios (empresa_id, nombre, email, password_hash, rol)
+       VALUES ($1, $2, $3, $4, 'cliente')
+       RETURNING id`,
+      [req.tenant.id, payload.nombre, payload.email, passwordHash]
+    );
+    const customerResult = await client.query(
+      `INSERT INTO clientes (usuario_id, empresa_id, condicion_credito, activo)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id`,
+      [userResult.rows[0].id, req.tenant.id, payload.condicion_credito, payload.activo]
+    );
+    await assignClientPriceList(client, req.tenant.id, customerResult.rows[0].id, payload.lista_precio_id);
+    await replaceClientBranches(client, customerResult.rows[0].id, payload.sucursales);
+    await client.query('COMMIT');
+
+    const saved = await getAdminClient(req.tenant.id, customerResult.rows[0].id);
+    res.status(201).json({ cliente: saved });
+  } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    res.status(error.statusCode || (error.code === '23505' ? 409 : 500)).json({
+      message: error.statusCode ? error.message : (error.code === '23505' ? 'Ya existe un usuario con ese correo' : 'No se pudo crear el cliente')
+    });
+  } finally {
+    if (client) client.release();
+  }
+});
+
+router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  const payload = normalizeClientPayload(req.body || {}, true);
+  let client;
+
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+    const current = await client.query(
+      `SELECT c.id, c.usuario_id
+       FROM clientes c
+       WHERE c.id = $1 AND c.empresa_id = $2
+       LIMIT 1`,
+      [req.params.id, req.tenant.id]
+    );
+    if (!current.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+
+    let passwordHash = null;
+    if (payload.password) passwordHash = await bcrypt.hash(payload.password, 10);
+
+    await client.query(
+      `UPDATE usuarios
+       SET nombre = COALESCE($1, nombre),
+           email = COALESCE($2, email),
+           password_hash = COALESCE($3, password_hash),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4 AND empresa_id = $5`,
+      [payload.nombre, payload.email, passwordHash, current.rows[0].usuario_id, req.tenant.id]
+    );
+    await client.query(
+      `UPDATE clientes
+       SET condicion_credito = COALESCE($1, condicion_credito),
+           activo = COALESCE($2, activo),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3 AND empresa_id = $4`,
+      [payload.condicion_credito, payload.activo, req.params.id, req.tenant.id]
+    );
+    if (payload.lista_precio_id !== undefined) {
+      await assignClientPriceList(client, req.tenant.id, req.params.id, payload.lista_precio_id);
+    }
+    if (Array.isArray(payload.sucursales)) {
+      await replaceClientBranches(client, req.params.id, payload.sucursales);
+    }
+    await client.query('COMMIT');
+
+    const saved = await getAdminClient(req.tenant.id, req.params.id);
+    res.json({ cliente: saved });
+  } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    res.status(error.statusCode || (error.code === '23505' ? 409 : 500)).json({
+      message: error.statusCode ? error.message : (error.code === '23505' ? 'Ya existe un usuario con ese correo' : 'No se pudo actualizar el cliente')
+    });
+  } finally {
+    if (client) client.release();
+  }
+});
+
+router.patch('/admin/clients/:id/status', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const result = await db.query(
+      `UPDATE clientes
+       SET activo = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND empresa_id = $3
+       RETURNING id`,
+      [Boolean(req.body.activo), req.params.id, req.tenant.id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ message: 'Cliente no encontrado' });
+    res.json({ cliente: await getAdminClient(req.tenant.id, req.params.id) });
+  } catch (error) {
+    res.status(500).json({ message: 'No se pudo cambiar el estado del cliente' });
+  }
+});
+
+router.get('/admin/price-lists', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT lp.*,
+              count(DISTINCT clp.cliente_id)::int AS clientes,
+              count(DISTINCT pr.producto_id)::int AS productos_con_precio
+       FROM listas_precios lp
+       LEFT JOIN cliente_lista_precio clp ON clp.lista_precio_id = lp.id
+       LEFT JOIN precios pr ON pr.lista_precio_id = lp.id
+       WHERE lp.empresa_id = $1
+       GROUP BY lp.id
+       ORDER BY lp.nombre`,
+      [req.tenant.id]
+    );
+    res.json({ listas: result.rows });
+  } catch (error) {
+    res.json({ listas: mockAdminPriceLists(), mode: 'mock' });
+  }
+});
+
+router.post('/admin/price-lists', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  const nombre = String(req.body?.nombre || '').trim();
+  if (!nombre) return res.status(400).json({ message: 'Nombre de lista requerido' });
+
+  try {
+    const result = await db.query(
+      `INSERT INTO listas_precios (empresa_id, nombre)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [req.tenant.id, nombre]
+    );
+    res.status(201).json({ lista: result.rows[0] });
+  } catch (error) {
+    res.status(error.code === '23505' ? 409 : 500).json({ message: error.code === '23505' ? 'La lista ya existe' : 'No se pudo crear la lista' });
+  }
+});
+
+router.patch('/admin/price-lists/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  const nombre = String(req.body?.nombre || '').trim();
+  if (!nombre) return res.status(400).json({ message: 'Nombre de lista requerido' });
+
+  try {
+    const result = await db.query(
+      `UPDATE listas_precios
+       SET nombre = $1
+       WHERE id = $2 AND empresa_id = $3
+       RETURNING *`,
+      [nombre, req.params.id, req.tenant.id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ message: 'Lista no encontrada' });
+    res.json({ lista: result.rows[0] });
+  } catch (error) {
+    res.status(error.code === '23505' ? 409 : 500).json({ message: error.code === '23505' ? 'La lista ya existe' : 'No se pudo actualizar la lista' });
+  }
+});
+
+router.get('/admin/prices', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const [lists, products] = await Promise.all([
+      db.query('SELECT * FROM listas_precios WHERE empresa_id = $1 ORDER BY nombre', [req.tenant.id]),
+      db.query(
+        `SELECT p.id, p.sku, p.descripcion, p.visible, m.nombre AS marca, c.nombre AS categoria
+         FROM productos p
+         LEFT JOIN marcas m ON m.id = p.marca_id
+         LEFT JOIN categorias c ON c.id = p.categoria_id
+         WHERE p.empresa_id = $1
+         ORDER BY p.posicion, p.sku`,
+        [req.tenant.id]
+      )
+    ]);
+    const prices = await db.query(
+      `SELECT pr.producto_id, pr.lista_precio_id, pr.precio, pr.precio_promocion
+       FROM precios pr
+       JOIN productos p ON p.id = pr.producto_id
+       JOIN listas_precios lp ON lp.id = pr.lista_precio_id
+       WHERE p.empresa_id = $1 AND lp.empresa_id = $1`,
+      [req.tenant.id]
+    );
+    res.json({
+      listas: lists.rows.map((list) => ({
+        ...list,
+        precios: prices.rows.filter((price) => price.lista_precio_id === list.id)
+      })),
+      productos: products.rows
+    });
+  } catch (error) {
+    res.json({ listas: mockAdminPriceLists(), productos: mock.productos, mode: 'mock' });
+  }
+});
+
+router.put('/admin/price-lists/:id/prices', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  const prices = Array.isArray(req.body?.precios) ? req.body.precios : [];
+  const listId = Number(req.params.id);
+  if (!listId) return res.status(400).json({ message: 'Lista invalida' });
+
+  let client;
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+    const list = await client.query('SELECT id FROM listas_precios WHERE id = $1 AND empresa_id = $2', [listId, req.tenant.id]);
+    if (!list.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Lista no encontrada' });
+    }
+
+    for (const row of prices) {
+      const productId = Number(row.producto_id);
+      if (!productId) continue;
+      const price = Number(row.precio);
+      const promo = row.precio_promocion === '' || row.precio_promocion === null || row.precio_promocion === undefined ? null : Number(row.precio_promocion);
+      if (!Number.isFinite(price) || price < 0 || (promo !== null && (!Number.isFinite(promo) || promo < 0))) continue;
+
+      await client.query(
+        `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion)
+         SELECT p.id, $2, $3, $4
+         FROM productos p
+         WHERE p.id = $1 AND p.empresa_id = $5
+         ON CONFLICT (producto_id, lista_precio_id)
+         DO UPDATE SET precio = EXCLUDED.precio,
+                       precio_promocion = EXCLUDED.precio_promocion`,
+        [productId, listId, price, promo, req.tenant.id]
+      );
+    }
+
+    await client.query('COMMIT');
+    const updated = await db.query(
+      `SELECT producto_id, lista_precio_id, precio, precio_promocion
+       FROM precios
+       WHERE lista_precio_id = $1`,
+      [listId]
+    );
+    res.json({ precios: updated.rows });
+  } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    res.status(500).json({ message: 'No se pudieron guardar los precios' });
+  } finally {
+    if (client) client.release();
   }
 });
 
@@ -317,7 +599,14 @@ async function queryAdminProducts(tenantId) {
      LEFT JOIN marcas m ON m.id = p.marca_id
      LEFT JOIN categorias c ON c.id = p.categoria_id
      LEFT JOIN producto_imagenes pi ON pi.producto_id = p.id
-     LEFT JOIN precios pr ON pr.producto_id = p.id
+     LEFT JOIN LATERAL (
+       SELECT lp.id
+       FROM listas_precios lp
+       WHERE lp.empresa_id = p.empresa_id
+       ORDER BY CASE WHEN lp.nombre = 'Distribuidor Mayorista' THEN 0 ELSE 1 END, lp.id
+       LIMIT 1
+     ) default_lp ON true
+     LEFT JOIN precios pr ON pr.producto_id = p.id AND pr.lista_precio_id = default_lp.id
      WHERE p.empresa_id = $1
      GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion
      ORDER BY p.posicion, p.created_at DESC`,
@@ -336,12 +625,135 @@ async function getAdminProduct(tenantId, productId) {
      LEFT JOIN marcas m ON m.id = p.marca_id
      LEFT JOIN categorias c ON c.id = p.categoria_id
      LEFT JOIN producto_imagenes pi ON pi.producto_id = p.id
-     LEFT JOIN precios pr ON pr.producto_id = p.id
+     LEFT JOIN LATERAL (
+       SELECT lp.id
+       FROM listas_precios lp
+       WHERE lp.empresa_id = p.empresa_id
+       ORDER BY CASE WHEN lp.nombre = 'Distribuidor Mayorista' THEN 0 ELSE 1 END, lp.id
+       LIMIT 1
+     ) default_lp ON true
+     LEFT JOIN precios pr ON pr.producto_id = p.id AND pr.lista_precio_id = default_lp.id
      WHERE p.empresa_id = $1 AND p.id = $2
      GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion`,
     [tenantId, productId]
   );
   return result.rows[0];
+}
+
+async function queryAdminClients(tenantId) {
+  return db.query(
+    `SELECT c.id,
+            c.usuario_id,
+            c.condicion_credito,
+            c.activo,
+            c.created_at,
+            c.updated_at,
+            u.nombre,
+            u.email,
+            lp.id AS lista_precio_id,
+            lp.nombre AS lista_precio,
+            COALESCE(
+              json_agg(
+                DISTINCT jsonb_build_object(
+                  'id', s.id,
+                  'nombre', s.nombre,
+                  'direccion', s.direccion
+                )
+              ) FILTER (WHERE s.id IS NOT NULL),
+              '[]'
+            ) AS sucursales,
+            access.fecha AS ultimo_acceso,
+            access.ip AS ultimo_ip,
+            access.user_agent AS ultimo_user_agent,
+            access.geolocalizacion AS ultimo_geolocalizacion
+     FROM clientes c
+     JOIN usuarios u ON u.id = c.usuario_id
+     LEFT JOIN cliente_lista_precio clp ON clp.cliente_id = c.id
+     LEFT JOIN listas_precios lp ON lp.id = clp.lista_precio_id
+     LEFT JOIN sucursales s ON s.cliente_id = c.id
+     LEFT JOIN LATERAL (
+       SELECT a.fecha, a.ip, a.user_agent, a.geolocalizacion
+       FROM accesos_log a
+       WHERE a.usuario_id = u.id
+       ORDER BY a.fecha DESC
+       LIMIT 1
+     ) access ON true
+     WHERE c.empresa_id = $1
+     GROUP BY c.id, u.id, lp.id, access.fecha, access.ip, access.user_agent, access.geolocalizacion
+     ORDER BY c.activo DESC, u.nombre`,
+    [tenantId]
+  );
+}
+
+async function getAdminClient(tenantId, clientId) {
+  const result = await queryAdminClients(tenantId);
+  return result.rows.find((client) => Number(client.id) === Number(clientId));
+}
+
+function normalizeClientPayload(input, partial = false) {
+  const output = {
+    nombre: input.nombre === undefined && partial ? null : String(input.nombre || '').trim(),
+    email: input.email === undefined && partial ? null : String(input.email || input.usuario || '').trim().toLowerCase(),
+    password: input.password ? String(input.password) : null,
+    condicion_credito: input.condicion_credito === undefined && partial ? null : String(input.condicion_credito || input.credito || 'Contado').trim(),
+    activo: input.activo === undefined ? (partial ? null : true) : Boolean(input.activo),
+    lista_precio_id: input.lista_precio_id === undefined ? undefined : normalizeId(input.lista_precio_id, true),
+    sucursales: input.sucursales
+  };
+
+  if (!Array.isArray(output.sucursales) && typeof input.sucursales_text === 'string') {
+    output.sucursales = input.sucursales_text
+      .split('\n')
+      .map((line) => {
+        const [nombre, ...addressParts] = line.split('|');
+        return { nombre: nombre?.trim(), direccion: addressParts.join('|').trim() };
+      })
+      .filter((branch) => branch.nombre);
+  }
+
+  if (Array.isArray(output.sucursales)) {
+    output.sucursales = output.sucursales
+      .map((branch) => ({
+        nombre: String(branch.nombre || '').trim(),
+        direccion: String(branch.direccion || '').trim()
+      }))
+      .filter((branch) => branch.nombre);
+  }
+
+  return output;
+}
+
+async function assignClientPriceList(client, tenantId, clientId, listId) {
+  if (!listId) {
+    await client.query('DELETE FROM cliente_lista_precio WHERE cliente_id = $1', [clientId]);
+    return;
+  }
+
+  const list = await client.query('SELECT id FROM listas_precios WHERE id = $1 AND empresa_id = $2', [listId, tenantId]);
+  if (!list.rows[0]) {
+    const error = new Error('Lista de precios no encontrada');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await client.query(
+    `INSERT INTO cliente_lista_precio (cliente_id, lista_precio_id)
+     VALUES ($1, $2)
+     ON CONFLICT (cliente_id)
+     DO UPDATE SET lista_precio_id = EXCLUDED.lista_precio_id`,
+    [clientId, listId]
+  );
+}
+
+async function replaceClientBranches(client, clientId, branches = []) {
+  if (!Array.isArray(branches)) return;
+  await client.query('DELETE FROM sucursales WHERE cliente_id = $1', [clientId]);
+  for (const branch of branches) {
+    await client.query(
+      'INSERT INTO sucursales (cliente_id, nombre, direccion) VALUES ($1, $2, $3)',
+      [clientId, branch.nombre, branch.direccion || 'Direccion pendiente']
+    );
+  }
 }
 
 async function replaceProductImages(productId, images = []) {
@@ -391,6 +803,44 @@ function mockAdminCatalog() {
     }),
     mode: 'mock'
   };
+}
+
+function mockAdminClients() {
+  return [
+    {
+      id: 1,
+      usuario_id: 3,
+      nombre: 'Auto Repuestos El Centro',
+      email: 'cliente1@autorepuestos.com',
+      condicion_credito: 'Credito 30 Dias',
+      activo: true,
+      lista_precio_id: 1,
+      lista_precio: 'Distribuidor Mayorista',
+      sucursales: mock.sucursales,
+      ultimo_acceso: new Date().toISOString(),
+      ultimo_ip: '190.0.0.10',
+      ultimo_user_agent: 'iPhone / Safari',
+      ultimo_geolocalizacion: 'Tegucigalpa, Honduras'
+    }
+  ];
+}
+
+function mockAdminPriceLists() {
+  return [
+    {
+      id: 1,
+      empresa_id: mock.empresa.id,
+      nombre: 'Distribuidor Mayorista',
+      clientes: 1,
+      productos_con_precio: mock.productos.length,
+      precios: mock.productos.map((product) => ({
+        producto_id: product.id,
+        lista_precio_id: 1,
+        precio: product.precios.mayorista,
+        precio_promocion: product.precios.promocion || null
+      }))
+    }
+  ];
 }
 
 async function optimizeImage(buffer) {

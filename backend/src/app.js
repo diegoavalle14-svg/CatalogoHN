@@ -13,8 +13,12 @@ const superadminRoutes = require('./routes/superadmin');
 const app = express();
 const port = process.env.PORT || 3001;
 
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true,
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean) : true,
   credentials: true
 }));
 app.use(express.json({ limit: '2mb' }));
