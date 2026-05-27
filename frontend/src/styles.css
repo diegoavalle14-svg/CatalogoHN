@@ -135,6 +135,10 @@ button {
   line-height: 1;
 }
 
+.logo-mark b svg {
+  display: block;
+}
+
 .logo-mark small {
   position: absolute;
   bottom: 4px;
@@ -147,12 +151,32 @@ button {
   text-align: center;
 }
 
+.tenant-logo-mark.needs-logo {
+  background: color-mix(in srgb, var(--tenant-primary, var(--yellow)) 78%, #fff);
+  color: #111;
+}
+
+.tenant-logo-mark.needs-logo small {
+  bottom: 5px;
+  font-size: 4px;
+  letter-spacing: .1px;
+  text-transform: uppercase;
+}
+
+.tenant-logo-mark.has-logo {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12);
+}
+
+.tenant-logo-mark.has-logo::before {
+  display: none;
+}
+
 .tenant-logo-mark img {
-  position: relative;
-  z-index: 1;
-  width: 82%;
-  height: 82%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  padding: 4px;
 }
 
 .tenant-logo-mark.small {
@@ -2447,6 +2471,28 @@ button {
 
 .admin-site-form {
   gap: 12px;
+}
+
+.admin-logo-upload {
+  gap: 8px;
+}
+
+.admin-logo-upload > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  border: 1px dashed #c7c7c7;
+  border-radius: 9px;
+  background: #fafafa;
+  padding: 10px;
+}
+
+.admin-logo-upload em {
+  color: #111;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .admin-color-grid {

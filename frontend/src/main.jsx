@@ -136,10 +136,17 @@ function SuperAdminShell({ session, onLogout }) {
 
 function TenantLogoMark({ tenant, size = 'normal' }) {
   const label = tenant?.nombre || 'Empresa';
+  const hasLogo = Boolean(tenant?.logo_url);
   return (
-    <span className={`logo-mark tenant-logo-mark ${size === 'small' ? 'small' : ''}`}>
-      {tenant?.logo_url ? <img src={tenant.logo_url} alt="" /> : <b>{initials(label).slice(0, 1) || 'E'}</b>}
-      <small>{label.split(/\s+/)[0] || 'SITE'}</small>
+    <span className={`logo-mark tenant-logo-mark ${size === 'small' ? 'small' : ''} ${hasLogo ? 'has-logo' : 'needs-logo'}`}>
+      {hasLogo ? (
+        <img src={tenant.logo_url} alt={`Logo de ${label}`} />
+      ) : (
+        <>
+          <b><Plus size={size === 'small' ? 14 : 18} strokeWidth={3} /></b>
+          <small>Colocar logo</small>
+        </>
+      )}
     </span>
   );
 }
@@ -1155,7 +1162,14 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, on
                   {SITE_FONT_OPTIONS.map((font) => <option value={font.value} key={font.value}>{font.label}</option>)}
                 </select>
               </label>
-              <label>Logo de la empresa<input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} /></label>
+              <label className="admin-logo-upload">
+                Logo de la empresa
+                <span>
+                  <TenantLogoMark tenant={sitePreviewTenant} />
+                  <em>{sitePreviewTenant.logo_url ? 'Cambiar logo' : 'Colocar logo'}</em>
+                </span>
+                <input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} />
+              </label>
               <div className="admin-color-grid">
                 <label>Color primario<input type="color" value={form.color_primario || '#F5C200'} onChange={(event) => update('color_primario', event.target.value)} /></label>
                 <label>Color secundario<input type="color" value={form.color_secundario || '#111111'} onChange={(event) => update('color_secundario', event.target.value)} /></label>
