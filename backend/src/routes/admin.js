@@ -154,8 +154,8 @@ router.get('/admin/clients', authenticate, requireRole('admin', 'superadmin'), a
 
 router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const payload = normalizeClientPayload(req.body || {});
-  if (!payload.nombre || !payload.email) {
-    return res.status(400).json({ message: 'Nombre y correo son requeridos' });
+  if (!payload.nombre || !payload.username) {
+    return res.status(400).json({ message: 'Nombre y usuario son requeridos' });
   }
 
   let client;
@@ -164,10 +164,10 @@ router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), 
     await client.query('BEGIN');
     const passwordHash = await bcrypt.hash(payload.password || 'ClientPassword123', 10);
     const userResult = await client.query(
-      `INSERT INTO usuarios (empresa_id, nombre, email, password_hash, rol)
-       VALUES ($1, $2, $3, $4, 'cliente')
+      `INSERT INTO usuarios (empresa_id, nombre, username, email, password_hash, rol)
+       VALUES ($1, $2, $3, $4, $5, 'cliente')
        RETURNING id`,
-      [req.tenant.id, payload.nombre, payload.email, passwordHash]
+      [req.tenant.id, payload.nombre, payload.username, payload.email, passwordHash]
     );
     const customerResult = await client.query(
       `INSERT INTO clientes (usuario_id, empresa_id, condicion_credito, activo)
@@ -184,7 +184,7 @@ router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), 
   } catch (error) {
     if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(error.statusCode || (error.code === '23505' ? 409 : 500)).json({
-      message: error.statusCode ? error.message : (error.code === '23505' ? 'Ya existe un usuario con ese correo' : 'No se pudo crear el cliente')
+      message: error.statusCode ? error.message : (error.code === '23505' ? 'Ya existe un cliente con ese usuario' : 'No se pudo crear el cliente')
     });
   } finally {
     if (client) client.release();
@@ -216,11 +216,12 @@ router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmi
     await client.query(
       `UPDATE usuarios
        SET nombre = COALESCE($1, nombre),
-           email = COALESCE($2, email),
-           password_hash = COALESCE($3, password_hash),
+           username = COALESCE($2, username),
+           email = COALESCE($3, email),
+           password_hash = COALESCE($4, password_hash),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4 AND empresa_id = $5`,
-      [payload.nombre, payload.email, passwordHash, current.rows[0].usuario_id, req.tenant.id]
+       WHERE id = $5 AND empresa_id = $6`,
+      [payload.nombre, payload.username, payload.email, passwordHash, current.rows[0].usuario_id, req.tenant.id]
     );
     await client.query(
       `UPDATE clientes
@@ -243,7 +244,7 @@ router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmi
   } catch (error) {
     if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(error.statusCode || (error.code === '23505' ? 409 : 500)).json({
-      message: error.statusCode ? error.message : (error.code === '23505' ? 'Ya existe un usuario con ese correo' : 'No se pudo actualizar el cliente')
+      message: error.statusCode ? error.message : (error.code === '23505' ? 'Ya existe un cliente con ese usuario' : 'No se pudo actualizar el cliente')
     });
   } finally {
     if (client) client.release();
@@ -649,6 +650,7 @@ async function queryAdminClients(tenantId) {
             c.created_at,
             c.updated_at,
             u.nombre,
+            u.username,
             u.email,
             lp.id AS lista_precio_id,
             lp.nombre AS lista_precio,
@@ -691,9 +693,13 @@ async function getAdminClient(tenantId, clientId) {
 }
 
 function normalizeClientPayload(input, partial = false) {
+  const rawUsername = input.username ?? input.usuario ?? input.email;
+  const username = rawUsername === undefined && partial ? null : String(rawUsername || '').trim().toLowerCase();
+  const rawEmail = input.email === undefined && partial ? null : String(input.email || '').trim().toLowerCase();
   const output = {
     nombre: input.nombre === undefined && partial ? null : String(input.nombre || '').trim(),
-    email: input.email === undefined && partial ? null : String(input.email || input.usuario || '').trim().toLowerCase(),
+    username,
+    email: rawEmail || (username ? `${username}@cliente.local` : null),
     password: input.password ? String(input.password) : null,
     condicion_credito: input.condicion_credito === undefined && partial ? null : String(input.condicion_credito || input.credito || 'Contado').trim(),
     activo: input.activo === undefined ? (partial ? null : true) : Boolean(input.activo),

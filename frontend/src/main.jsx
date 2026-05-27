@@ -1204,8 +1204,8 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, on
         {editor.type === 'client' && (
           <div className="admin-form">
             <label>Nombre<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
-            <label>Correo<input value={form.email || form.usuario || ''} onChange={(event) => update('email', event.target.value)} /></label>
-            <label>Contrasena<input type="password" placeholder={form.id ? 'Dejar igual' : 'ClientPassword123'} value={form.password || ''} onChange={(event) => update('password', event.target.value)} /></label>
+            <label>Usuario<input value={form.username || form.usuario || ''} onChange={(event) => update('username', event.target.value)} /></label>
+            <label>Contrasena inicial<input type="password" placeholder={form.id ? 'Dejar igual' : 'Asignar contrasena'} value={form.password || ''} onChange={(event) => update('password', event.target.value)} /></label>
             <label>Lista<select value={form.lista_precio_id || ''} onChange={(event) => update('lista_precio_id', Number(event.target.value) || '')}>
               <option value="">Sin lista</option>
               {priceLists.map((list) => <option value={list.id} key={list.id}>{list.nombre}</option>)}
@@ -1309,7 +1309,7 @@ function normalizeAdminClient(client) {
     : 'Sin accesos registrados';
   return {
     ...client,
-    usuario: client.email || client.usuario || '',
+    usuario: client.username || client.usuario || client.email || '',
     lista: client.lista_precio || client.lista || 'Sin lista',
     credito: client.condicion_credito || client.credito || 'Contado',
     tipo: branches.length > 1 ? 'Multi-sucursal' : 'Estandar',
@@ -1346,7 +1346,8 @@ function prepareClientPayload(client) {
   return {
     id: client.id,
     nombre: String(client.nombre || '').trim(),
-    email: String(client.email || client.usuario || '').trim().toLowerCase(),
+    username: String(client.username || client.usuario || client.email || '').trim().toLowerCase(),
+    email: client.email && !String(client.email).endsWith('@cliente.local') ? String(client.email).trim().toLowerCase() : undefined,
     password: client.password || undefined,
     condicion_credito: String(client.condicion_credito || client.credito || 'Contado').trim(),
     activo: client.activo !== false,
