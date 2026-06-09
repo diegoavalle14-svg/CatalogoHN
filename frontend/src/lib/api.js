@@ -116,6 +116,9 @@ export const api = {
     const method = client.id ? 'PATCH' : 'POST';
     return request(path, { method, token, body: JSON.stringify(client) });
   },
+  adminDeleteClient: async (token, id) => {
+    return request(`/admin/clients/${id}`, { method: 'DELETE', token });
+  },
   adminSetClientActive: async (token, id, activo) => {
     return request(`/admin/clients/${id}/status`, { method: 'PATCH', token, body: JSON.stringify({ activo }) });
   },

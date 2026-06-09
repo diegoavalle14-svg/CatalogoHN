@@ -1163,6 +1163,36 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
     }
   }
 
+  async function deleteProduct(product) {
+    const ok = window.confirm(`Eliminar producto ${product.sku || product.descripcion}?`) && window.confirm('Segunda confirmación requerida');
+    if (!ok) return;
+    const previousProducts = products;
+    setProducts((current) => current.filter((item) => item.id !== product.id));
+    try {
+      await api.adminDeleteProduct(session.token, product.id);
+      const latestPrices = await api.adminPrices(session.token);
+      setPriceData(normalizeAdminPriceData(latestPrices));
+    } catch (error) {
+      setProducts(previousProducts);
+      window.alert(error.message || 'No se pudo eliminar el producto');
+    }
+  }
+
+  async function deleteClient(client) {
+    const ok = window.confirm(`Eliminar cliente ${client.nombre}?`) && window.confirm('Segunda confirmación requerida');
+    if (!ok) return;
+    const previousClients = clients;
+    setClients((current) => current.filter((item) => item.id !== client.id));
+    try {
+      await api.adminDeleteClient(session.token, client.id);
+      const latestPrices = await api.adminPrices(session.token);
+      setPriceData(normalizeAdminPriceData(latestPrices));
+    } catch (error) {
+      setClients(previousClients);
+      window.alert(error.message || 'No se pudo eliminar el cliente');
+    }
+  }
+
   async function deleteOrder(id) {
     const ok = window.confirm('Confirmar eliminación del pedido') && window.confirm('Segunda confirmación requerida');
     if (!ok) return;
@@ -1337,6 +1367,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
             onProductEdit={(product) => setEditor({ type: 'product', title: 'Editar producto', value: product })}
             onToggle={(product) => updateProduct(product.id, { visible: !product.visible })}
             onPosition={(product, posicion) => updateProduct(product.id, { posicion })}
+            onDelete={deleteProduct}
             onBrands={() => setEditor({ type: 'brands', title: 'Marcas', value: brands })}
             onCategories={() => setEditor({ type: 'categories', title: 'Categorías', value: categories })}
           />
@@ -1348,6 +1379,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
             onNew={() => setEditor({ type: 'client', title: 'Nuevo cliente', value: {} })}
             onEdit={(client) => setEditor({ type: 'client', title: 'Editar cliente', value: client })}
             onToggle={toggleClient}
+            onDelete={deleteClient}
           />
         )}
 
@@ -1495,7 +1527,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   );
 }
 
-function AdminCatalogSection({ products, brands, categories, onNew, onProductEdit, onToggle, onPosition, onBrands, onCategories }) {
+function AdminCatalogSection({ products, brands, categories, onNew, onProductEdit, onToggle, onPosition, onDelete, onBrands, onCategories }) {
   const [query, setQuery] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('all');
   const filteredProducts = useMemo(() => {
@@ -1547,7 +1579,10 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
                 <small>{product.marca} · {product.specs?.aplicacion || product.descripcion}</small>
                 <ProductStockPill product={product} className="admin-stock-badge" />
               </div>
-              <button onClick={() => onProductEdit(product)}>Editar</button>
+              <div className="admin-row-actions">
+                <button onClick={() => onProductEdit(product)}>Editar</button>
+                <button className="danger-icon-button" onClick={() => onDelete(product)}>Eliminar</button>
+              </div>
             </div>
             <footer>
               <label>Pos.<input value={product.posicion || 1} onChange={(event) => onPosition(product, Number(event.target.value) || 1)} /></label>
@@ -1561,7 +1596,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
   );
 }
 
-function AdminClientsSection({ clients, onNew, onEdit, onToggle }) {
+function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const filteredClients = useMemo(() => {
@@ -1614,7 +1649,10 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle }) {
               <small>{client.usuario} · {client.lista} · {client.credito} · {client.tipo}</small>
               <small>{client.acceso}</small>
             </span>
-            <b onClick={(event) => { event.stopPropagation(); onToggle(client); }} className={client.activo ? 'client-state on' : 'client-state'}>{client.activo ? 'Activo' : 'Inactivo'}</b>
+            <span className="admin-client-actions">
+              <b onClick={(event) => { event.stopPropagation(); onToggle(client); }} className={client.activo ? 'client-state on' : 'client-state'}>{client.activo ? 'Activo' : 'Inactivo'}</b>
+              <span role="button" tabIndex={0} className="danger-icon-button" onClick={(event) => { event.stopPropagation(); onDelete(client); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); onDelete(client); } }}>Eliminar</span>
+            </span>
           </button>
         ))}
       </div>

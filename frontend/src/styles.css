@@ -4461,6 +4461,31 @@ button {
   font-weight: 900;
 }
 
+.admin-row-actions,
+.admin-client-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-row-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.danger-icon-button {
+  min-height: 27px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: #fee8ea;
+  color: var(--danger);
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
 .admin-product-row footer {
   display: flex;
   align-items: center;
@@ -4585,6 +4610,10 @@ button {
   min-width: 0;
   display: grid;
   gap: 3px;
+}
+
+.admin-client-actions {
+  justify-content: flex-end;
 }
 
 .client-avatar {

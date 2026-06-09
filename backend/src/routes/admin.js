@@ -266,6 +266,48 @@ router.patch('/admin/clients/:id/status', authenticate, requireRole('admin', 'su
   }
 });
 
+router.delete('/admin/clients/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  let client;
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+    const current = await client.query(
+      `SELECT c.id, c.usuario_id,
+              EXISTS (
+                SELECT 1
+                FROM pedidos p
+                WHERE p.cliente_id = c.id
+              ) AS has_orders
+       FROM clientes c
+       WHERE c.id = $1 AND c.empresa_id = $2
+       LIMIT 1`,
+      [req.params.id, req.tenant.id]
+    );
+    const target = current.rows[0];
+    if (!target) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+    if (target.has_orders) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ message: 'Este cliente tiene pedidos. Desactivalo para conservar el historial.' });
+    }
+
+    await client.query('DELETE FROM accesos_log WHERE usuario_id = $1', [target.usuario_id]);
+    await client.query('DELETE FROM sucursales WHERE cliente_id = $1', [target.id]);
+    await client.query('DELETE FROM cliente_lista_precio WHERE cliente_id = $1', [target.id]);
+    await client.query('DELETE FROM clientes WHERE id = $1 AND empresa_id = $2', [target.id, req.tenant.id]);
+    await client.query('DELETE FROM usuarios WHERE id = $1 AND empresa_id = $2 AND rol = $3', [target.usuario_id, req.tenant.id, 'cliente']);
+    await client.query('COMMIT');
+    res.status(204).end();
+  } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    res.status(500).json({ message: 'No se pudo eliminar el cliente' });
+  } finally {
+    if (client) client.release();
+  }
+});
+
 router.get('/admin/price-lists', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const result = await db.query(
@@ -610,11 +652,42 @@ router.patch('/admin/products/:id', authenticate, requireRole('admin', 'superadm
 });
 
 router.delete('/admin/products/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  let client;
   try {
-    await db.query('DELETE FROM productos WHERE id = $1 AND empresa_id = $2', [req.params.id, req.tenant.id]);
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+    const current = await client.query(
+      `SELECT p.id,
+              EXISTS (
+                SELECT 1
+                FROM pedido_items pi
+                WHERE pi.producto_id = p.id
+              ) AS has_orders
+       FROM productos p
+       WHERE p.id = $1 AND p.empresa_id = $2
+       LIMIT 1`,
+      [req.params.id, req.tenant.id]
+    );
+    const target = current.rows[0];
+    if (!target) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+    if (target.has_orders) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ message: 'Este producto tiene pedidos. Ocultalo para conservar el historial.' });
+    }
+
+    await client.query('DELETE FROM producto_imagenes WHERE producto_id = $1', [target.id]);
+    await client.query('DELETE FROM precios WHERE producto_id = $1', [target.id]);
+    await client.query('DELETE FROM productos WHERE id = $1 AND empresa_id = $2', [target.id, req.tenant.id]);
+    await client.query('COMMIT');
     res.status(204).end();
   } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(500).json({ message: 'No se pudo eliminar el producto' });
+  } finally {
+    if (client) client.release();
   }
 });
 
