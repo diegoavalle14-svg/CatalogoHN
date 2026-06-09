@@ -4,13 +4,14 @@ const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
 const db = require('../config/database');
-const mock = require('../services/mockData');
 const { authenticate, requireRole } = require('../middleware/auth');
 const multer = require('multer');
 const sharp = require('sharp');
+const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn } = require('../services/schemaGuards');
 
 const router = express.Router();
 let tenantProfileColumnsReady = false;
+let clientPriceListConstraintReady = false;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -47,21 +48,7 @@ router.get('/admin/summary', authenticate, requireRole('admin', 'superadmin'), a
       tenant: req.tenant
     });
   } catch (error) {
-    res.json({
-      totals: { productos: mock.productos.length, clientes: 1, pedidos: mock.pedidos.length },
-      accesos: [
-        {
-          nombre: 'Auto Repuestos El Centro',
-          email: 'cliente1@autorepuestos.com',
-          fecha: new Date().toISOString(),
-          ip: '190.0.0.10',
-          user_agent: 'iPhone / Safari',
-          geolocalizacion: 'Tegucigalpa, Honduras'
-        }
-      ],
-      tenant: mock.empresa,
-      mode: 'mock'
-    });
+    res.status(500).json({ message: 'No se pudo cargar el resumen administrativo' });
   }
 });
 
@@ -95,14 +82,14 @@ router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), a
     );
     res.json({ tenant: result.rows[0] });
   } catch (error) {
-    res.json({ tenant: { ...mock.empresa, nombre, subnombre, logo_url, color_primario, color_secundario, fuente }, mode: 'mock' });
+    res.status(500).json({ message: 'No se pudo actualizar la configuración de la empresa' });
   }
 });
 
 router.post('/admin/uploads', authenticate, requireRole('admin', 'superadmin'), upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'Imagen requerida' });
 
-  const purpose = ['product', 'brand', 'tenant'].includes(req.body?.purpose) ? req.body.purpose : 'product';
+  const purpose = ['product', 'brand', 'category', 'tenant'].includes(req.body?.purpose) ? req.body.purpose : 'product';
   try {
     const optimized = await optimizeImage(req.file.buffer);
     const key = `${req.tenant.slug}/${purpose}/${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${optimized.ext}`;
@@ -123,6 +110,8 @@ router.post('/admin/uploads', authenticate, requireRole('admin', 'superadmin'), 
 
 router.get('/admin/catalog', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
+    await ensureProductInventoryColumns();
+    await ensureCategoryImageColumn();
     const [brands, categories, products] = await Promise.all([
       db.query('SELECT * FROM marcas WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
       db.query('SELECT * FROM categorias WHERE empresa_id = $1 ORDER BY nombre', [req.tenant.id]),
@@ -136,7 +125,7 @@ router.get('/admin/catalog', authenticate, requireRole('admin', 'superadmin'), a
       productos: products.rows
     });
   } catch (error) {
-    res.json(mockAdminCatalog());
+    res.status(500).json({ message: 'No se pudo cargar el catálogo administrativo' });
   }
 });
 
@@ -145,15 +134,18 @@ router.get('/admin/clients', authenticate, requireRole('admin', 'superadmin'), a
     const clients = await queryAdminClients(req.tenant.id);
     res.json({ clientes: clients.rows });
   } catch (error) {
-    res.json({
-      clientes: mockAdminClients(),
-      mode: 'mock'
-    });
+    res.status(500).json({ message: 'No se pudieron cargar los clientes' });
   }
 });
 
 router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const payload = normalizeClientPayload(req.body || {});
+  await ensureClientPriceListConstraint();
+  let payload;
+  try {
+    payload = normalizeClientPayload(req.body || {});
+  } catch (error) {
+    return res.status(error.statusCode || 400).json({ message: error.message || 'Datos de cliente inválidos' });
+  }
   if (!payload.nombre || !payload.username) {
     return res.status(400).json({ message: 'Nombre y usuario son requeridos' });
   }
@@ -192,7 +184,13 @@ router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), 
 });
 
 router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const payload = normalizeClientPayload(req.body || {}, true);
+  await ensureClientPriceListConstraint();
+  let payload;
+  try {
+    payload = normalizeClientPayload(req.body || {}, true);
+  } catch (error) {
+    return res.status(error.statusCode || 400).json({ message: error.message || 'Datos de cliente inválidos' });
+  }
   let client;
 
   try {
@@ -240,7 +238,8 @@ router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmi
     await client.query('COMMIT');
 
     const saved = await getAdminClient(req.tenant.id, req.params.id);
-    res.json({ cliente: saved });
+    if (!saved) return res.status(404).json({ message: 'Cliente actualizado, pero no se pudo recargar' });
+    res.json({ cliente: saved, password_changed: Boolean(payload.password) });
   } catch (error) {
     if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(error.statusCode || (error.code === '23505' ? 409 : 500)).json({
@@ -283,7 +282,7 @@ router.get('/admin/price-lists', authenticate, requireRole('admin', 'superadmin'
     );
     res.json({ listas: result.rows });
   } catch (error) {
-    res.json({ listas: mockAdminPriceLists(), mode: 'mock' });
+    res.status(500).json({ message: 'No se pudieron cargar las listas de precios' });
   }
 });
 
@@ -291,16 +290,24 @@ router.post('/admin/price-lists', authenticate, requireRole('admin', 'superadmin
   const nombre = String(req.body?.nombre || '').trim();
   if (!nombre) return res.status(400).json({ message: 'Nombre de lista requerido' });
 
+  let client;
   try {
-    const result = await db.query(
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+    const result = await client.query(
       `INSERT INTO listas_precios (empresa_id, nombre)
        VALUES ($1, $2)
        RETURNING *`,
       [req.tenant.id, nombre]
     );
+    await replacePriceListClients(client, req.tenant.id, result.rows[0].id, req.body?.cliente_ids);
+    await client.query('COMMIT');
     res.status(201).json({ lista: result.rows[0] });
   } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(error.code === '23505' ? 409 : 500).json({ message: error.code === '23505' ? 'La lista ya existe' : 'No se pudo crear la lista' });
+  } finally {
+    if (client) client.release();
   }
 });
 
@@ -308,62 +315,95 @@ router.patch('/admin/price-lists/:id', authenticate, requireRole('admin', 'super
   const nombre = String(req.body?.nombre || '').trim();
   if (!nombre) return res.status(400).json({ message: 'Nombre de lista requerido' });
 
+  let client;
   try {
-    const result = await db.query(
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+    const result = await client.query(
       `UPDATE listas_precios
        SET nombre = $1
        WHERE id = $2 AND empresa_id = $3
        RETURNING *`,
       [nombre, req.params.id, req.tenant.id]
     );
-    if (!result.rows[0]) return res.status(404).json({ message: 'Lista no encontrada' });
+    if (!result.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Lista no encontrada' });
+    }
+    await replacePriceListClients(client, req.tenant.id, req.params.id, req.body?.cliente_ids);
+    await client.query('COMMIT');
     res.json({ lista: result.rows[0] });
   } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(error.code === '23505' ? 409 : 500).json({ message: error.code === '23505' ? 'La lista ya existe' : 'No se pudo actualizar la lista' });
+  } finally {
+    if (client) client.release();
   }
 });
 
 router.get('/admin/prices', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    const [lists, products] = await Promise.all([
-      db.query('SELECT * FROM listas_precios WHERE empresa_id = $1 ORDER BY nombre', [req.tenant.id]),
-      db.query(
-        `SELECT p.id, p.sku, p.descripcion, p.visible, m.nombre AS marca, c.nombre AS categoria
-         FROM productos p
-         LEFT JOIN marcas m ON m.id = p.marca_id
-         LEFT JOIN categorias c ON c.id = p.categoria_id
-         WHERE p.empresa_id = $1
-         ORDER BY p.posicion, p.sku`,
-        [req.tenant.id]
-      )
-    ]);
-    const prices = await db.query(
-      `SELECT pr.producto_id, pr.lista_precio_id, pr.precio, pr.precio_promocion
-       FROM precios pr
-       JOIN productos p ON p.id = pr.producto_id
-       JOIN listas_precios lp ON lp.id = pr.lista_precio_id
-       WHERE p.empresa_id = $1 AND lp.empresa_id = $1`,
-      [req.tenant.id]
-    );
-    res.json({
-      listas: lists.rows.map((list) => ({
-        ...list,
-        precios: prices.rows.filter((price) => price.lista_precio_id === list.id)
-      })),
-      productos: products.rows
-    });
+    await ensurePriceVisibilityColumn();
+    res.json(await queryAdminPriceData(req.tenant.id));
   } catch (error) {
-    res.json({ listas: mockAdminPriceLists(), productos: mock.productos, mode: 'mock' });
+    res.status(500).json({ message: 'No se pudieron cargar los precios' });
+  }
+});
+
+router.post('/admin/price-lists/:id/sync', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  const listId = Number(req.params.id);
+  if (!listId) return res.status(400).json({ message: 'Lista inválida' });
+
+  try {
+    await ensureProductInventoryColumns();
+    await ensurePriceVisibilityColumn();
+    const list = await db.query('SELECT id FROM listas_precios WHERE id = $1 AND empresa_id = $2', [listId, req.tenant.id]);
+    if (!list.rows[0]) return res.status(404).json({ message: 'Lista no encontrada' });
+
+    const result = await db.query(
+      `WITH target AS (
+         SELECT id
+         FROM listas_precios
+         WHERE id = $1 AND empresa_id = $2
+       ),
+       default_lp AS (
+         SELECT id
+         FROM listas_precios
+         WHERE empresa_id = $2
+         ORDER BY CASE WHEN nombre = 'Distribuidor Mayorista' THEN 0 ELSE 1 END, id
+         LIMIT 1
+       )
+       INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, visible_cliente)
+       SELECT p.id,
+              target.id,
+              COALESCE(base.precio, 0),
+              base.precio_promocion,
+              true
+       FROM productos p
+       CROSS JOIN target
+       LEFT JOIN default_lp ON true
+       LEFT JOIN precios base ON base.producto_id = p.id AND base.lista_precio_id = default_lp.id
+       WHERE p.empresa_id = $2
+       ON CONFLICT (producto_id, lista_precio_id) DO NOTHING
+       RETURNING producto_id`,
+      [listId, req.tenant.id]
+    );
+    const payload = await queryAdminPriceData(req.tenant.id);
+    res.json({ ...payload, sincronizados: result.rowCount });
+  } catch (error) {
+    res.status(500).json({ message: 'No se pudo sincronizar la lista de precios' });
   }
 });
 
 router.put('/admin/price-lists/:id/prices', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const prices = Array.isArray(req.body?.precios) ? req.body.precios : [];
   const listId = Number(req.params.id);
-  if (!listId) return res.status(400).json({ message: 'Lista invalida' });
+  if (!listId) return res.status(400).json({ message: 'Lista inválida' });
 
   let client;
   try {
+    await ensureProductInventoryColumns();
+    await ensurePriceVisibilityColumn();
     client = await db.pool.connect();
     await client.query('BEGIN');
     const list = await client.query('SELECT id FROM listas_precios WHERE id = $1 AND empresa_id = $2', [listId, req.tenant.id]);
@@ -377,23 +417,25 @@ router.put('/admin/price-lists/:id/prices', authenticate, requireRole('admin', '
       if (!productId) continue;
       const price = Number(row.precio);
       const promo = row.precio_promocion === '' || row.precio_promocion === null || row.precio_promocion === undefined ? null : Number(row.precio_promocion);
+      const visible = row.visible_cliente === undefined ? true : Boolean(row.visible_cliente);
       if (!Number.isFinite(price) || price < 0 || (promo !== null && (!Number.isFinite(promo) || promo < 0))) continue;
 
       await client.query(
-        `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion)
-         SELECT p.id, $2, $3, $4
+        `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, visible_cliente)
+         SELECT p.id, $2, $3, $4, $6
          FROM productos p
          WHERE p.id = $1 AND p.empresa_id = $5
          ON CONFLICT (producto_id, lista_precio_id)
          DO UPDATE SET precio = EXCLUDED.precio,
-                       precio_promocion = EXCLUDED.precio_promocion`,
-        [productId, listId, price, promo, req.tenant.id]
+                       precio_promocion = EXCLUDED.precio_promocion,
+                       visible_cliente = EXCLUDED.visible_cliente`,
+        [productId, listId, price, promo, req.tenant.id, visible]
       );
     }
 
     await client.query('COMMIT');
     const updated = await db.query(
-      `SELECT producto_id, lista_precio_id, precio, precio_promocion
+      `SELECT producto_id, lista_precio_id, precio, precio_promocion, visible_cliente
        FROM precios
        WHERE lista_precio_id = $1`,
       [listId]
@@ -453,15 +495,16 @@ router.delete('/admin/brands/:id', authenticate, requireRole('admin', 'superadmi
 });
 
 router.post('/admin/categories', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const { nombre, color = '#F5C200' } = req.body || {};
+  const { nombre, color = '#F5C200', imagen_url = '' } = req.body || {};
   if (!nombre) return res.status(400).json({ message: 'Nombre de categoria requerido' });
 
   try {
+    await ensureCategoryImageColumn();
     const result = await db.query(
-      `INSERT INTO categorias (empresa_id, nombre, color)
-       VALUES ($1, $2, $3)
+      `INSERT INTO categorias (empresa_id, nombre, color, imagen_url)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [req.tenant.id, String(nombre).trim(), color]
+      [req.tenant.id, String(nombre).trim(), color, imagen_url]
     );
     res.status(201).json({ categoria: result.rows[0] });
   } catch (error) {
@@ -470,17 +513,19 @@ router.post('/admin/categories', authenticate, requireRole('admin', 'superadmin'
 });
 
 router.patch('/admin/categories/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const { nombre, color } = req.body || {};
+  const { nombre, color, imagen_url } = req.body || {};
   try {
+    await ensureCategoryImageColumn();
     const result = await db.query(
       `UPDATE categorias
        SET nombre = COALESCE($1, nombre),
-           color = COALESCE($2, color)
-       WHERE id = $3 AND empresa_id = $4
+           color = COALESCE($2, color),
+           imagen_url = COALESCE($3, imagen_url)
+       WHERE id = $4 AND empresa_id = $5
        RETURNING *`,
-      [nombre ? String(nombre).trim() : null, color ?? null, req.params.id, req.tenant.id]
+      [nombre ? String(nombre).trim() : null, color ?? null, imagen_url ?? null, req.params.id, req.tenant.id]
     );
-    if (!result.rows[0]) return res.status(404).json({ message: 'Categoria no encontrada' });
+    if (!result.rows[0]) return res.status(404).json({ message: 'Categoría no encontrada' });
     res.json({ categoria: result.rows[0] });
   } catch (error) {
     res.status(error.code === '23505' ? 409 : 500).json({ message: error.code === '23505' ? 'La categoria ya existe' : 'No se pudo actualizar la categoria' });
@@ -499,15 +544,16 @@ router.delete('/admin/categories/:id', authenticate, requireRole('admin', 'super
 router.post('/admin/products', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const payload = normalizeProductPayload(req.body || {});
   if (!payload.sku || !payload.descripcion) {
-    return res.status(400).json({ message: 'Codigo y descripcion son requeridos' });
+    return res.status(400).json({ message: 'Código y descripción son requeridos' });
   }
 
   try {
+    await ensureProductInventoryColumns();
     const result = await db.query(
-      `INSERT INTO productos (empresa_id, marca_id, categoria_id, sku, descripcion, specs, visible, en_promocion, posicion)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)
+      `INSERT INTO productos (empresa_id, marca_id, categoria_id, sku, descripcion, specs, stock_actual, stock_minimo, visible, en_promocion, posicion)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11)
        RETURNING id`,
-      [req.tenant.id, payload.marca_id, payload.categoria_id, payload.sku, payload.descripcion, JSON.stringify(payload.specs), payload.visible, payload.en_promocion, payload.posicion]
+      [req.tenant.id, payload.marca_id, payload.categoria_id, payload.sku, payload.descripcion, JSON.stringify(payload.specs), payload.stock_actual, payload.stock_minimo, payload.visible, payload.en_promocion, payload.posicion]
     );
     await replaceProductImages(result.rows[0].id, payload.imagenes);
     await upsertProductPrice(req.tenant.id, result.rows[0].id, payload.precio, payload.precio_promocion);
@@ -521,6 +567,7 @@ router.patch('/admin/products/:id', authenticate, requireRole('admin', 'superadm
   const payload = normalizeProductPayload(req.body || {}, true);
 
   try {
+    await ensureProductInventoryColumns();
     const result = await db.query(
       `UPDATE productos
        SET marca_id = COALESCE($1, marca_id),
@@ -531,8 +578,10 @@ router.patch('/admin/products/:id', authenticate, requireRole('admin', 'superadm
            visible = COALESCE($6, visible),
            en_promocion = COALESCE($7, en_promocion),
            posicion = COALESCE($8, posicion),
+           stock_actual = COALESCE($9, stock_actual),
+           stock_minimo = COALESCE($10, stock_minimo),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9 AND empresa_id = $10
+       WHERE id = $11 AND empresa_id = $12
        RETURNING id`,
       [
         payload.marca_id,
@@ -543,6 +592,8 @@ router.patch('/admin/products/:id', authenticate, requireRole('admin', 'superadm
         payload.visible,
         payload.en_promocion,
         payload.posicion,
+        payload.stock_actual,
+        payload.stock_minimo,
         req.params.id,
         req.tenant.id
       ]
@@ -577,10 +628,29 @@ function normalizeProductPayload(input, partial = false) {
     visible: input.visible === undefined ? (partial ? null : true) : Boolean(input.visible),
     en_promocion: input.en_promocion === undefined ? (partial ? null : false) : Boolean(input.en_promocion),
     posicion: input.posicion === undefined ? (partial ? null : 0) : Number(input.posicion) || 0,
+    stock_actual: normalizeStockValue(input.stock_actual, partial),
+    stock_minimo: normalizeStockValue(input.stock_minimo, partial),
     imagenes: input.imagenes,
     precio: input.precio === undefined ? null : Number(input.precio) || 0,
     precio_promocion: input.precio_promocion === undefined || input.precio_promocion === '' ? null : Number(input.precio_promocion) || null
   };
+}
+
+function normalizePassword(value) {
+  const password = String(value || '').trim();
+  if (!password) return null;
+  if (password.length < 8) {
+    const error = new Error('La nueva contraseña debe tener al menos 8 caracteres');
+    error.statusCode = 400;
+    throw error;
+  }
+  return password;
+}
+
+function normalizeStockValue(value, partial) {
+  if (value === undefined && partial) return null;
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? Math.floor(num) : 0;
 }
 
 function normalizeId(value, partial) {
@@ -590,6 +660,7 @@ function normalizeId(value, partial) {
 }
 
 async function queryAdminProducts(tenantId) {
+  await ensureProductInventoryColumns();
   return db.query(
     `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
       COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
@@ -616,6 +687,7 @@ async function queryAdminProducts(tenantId) {
 }
 
 async function getAdminProduct(tenantId, productId) {
+  await ensureProductInventoryColumns();
   const result = await db.query(
     `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
       COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
@@ -639,6 +711,56 @@ async function getAdminProduct(tenantId, productId) {
     [tenantId, productId]
   );
   return result.rows[0];
+}
+
+async function queryAdminPriceData(tenantId) {
+  await ensureProductInventoryColumns();
+  await ensurePriceVisibilityColumn();
+  const [lists, products, prices, assignedClients] = await Promise.all([
+    db.query('SELECT * FROM listas_precios WHERE empresa_id = $1 ORDER BY nombre', [tenantId]),
+    db.query(
+      `SELECT p.id, p.sku, p.descripcion, p.visible, p.stock_actual, p.stock_minimo, m.nombre AS marca, c.nombre AS categoria
+       FROM productos p
+       LEFT JOIN marcas m ON m.id = p.marca_id
+       LEFT JOIN categorias c ON c.id = p.categoria_id
+       WHERE p.empresa_id = $1
+       ORDER BY p.posicion, p.sku`,
+      [tenantId]
+    ),
+    db.query(
+      `SELECT pr.producto_id, pr.lista_precio_id, pr.precio, pr.precio_promocion, COALESCE(pr.visible_cliente, true) AS visible_cliente
+       FROM precios pr
+       JOIN productos p ON p.id = pr.producto_id
+       JOIN listas_precios lp ON lp.id = pr.lista_precio_id
+       WHERE p.empresa_id = $1 AND lp.empresa_id = $1`,
+      [tenantId]
+    ),
+    db.query(
+      `SELECT clp.lista_precio_id, c.id, u.nombre, u.username
+       FROM cliente_lista_precio clp
+       JOIN clientes c ON c.id = clp.cliente_id
+       JOIN usuarios u ON u.id = c.usuario_id
+       WHERE c.empresa_id = $1
+       ORDER BY u.nombre`,
+      [tenantId]
+    )
+  ]);
+
+  return {
+    listas: lists.rows.map((list) => {
+      const listPrices = prices.rows.filter((price) => Number(price.lista_precio_id) === Number(list.id));
+      const clients = assignedClients.rows.filter((client) => Number(client.lista_precio_id) === Number(list.id));
+      return {
+        ...list,
+        clientes: clients.length,
+        clientes_asignados: clients,
+        productos_con_precio: listPrices.filter((price) => Number(price.precio) > 0).length,
+        productos_faltantes: products.rows.length - listPrices.length,
+        precios: listPrices
+      };
+    }),
+    productos: products.rows
+  };
 }
 
 async function queryAdminClients(tenantId) {
@@ -696,11 +818,12 @@ function normalizeClientPayload(input, partial = false) {
   const rawUsername = input.username ?? input.usuario ?? input.email;
   const username = rawUsername === undefined && partial ? null : String(rawUsername || '').trim().toLowerCase();
   const rawEmail = input.email === undefined && partial ? null : String(input.email || '').trim().toLowerCase();
+  const email = rawEmail || (partial ? null : (username ? `${username}@cliente.local` : null));
   const output = {
     nombre: input.nombre === undefined && partial ? null : String(input.nombre || '').trim(),
     username,
-    email: rawEmail || (username ? `${username}@cliente.local` : null),
-    password: input.password ? String(input.password) : null,
+    email,
+    password: normalizePassword(input.password),
     condicion_credito: input.condicion_credito === undefined && partial ? null : String(input.condicion_credito || input.credito || 'Contado').trim(),
     activo: input.activo === undefined ? (partial ? null : true) : Boolean(input.activo),
     lista_precio_id: input.lista_precio_id === undefined ? undefined : normalizeId(input.lista_precio_id, true),
@@ -718,12 +841,20 @@ function normalizeClientPayload(input, partial = false) {
   }
 
   if (Array.isArray(output.sucursales)) {
+    const seenBranches = new Set();
     output.sucursales = output.sucursales
       .map((branch) => ({
+        id: normalizeId(branch.id, true),
         nombre: String(branch.nombre || '').trim(),
         direccion: String(branch.direccion || '').trim()
       }))
-      .filter((branch) => branch.nombre);
+      .filter((branch) => {
+        if (!branch.nombre) return false;
+        const key = branch.id ? `id:${branch.id}` : `${branch.nombre.toLowerCase()}|${branch.direccion.toLowerCase()}`;
+        if (seenBranches.has(key)) return false;
+        seenBranches.add(key);
+        return true;
+      });
   }
 
   return output;
@@ -751,13 +882,109 @@ async function assignClientPriceList(client, tenantId, clientId, listId) {
   );
 }
 
+async function ensureClientPriceListConstraint() {
+  if (clientPriceListConstraintReady) return;
+  await db.query(`
+    DELETE FROM cliente_lista_precio a
+    USING cliente_lista_precio b
+    WHERE a.ctid < b.ctid
+      AND a.cliente_id = b.cliente_id
+  `);
+  await db.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'cliente_lista_precio'::regclass
+          AND contype IN ('p', 'u')
+          AND conkey = ARRAY[
+            (
+              SELECT attnum
+              FROM pg_attribute
+              WHERE attrelid = 'cliente_lista_precio'::regclass
+                AND attname = 'cliente_id'
+            )
+          ]::smallint[]
+      ) THEN
+        ALTER TABLE cliente_lista_precio
+        ADD CONSTRAINT cliente_lista_precio_cliente_id_unique UNIQUE (cliente_id);
+      END IF;
+    END $$;
+  `);
+  clientPriceListConstraintReady = true;
+}
+
+async function replacePriceListClients(client, tenantId, listId, clientIds) {
+  if (!Array.isArray(clientIds)) return;
+  const ids = [...new Set(clientIds.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0))];
+  await client.query(
+    `DELETE FROM cliente_lista_precio
+     WHERE lista_precio_id = $1
+       AND cliente_id IN (SELECT id FROM clientes WHERE empresa_id = $2)`,
+    [listId, tenantId]
+  );
+  for (const clientId of ids) {
+    const exists = await client.query('SELECT id FROM clientes WHERE id = $1 AND empresa_id = $2', [clientId, tenantId]);
+    if (!exists.rows[0]) continue;
+    await client.query(
+      `INSERT INTO cliente_lista_precio (cliente_id, lista_precio_id)
+       VALUES ($1, $2)
+       ON CONFLICT (cliente_id)
+       DO UPDATE SET lista_precio_id = EXCLUDED.lista_precio_id`,
+      [clientId, listId]
+    );
+  }
+}
+
 async function replaceClientBranches(client, clientId, branches = []) {
   if (!Array.isArray(branches)) return;
-  await client.query('DELETE FROM sucursales WHERE cliente_id = $1', [clientId]);
+  const keepIds = [];
   for (const branch of branches) {
-    await client.query(
-      'INSERT INTO sucursales (cliente_id, nombre, direccion) VALUES ($1, $2, $3)',
+    const branchId = normalizeId(branch.id, true);
+    if (branchId) {
+      const updated = await client.query(
+        `UPDATE sucursales
+         SET nombre = $1,
+             direccion = $2
+         WHERE id = $3 AND cliente_id = $4
+         RETURNING id`,
+        [branch.nombre, branch.direccion || 'Direccion pendiente', branchId, clientId]
+      );
+      if (updated.rows[0]) {
+        keepIds.push(updated.rows[0].id);
+        continue;
+      }
+    }
+    const inserted = await client.query(
+      'INSERT INTO sucursales (cliente_id, nombre, direccion) VALUES ($1, $2, $3) RETURNING id',
       [clientId, branch.nombre, branch.direccion || 'Direccion pendiente']
+    );
+    keepIds.push(inserted.rows[0].id);
+  }
+
+  if (keepIds.length > 0) {
+    await client.query(
+      `DELETE FROM sucursales s
+       WHERE s.cliente_id = $1
+         AND s.id <> ALL($2::int[])
+         AND NOT EXISTS (
+           SELECT 1
+           FROM pedido_items pi
+           WHERE pi.sucursal_id = s.id
+         )`,
+      [clientId, keepIds]
+    );
+  } else {
+    await client.query(
+      `DELETE FROM sucursales s
+       WHERE s.cliente_id = $1
+         AND NOT EXISTS (
+           SELECT 1
+           FROM pedido_items pi
+           WHERE pi.sucursal_id = s.id
+         )`,
+      [clientId]
     );
   }
 }
@@ -771,6 +998,7 @@ async function replaceProductImages(productId, images = []) {
 }
 
 async function upsertProductPrice(tenantId, productId, price, promoPrice) {
+  await ensurePriceVisibilityColumn();
   if (price === null && promoPrice === null) return;
   const listResult = await db.query(
     `INSERT INTO listas_precios (empresa_id, nombre)
@@ -782,71 +1010,13 @@ async function upsertProductPrice(tenantId, productId, price, promoPrice) {
   );
   const listId = listResult.rows[0].id;
   await db.query(
-    `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, visible_cliente)
+     VALUES ($1, $2, $3, $4, true)
      ON CONFLICT (producto_id, lista_precio_id)
      DO UPDATE SET precio = COALESCE(EXCLUDED.precio, precios.precio),
                    precio_promocion = EXCLUDED.precio_promocion`,
     [productId, listId, price, promoPrice]
   );
-}
-
-function mockAdminCatalog() {
-  return {
-    tenant: mock.empresa,
-    marcas: mock.marcas,
-    categorias: mock.categorias,
-    productos: mock.productos.map((product) => {
-      const marca = mock.marcas.find((item) => item.id === product.marca_id);
-      const categoria = mock.categorias.find((item) => item.id === product.categoria_id);
-      return {
-        ...product,
-        marca: marca?.nombre || '',
-        categoria: categoria?.nombre || '',
-        precio: product.precios.mayorista,
-        precio_final: product.precios.promocion || product.precios.mayorista
-      };
-    }),
-    mode: 'mock'
-  };
-}
-
-function mockAdminClients() {
-  return [
-    {
-      id: 1,
-      usuario_id: 3,
-      nombre: 'Auto Repuestos El Centro',
-      email: 'cliente1@autorepuestos.com',
-      condicion_credito: 'Credito 30 Dias',
-      activo: true,
-      lista_precio_id: 1,
-      lista_precio: 'Distribuidor Mayorista',
-      sucursales: mock.sucursales,
-      ultimo_acceso: new Date().toISOString(),
-      ultimo_ip: '190.0.0.10',
-      ultimo_user_agent: 'iPhone / Safari',
-      ultimo_geolocalizacion: 'Tegucigalpa, Honduras'
-    }
-  ];
-}
-
-function mockAdminPriceLists() {
-  return [
-    {
-      id: 1,
-      empresa_id: mock.empresa.id,
-      nombre: 'Distribuidor Mayorista',
-      clientes: 1,
-      productos_con_precio: mock.productos.length,
-      precios: mock.productos.map((product) => ({
-        producto_id: product.id,
-        lista_precio_id: 1,
-        precio: product.precios.mayorista,
-        precio_promocion: product.precios.promocion || null
-      }))
-    }
-  ];
 }
 
 async function optimizeImage(buffer) {

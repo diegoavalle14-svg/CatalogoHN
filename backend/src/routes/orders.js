@@ -1,9 +1,11 @@
 const express = require('express');
 const db = require('../config/database');
-const mock = require('../services/mockData');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { sendMail } = require('../services/mailer');
 const { buildAdminNewOrderEmail, buildClientStatusEmail } = require('../services/orderEmails');
+const { ensureProductInventoryColumns } = require('../services/schemaGuards');
+const { enumValue, handleValidationError, positiveInt, validateOrderItems } = require('../services/validators');
+const { dispatchWebhookEvent } = require('../services/webhooks');
 
 const router = express.Router();
 
@@ -32,6 +34,41 @@ async function queryOrderEmailContext(tenantId, orderId) {
   );
 
   return { order, items: itemsRes.rows };
+}
+
+async function decrementOrderStock(client, tenantId, orderId) {
+  const items = await client.query(
+    `SELECT pi.producto_id,
+            pr.sku,
+            pr.descripcion,
+            SUM(pi.cantidad)::int AS cantidad
+     FROM pedido_items pi
+     JOIN productos pr ON pr.id = pi.producto_id
+     JOIN pedidos p ON p.id = pi.pedido_id
+     WHERE p.id = $1 AND p.empresa_id = $2
+     GROUP BY pi.producto_id, pr.sku, pr.descripcion`,
+    [orderId, tenantId]
+  );
+
+  for (const item of items.rows) {
+    const stock = await client.query(
+      `UPDATE productos
+       SET stock_actual = stock_actual - $1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+         AND empresa_id = $3
+         AND visible = true
+         AND stock_actual >= $1
+       RETURNING stock_actual`,
+      [item.cantidad, item.producto_id, tenantId]
+    );
+
+    if (!stock.rows[0]) {
+      const error = new Error(`Stock insuficiente para ${item.sku || item.descripcion || 'este producto'}`);
+      error.statusCode = 409;
+      throw error;
+    }
+  }
 }
 
 router.get('/orders', authenticate, async (req, res) => {
@@ -70,23 +107,27 @@ router.get('/orders', authenticate, async (req, res) => {
 
     res.json({ pedidos: payload });
   } catch (error) {
-    const pedidos = req.user.rol === 'cliente'
-      ? mock.pedidos.filter((pedido) => pedido.cliente_id === req.user.cliente_id)
-      : mock.pedidos;
-    res.json({ pedidos, mode: 'mock' });
+    res.status(500).json({ message: 'No se pudieron cargar los pedidos' });
   }
 });
 
 router.post('/orders', authenticate, requireRole('cliente'), async (req, res) => {
+  try {
+    req.body = { ...(req.body || {}), items: validateOrderItems(req.body) };
+  } catch (error) {
+    return handleValidationError(error, res, 'El pedido contiene lineas invalidas');
+  }
+
   const { items } = req.body;
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'El pedido no contiene productos' });
   }
   if (items.some((item) => !Number.isInteger(Number(item.cantidad)) || Number(item.cantidad) <= 0 || !item.producto_id || !item.sucursal_id)) {
-    return res.status(400).json({ message: 'El pedido contiene lineas invalidas' });
+    return res.status(400).json({ message: 'El pedido contiene líneas inválidas' });
   }
 
   try {
+    await ensureProductInventoryColumns();
     const created = await db.pool.connect();
     try {
       await created.query('BEGIN');
@@ -95,13 +136,15 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
       for (const item of items) {
         const quantity = Number(item.cantidad);
         if (!Number.isInteger(quantity) || quantity <= 0) {
-          const error = new Error('Cantidad invalida en el pedido');
+          const error = new Error('Cantidad inválida en el pedido');
           error.statusCode = 400;
           throw error;
         }
 
         const product = await created.query(
           `SELECT p.id AS producto_id,
+                  p.sku,
+                  p.descripcion,
                   s.id AS sucursal_id,
                   COALESCE(pr.precio_promocion, pr.precio) AS precio_unitario
            FROM productos p
@@ -123,14 +166,40 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
 
         validatedItems.push({
           producto_id: product.rows[0].producto_id,
+          sku: product.rows[0].sku,
+          descripcion: product.rows[0].descripcion,
           sucursal_id: product.rows[0].sucursal_id,
           cantidad: quantity,
           precio_unitario: Number(product.rows[0].precio_unitario)
         });
       }
 
-      const total = validatedItems.reduce((sum, item) => sum + item.precio_unitario * item.cantidad, 0);
-      const isv = total - total / 1.15;
+      const requestedByProduct = validatedItems.reduce((map, item) => {
+        const current = map.get(item.producto_id) || { cantidad: 0, sku: item.sku, descripcion: item.descripcion };
+        current.cantidad += item.cantidad;
+        map.set(item.producto_id, current);
+        return map;
+      }, new Map());
+
+      for (const [productId, request] of requestedByProduct.entries()) {
+        const stock = await created.query(
+          `SELECT stock_actual
+           FROM productos
+           WHERE id = $1
+             AND empresa_id = $2
+             AND visible = true`,
+          [productId, req.tenant.id]
+        );
+        if (!stock.rows[0] || Number(stock.rows[0].stock_actual) < request.cantidad) {
+          const error = new Error(`Stock insuficiente para ${request.sku || request.descripcion || 'este producto'}`);
+          error.statusCode = 409;
+          throw error;
+        }
+      }
+
+      const subtotal = validatedItems.reduce((sum, item) => sum + item.precio_unitario * item.cantidad, 0);
+      const isv = subtotal * 0.15;
+      const total = subtotal + isv;
       const numero = `PED-${Date.now().toString().slice(-6)}`;
       const order = await created.query(
         `INSERT INTO pedidos (empresa_id, cliente_id, numero, estado, total, isv)
@@ -149,6 +218,15 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
 
       await created.query('COMMIT');
       res.status(201).json({ pedido: order.rows[0] });
+
+      dispatchWebhookEvent({
+        empresaId: req.tenant.id,
+        eventType: 'order.created',
+        payload: {
+          order: order.rows[0],
+          items: validatedItems
+        }
+      }).catch((err) => console.warn('[webhooks] order.created failed:', err.message || err));
 
       // Notify admins asynchronously (do not block the checkout UX).
       (async () => {
@@ -181,47 +259,71 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
       created.release();
     }
   } catch (error) {
-    if (error.statusCode) {
-      return res.status(error.statusCode).json({ message: error.message });
-    }
-
-    const total = items.reduce((sum, item) => sum + Number(item.precio_unitario) * Number(item.cantidad), 0);
-    const pedido = mock.addPedido({
-      id: Date.now(),
-      empresa_id: req.tenant.id,
-      cliente_id: req.user.cliente_id,
-      numero: `PED-${Date.now().toString().slice(-6)}`,
-      estado: 'pendiente',
-      total,
-      isv: total - total / 1.15,
-      fecha: new Date().toISOString(),
-      items
-    });
-    res.status(201).json({ pedido, mode: 'mock' });
+    res.status(error.statusCode || 500).json({ message: error.statusCode ? error.message : 'No se pudo crear el pedido' });
   }
 });
 
 router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const { estado, confirmacion } = req.body;
   if (confirmacion !== 'CONFIRMAR') {
-    return res.status(400).json({ message: 'Se requiere doble confirmacion' });
+    return res.status(400).json({ message: 'Se requiere doble confirmación' });
   }
   if (!['pendiente', 'preparando', 'enviado'].includes(estado)) {
-    return res.status(400).json({ message: 'Estado invalido' });
+    return res.status(400).json({ message: 'Estado inválido' });
   }
 
   try {
-    const result = await db.query(
-      'UPDATE pedidos SET estado = $1 WHERE id = $2 AND empresa_id = $3 RETURNING *',
-      [estado, req.params.id, req.tenant.id]
-    );
-    res.json({ pedido: result.rows[0] });
+    await ensureProductInventoryColumns();
+    const client = await db.pool.connect();
+    let pedido;
+    try {
+      await client.query('BEGIN');
+      const current = await client.query(
+        'SELECT * FROM pedidos WHERE id = $1 AND empresa_id = $2 FOR UPDATE',
+        [req.params.id, req.tenant.id]
+      );
+
+      if (!current.rows[0]) {
+        const error = new Error('Pedido no encontrado');
+        error.statusCode = 404;
+        throw error;
+      }
+
+      const previousStatus = current.rows[0].estado;
+      const shouldDiscountStock = previousStatus === 'pendiente' && ['preparando', 'enviado'].includes(estado);
+      if (shouldDiscountStock) {
+        await decrementOrderStock(client, req.tenant.id, req.params.id);
+      }
+
+      const result = await client.query(
+        'UPDATE pedidos SET estado = $1 WHERE id = $2 AND empresa_id = $3 RETURNING *',
+        [estado, req.params.id, req.tenant.id]
+      );
+      pedido = result.rows[0];
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    res.json({ pedido });
+
+    dispatchWebhookEvent({
+      empresaId: req.tenant.id,
+      eventType: 'order.status_changed',
+      payload: {
+        order: pedido,
+        status: pedido.estado
+      }
+    }).catch((err) => console.warn('[webhooks] order.status_changed failed:', err.message || err));
 
     // Notify client when state changes to preparing/shipped.
     if (['preparando', 'enviado'].includes(estado)) {
       (async () => {
         try {
-          const ctx = await queryOrderEmailContext(req.tenant.id, result.rows[0].id);
+          const ctx = await queryOrderEmailContext(req.tenant.id, pedido.id);
           if (!ctx) return;
           if (!ctx.order.cliente_email) return;
           const email = buildClientStatusEmail({
@@ -237,21 +339,20 @@ router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmi
       })();
     }
   } catch (error) {
-    res.json({ pedido: mock.updatePedido(Number(req.params.id), { estado }), mode: 'mock' });
+    res.status(error.statusCode || 500).json({ message: error.statusCode ? error.message : 'No se pudo cambiar el estado del pedido' });
   }
 });
 
 router.delete('/orders/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   if (req.body.confirmacion !== 'ELIMINAR') {
-    return res.status(400).json({ message: 'Se requiere doble confirmacion' });
+    return res.status(400).json({ message: 'Se requiere doble confirmación' });
   }
 
   try {
     await db.query('DELETE FROM pedidos WHERE id = $1 AND empresa_id = $2', [req.params.id, req.tenant.id]);
     res.status(204).send();
   } catch (error) {
-    mock.deletePedido(Number(req.params.id));
-    res.status(204).send();
+    res.status(500).json({ message: 'No se pudo eliminar el pedido' });
   }
 });
 

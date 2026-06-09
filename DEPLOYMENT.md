@@ -2,7 +2,12 @@
 
 Guia inicial para publicar CatalogoHN usando GitHub y AWS, siguiendo la especificacion tecnica del proyecto.
 
-Para ejecutar el primer preview, usar tambien el runbook operativo en [docs/AWS_PREVIEW.md](docs/AWS_PREVIEW.md).
+Este documento funciona como guia general de arquitectura y despliegue.
+
+Usar el runbook correcto segun el caso:
+
+- Si el preview de AWS ya existe y solo hay que actualizarlo, usar [docs/AWS_PREVIEW_UPDATE.md](docs/AWS_PREVIEW_UPDATE.md).
+- Si se va a levantar el primer preview desde cero, usar [docs/AWS_PREVIEW.md](docs/AWS_PREVIEW.md).
 
 ## 1. GitHub
 
@@ -124,8 +129,7 @@ VITE_TENANT_SLUG=kolben
 VITE_DEMO_MODE=false
 ```
 
-Configura variables distintas por rama/entorno. Si primero despliegas sin dominio propio, `VITE_API_URL` puede apuntar temporalmente a la URL publica del backend.
-Si todavia no hay backend preview, `VITE_DEMO_MODE=true` permite publicar el frontend de pruebas con datos demo sin llamadas a `localhost`.
+Configura variables distintas por rama/entorno. `VITE_API_URL` es obligatorio para builds de preview/produccion y debe apuntar a la URL publica real del backend. `VITE_DEMO_MODE` debe permanecer en `false`; el frontend no debe publicarse con datos demo.
 
 ## 5. Backend en AWS
 
@@ -142,15 +146,19 @@ AWS_REGION=us-east-1
 S3_BUCKET=catalogohn-assets-preview-o-prod
 S3_PUBLIC_URL=https://cdn-o-bucket-publico
 PUBLIC_API_URL=https://api-preview-o-api-produccion.catalogohn.com
-AWS_ACCESS_KEY_ID=valor-seguro
-AWS_SECRET_ACCESS_KEY=valor-seguro
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=correo@gmail.com
 SMTP_PASS=app-password
 EMAIL_FROM="CatalogoHN <correo@gmail.com>"
 EMAIL_ADMIN_NOTIFY=admin@kolben.com
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=300
+RATE_LIMIT_AUTH_WINDOW_MS=60000
+RATE_LIMIT_AUTH_MAX=30
 ```
+
+Para S3 en preview/produccion, preferir IAM role del backend. Usar `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY` solo como contingencia temporal y rotarlas despues.
 
 Comandos base:
 
@@ -241,6 +249,8 @@ Tambien se debe preparar wildcard DNS para futuros inquilinos:
 
 - Cambiar `JWT_SECRET` por un valor largo y privado.
 - Configurar `CORS_ORIGIN` con la URL real del frontend.
+- Confirmar que `VITE_API_URL` apunta al backend real y `VITE_DEMO_MODE=false`.
+- Configurar rate limiting para API general y login.
 - Confirmar que `.env` no se subio a GitHub.
 - Activar backups en RDS.
 - Revisar reglas de red para que la base no quede publica innecesariamente.

@@ -9,7 +9,7 @@ Plataforma SaaS multi-tenant para distribuidoras en Honduras. El primer inquilin
 - Panel Admin Kolben separado del catalogo del cliente.
 - Panel Admin con 4 secciones: `Pedidos`, `Catalogo`, `Clientes` y `C. Precios`.
 - Configuracion del inquilino desde admin: nombre, subnombre, logo, colores, fuente y vista previa.
-- CRUD de admin para productos, marcas y categorias conectado a endpoints backend, con fallback local de demo.
+- CRUD de admin para productos, marcas y categorias conectado a endpoints backend reales.
 - Subida de imagenes desde admin con compresion a WebP/JPEG y limite objetivo de 300 KB.
 - Almacenamiento local de imagenes en desarrollo y soporte opcional para S3 en AWS.
 - CRUD de clientes, listas de precios y precios conectado al backend.
@@ -37,9 +37,9 @@ Administra el sitio de su empresa/inquilino. Para KOLBEN puede:
 
 Gestiona empresas/inquilinos y debe ser el unico rol con capacidad de asignar o controlar admins de empresas.
 
-## Credenciales Demo
+## Credenciales Seed
 
-El login principal usa usuario corto:
+El seed inicial crea credenciales reales para desarrollo/preview:
 
 - Cliente: `cliente1` / `ClientPassword123`
 - Admin Kolben: `admin` / `KolbenAdminPassword123`
@@ -85,6 +85,7 @@ Variables publicas:
 ```bash
 VITE_API_URL=http://localhost:3001/api
 VITE_TENANT_SLUG=kolben
+VITE_DEMO_MODE=false
 ```
 
 ## GitHub y AWS
@@ -124,16 +125,121 @@ La direccion correcta del producto es que los admins suban imagenes desde el Pan
 - Logos de marcas: seccion `Catalogo` -> `Marcas`.
 - Imagenes de productos: seccion `Catalogo` -> `+ Nuevo` o `Editar`.
 
-En desarrollo, si S3 no esta configurado, las imagenes se guardan en `backend/uploads/` y Git las ignora. En AWS, configurar `S3_BUCKET`, `AWS_REGION` y credenciales seguras para guardar en S3.
+En desarrollo, si S3 no esta configurado, las imagenes se guardan en `backend/uploads/` y Git las ignora. En AWS preview/produccion, configurar `S3_BUCKET`, `AWS_REGION`, `S3_PUBLIC_URL` y credenciales seguras para guardar en S3.
 
 ## Pendientes Tecnicos
 
 - Configurar bucket S3 definitivo para preview y produccion.
 - Crear flujo real de recuperacion de contrasena.
 - Agregar gestion de admins de empresa desde superadmin.
-- Reemplazar datos seed/mock por datos reales administrables desde UI.
+- Reemplazar datos seed por datos reales administrables desde UI.
 - Revisar permisos por rol en cada endpoint de admin.
 
 ## Seguridad
 
-Los archivos `.env`, `.env.local`, `node_modules/`, `dist/` y `*.pem` estan excluidos en `.gitignore`. Las credenciales reales deben inyectarse en AWS Amplify/EC2 u otro entorno seguro y nunca guardarse en el repositorio.
+Los archivos `.env`, `.env.local`, `node_modules/`, `dist/` y `*.pem` estan excluidos en `.gitignore`. Las credenciales reales deben inyectarse en AWS Amplify/EC2 u otro entorno seguro y nunca guardarse en el repositorio. En `NODE_ENV=production`, el backend requiere `JWT_SECRET` y `CORS_ORIGIN`; no debe arrancar con valores abiertos o de desarrollo.
+
+Rate limiting backend:
+
+```bash
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=300
+RATE_LIMIT_AUTH_WINDOW_MS=60000
+RATE_LIMIT_AUTH_MAX=30
+```
+
+## API Publica
+
+La API vendible debe usar API keys por integracion. Las llaves se guardan hasheadas y solo se muestran una vez al crearlas desde superadmin.
+
+Primer endpoint versionado:
+
+```bash
+GET /api/v1/catalog
+X-API-Key=<api-key>
+```
+
+Permiso requerido: `catalog:read`.
+
+Crear pedidos desde integraciones:
+
+```bash
+POST /api/v1/orders
+X-API-Key=<api-key>
+Content-Type: application/json
+```
+
+```json
+{
+  "cliente_id": 1,
+  "items": [
+    { "producto_id": 10, "sucursal_id": 3, "cantidad": 2 }
+  ]
+}
+```
+
+Permiso requerido: `orders:write`.
+
+Consultar pedidos desde integraciones:
+
+```bash
+GET /api/v1/orders
+GET /api/v1/orders/:id
+X-API-Key=<api-key>
+```
+
+Filtros opcionales para listado:
+
+```text
+cliente_id
+estado
+limit
+```
+
+Permiso requerido: `orders:read`.
+
+Scopes aceptados actualmente:
+
+```text
+catalog:read
+orders:read
+orders:write
+stock:read
+*
+```
+
+El superadmin puede revisar uso reciente por tenant:
+
+```bash
+GET /api/superadmin/tenants/:id/api-logs
+```
+
+## Webhooks
+
+Los webhooks permiten notificar a integraciones externas sin que tengan que consultar la API constantemente.
+
+Eventos disponibles:
+
+```text
+order.created
+order.status_changed
+catalog.updated
+stock.updated
+```
+
+Endpoints superadmin:
+
+```bash
+GET /api/superadmin/tenants/:id/webhooks
+POST /api/superadmin/tenants/:id/webhooks
+PATCH /api/superadmin/webhooks/:id/revoke
+GET /api/superadmin/tenants/:id/webhook-deliveries
+```
+
+Cada entrega incluye firma HMAC:
+
+```text
+X-CatalogoHN-Event
+X-CatalogoHN-Timestamp
+X-CatalogoHN-Signature
+```
