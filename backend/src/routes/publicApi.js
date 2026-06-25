@@ -24,10 +24,10 @@ router.get('/v1/catalog', requireApiKey('catalog:read'), async (req, res) => {
         [req.tenant.id]
       ),
       db.query(
-        `SELECT id, nombre, color, imagen_url
+        `SELECT id, nombre, color, imagen_url, posicion
          FROM categorias
          WHERE empresa_id = $1
-         ORDER BY nombre`,
+         ORDER BY posicion, nombre`,
         [req.tenant.id]
       ),
       db.query(

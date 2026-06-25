@@ -551,6 +551,7 @@ function Catalog({ session, onSessionUpdated }) {
   const [data, setData] = useState(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  const [brand, setBrand] = useState('all');
   const [cart, setCart] = useState(() => loadCart());
   const [cartOpen, setCartOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -587,9 +588,20 @@ function Catalog({ session, onSessionUpdated }) {
       const haystack = `${product.sku} ${product.descripcion} ${product.marca} ${product.categoria}`.toLowerCase();
       const matchesQuery = haystack.includes(query.toLowerCase());
       const matchesCategory = category === 'all' || Number(product.categoria_id) === Number(category);
-      return matchesQuery && matchesCategory;
+      const matchesBrand = brand === 'all' || Number(product.marca_id) === Number(brand);
+      return matchesQuery && matchesCategory && matchesBrand;
     });
-  }, [data, query, category]);
+  }, [data, query, category, brand]);
+  const categoryBrands = useMemo(() => {
+    if (!data || category === 'all') return [];
+    const brandIds = new Set(
+      data.productos
+        .filter((product) => Number(product.categoria_id) === Number(category))
+        .map((product) => Number(product.marca_id))
+        .filter(Boolean)
+    );
+    return (data.marcas || []).filter((item) => brandIds.has(Number(item.id)));
+  }, [data, category]);
   const catalogStats = useMemo(() => {
     if (!data) return { total: 0, available: 0, promos: 0, categories: 0 };
     const total = data.productos.length;
@@ -674,19 +686,24 @@ function Catalog({ session, onSessionUpdated }) {
         </div>
       </div>
 
-      <div className="search-box">
-        <Search size={18} />
-        <input placeholder="Buscar por codigo, marca o categoria..." value={query} onChange={(event) => setQuery(event.target.value)} />
-      </div>
+      <ClearableSearchInput
+        className="search-box"
+        iconSize={18}
+        placeholder="Buscar por codigo, marca o categoria..."
+        value={query}
+        onChange={setQuery}
+      />
 
-      <CategoryFilterStrip categories={data.categorias || []} value={category} onChange={setCategory} />
+      <CategoryFilterStrip categories={data.categorias || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} />
+      {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} />}
 
       <div className="product-count-row">
         <p className="product-count">{products.length} productos</p>
-        {(query || category !== 'all') && (
+        {(query || category !== 'all' || brand !== 'all') && (
           <button type="button" onClick={() => {
             setQuery('');
             setCategory('all');
+            setBrand('all');
           }}>
             Limpiar filtros
           </button>
@@ -842,6 +859,20 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
         })}
       </div>
     </article>
+  );
+}
+
+function ClearableSearchInput({ className, iconSize = 16, placeholder, value, onChange }) {
+  return (
+    <label className={className}>
+      <Search size={iconSize} />
+      <input placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} />
+      {value && (
+        <button type="button" className="search-clear-button" onClick={() => onChange('')} aria-label="Borrar búsqueda">
+          <X size={iconSize} />
+        </button>
+      )}
+    </label>
   );
 }
 
@@ -1328,7 +1359,11 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
     const nextPayload = { ...payload, imageFile: undefined, imagen_url: imageUrl };
     try {
       const saved = await api.adminSaveCategory(session.token, nextPayload);
-      setCategories((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? saved.categoria : item)) : [saved.categoria, ...current]));
+      setCategories((current) => (
+        nextPayload.id
+          ? current.map((item) => (item.id === nextPayload.id ? saved.categoria : item))
+          : [saved.categoria, ...current]
+      ).sort(sortByPositionThenName));
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar la categoria');
     }
@@ -1551,10 +1586,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         </span>
       </div>
       <div className="admin-filter-bar">
-        <label className="admin-search-inline">
-          <Search size={15} />
-          <input placeholder="Buscar pedido o cliente" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
+        <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar pedido o cliente" value={query} onChange={setQuery} />
         <div className="admin-chip-row">
           {[
             ['all', 'Todos'],
@@ -1635,10 +1667,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
         </div>
       </div>
       <div className="admin-filter-bar">
-        <label className="admin-search-inline">
-          <Search size={15} />
-          <input placeholder="Buscar sku, marca o categoria" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
+        <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar sku, marca o categoria" value={query} onChange={setQuery} />
         <div className="admin-chip-row">
           {[
             ['all', 'Todos'],
@@ -1700,10 +1729,7 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
         <button className="admin-new-button" onClick={onNew}><Plus size={13} /> Nuevo</button>
       </div>
       <div className="admin-filter-bar">
-        <label className="admin-search-inline">
-          <Search size={15} />
-          <input placeholder="Buscar cliente o usuario" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
+        <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar cliente o usuario" value={query} onChange={setQuery} />
         <div className="admin-chip-row">
           {[
             ['all', 'Todos'],
@@ -1773,10 +1799,7 @@ function AdminPricesSection({ lists, products, clients, onEditPrices, onSyncList
         <article className={totalMissingPrices > 0 ? 'needs-sync' : ''}><strong>{totalMissingPrices}</strong><span>precios faltantes</span></article>
       </div>
       <div className="admin-filter-bar">
-        <label className="admin-search-inline">
-          <Search size={15} />
-          <input placeholder="Buscar cliente o usuario" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
+        <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar cliente o usuario" value={query} onChange={setQuery} />
         <small className="admin-results-count">{filteredClients.length} clientes</small>
       </div>
       <div className="admin-price-groups">
@@ -1828,23 +1851,34 @@ function AdminPricesSection({ lists, products, clients, onEditPrices, onSyncList
 function CategoryFilterStrip({ categories = [], value, onChange, className = '' }) {
   if (!categories.length) return null;
   return (
-    <section className={`brand-section category-section ${className}`.trim()} aria-label="Categorías">
-      <div className="brand-section-head">
-        <h2>Categorías</h2>
-        <button type="button" onClick={() => onChange('all')}>Ver todas</button>
-      </div>
-
-      <div className="brand-strip">
-        <button className={value === 'all' ? 'brand-chip active' : 'brand-chip'} onClick={() => onChange('all')} aria-label="Todas las categorías" title="Todas">
-          <span className="brand-orb all-brand-icon all-category-orb" aria-hidden="true"><i /><i /><i /><i /></span>
-          <span className="brand-label">Todas</span>
+    <section className={`filter-tab-section category-section ${className}`.trim()} aria-label="Categorías">
+      <div className="filter-tab-strip">
+        <button className={value === 'all' ? 'filter-tab active' : 'filter-tab'} onClick={() => onChange('all')} aria-label="Todas las categorías" title="Todas">
+          <span>Todas</span>
         </button>
         {categories.map((item) => (
-          <button className={Number(value) === item.id ? 'brand-chip active' : 'brand-chip'} onClick={() => onChange(item.id)} key={item.id} aria-label={item.nombre} title={item.nombre}>
-            <span className="brand-orb category-orb" style={categoryOrbStyle(item)}>
-              {item.imagen_url ? <img src={resolveMediaUrl(item.imagen_url)} alt="" /> : <Folder size={22} strokeWidth={2.4} />}
-            </span>
-            <span className="brand-label">{item.nombre}</span>
+          <button className={Number(value) === item.id ? 'filter-tab active' : 'filter-tab'} onClick={() => onChange(item.id)} key={item.id} aria-label={item.nombre} title={item.nombre}>
+            {item.imagen_url ? <img src={resolveMediaUrl(item.imagen_url)} alt="" /> : null}
+            <span>{item.nombre}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BrandFilterStrip({ brands = [], value, onChange, className = '' }) {
+  if (!brands.length) return null;
+  return (
+    <section className={`filter-tab-section brand-filter-section ${className}`.trim()} aria-label="Marcas">
+      <div className="filter-tab-strip">
+        <button className={value === 'all' ? 'filter-tab active' : 'filter-tab'} onClick={() => onChange('all')} aria-label="Todas las marcas" title="Todas">
+          <span>Todas</span>
+        </button>
+        {brands.map((item) => (
+          <button className={Number(value) === item.id ? 'filter-tab active' : 'filter-tab'} onClick={() => onChange(item.id)} key={item.id} aria-label={item.nombre} title={item.nombre}>
+            {item.logo_url ? <img src={resolveMediaUrl(item.logo_url)} alt="" /> : null}
+            <span>{item.nombre}</span>
           </button>
         ))}
       </div>
@@ -1882,6 +1916,7 @@ function DefaultProductArtwork({ product, categoryMeta }) {
 function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [], brands = [], categories }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  const [brand, setBrand] = useState('all');
   const [clientId, setClientId] = useState(() => clients[0]?.id || '');
   const selectedClient = clients.find((client) => Number(client.id) === Number(clientId));
   const selectedList = priceLists.find((list) => Number(list.id) === Number(selectedClient?.lista_precio_id));
@@ -1891,9 +1926,20 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
       const haystack = `${product.sku} ${product.descripcion} ${product.marca} ${product.categoria} ${product.specs?.aplicacion || ''}`.toLowerCase();
       const matchesQuery = haystack.includes(query.toLowerCase());
       const matchesCategory = category === 'all' || Number(product.categoria_id) === Number(category);
-      return matchesQuery && matchesCategory;
+      const matchesBrand = brand === 'all' || Number(product.marca_id) === Number(brand);
+      return matchesQuery && matchesCategory && matchesBrand;
     });
-  }, [products, query, category]);
+  }, [products, query, category, brand]);
+  const categoryBrands = useMemo(() => {
+    if (category === 'all') return [];
+    const brandIds = new Set(
+      (products || [])
+        .filter((product) => product.visible !== false && Number(product.categoria_id) === Number(category))
+        .map((product) => Number(product.marca_id))
+        .filter(Boolean)
+    );
+    return (brands || []).filter((item) => brandIds.has(Number(item.id)));
+  }, [products, brands, category]);
   const previewProducts = useMemo(() => {
     return visibleProducts.flatMap((product) => {
       const price = selectedList?.precios?.find((item) => Number(item.producto_id) === Number(product.id));
@@ -1946,12 +1992,16 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
         </span>
       </div>
 
-      <div className="search-box admin-preview-search">
-        <Search size={18} />
-        <input placeholder="Buscar por codigo, marca o categoria..." value={query} onChange={(event) => setQuery(event.target.value)} />
-      </div>
+      <ClearableSearchInput
+        className="search-box admin-preview-search"
+        iconSize={18}
+        placeholder="Buscar por codigo, marca o categoria..."
+        value={query}
+        onChange={setQuery}
+      />
 
-      <CategoryFilterStrip categories={categories || []} value={category} onChange={setCategory} className="admin-preview-brands" />
+      <CategoryFilterStrip categories={categories || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} className="admin-preview-brands" />
+      {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} className="admin-preview-brands" />}
 
       <p className="product-count">{previewProducts.length} productos visibles</p>
 
@@ -2106,6 +2156,18 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const removeClientBranch = (index) => {
     syncClientBranches(clientBranches.filter((_, branchIndex) => branchIndex !== index));
   };
+  const updateProductInfoLines = (value) => {
+    const lines = String(value || '').split(/\r?\n/);
+    update('descripcion', lines[0] || '');
+    setForm((current) => ({
+      ...current,
+      specs: {
+        ...(current.specs || {}),
+        aplicacion: lines[1] || '',
+        medida: lines.slice(2).join('\n')
+      }
+    }));
+  };
   const selectedSubname = customSubnameMode ? '__custom__' : SITE_SUBNAME_OPTIONS.includes(form.subnombre) ? form.subnombre : '';
   const sitePreviewTenant = useMemo(
     () => ({ ...(editor.value || {}), ...form, logo_url: previewLogoUrl || form.logo_url }),
@@ -2219,17 +2281,25 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
         )}
 
         {editor.type === 'product' && (
-          <div className="admin-form">
-            <label>Código<input value={form.sku || ''} onChange={(event) => update('sku', event.target.value)} /></label>
-            <label>Descripción<input value={form.descripcion || ''} onChange={(event) => update('descripcion', event.target.value)} /></label>
-            <label>Aplicación<input value={form.specs?.aplicacion || ''} onChange={(event) => update('specs', { ...(form.specs || {}), aplicacion: event.target.value })} /></label>
-            <label>Medida<input value={form.specs?.medida || ''} onChange={(event) => update('specs', { ...(form.specs || {}), medida: event.target.value })} /></label>
+          <div className="admin-form admin-product-form">
+            <label className="admin-product-full">Código SKU<input placeholder="Ej: 47201-60290" value={form.sku || ''} onChange={(event) => update('sku', event.target.value)} /></label>
             <label>Marca<select value={form.marca_id || brands[0]?.id || ''} onChange={(event) => update('marca_id', Number(event.target.value))}>{brands.map((brand) => <option value={brand.id} key={brand.id}>{brand.nombre}</option>)}</select></label>
             <label>Categoría<select value={form.categoria_id || categories[0]?.id || ''} onChange={(event) => update('categoria_id', Number(event.target.value))}>{categories.map((category) => <option value={category.id} key={category.id}>{category.nombre}</option>)}</select></label>
-            <label>Precio<input type="number" value={form.precio || ''} onChange={(event) => update('precio', Number(event.target.value))} /></label>
-            <label>Stock actual<input type="number" min="0" step="1" value={form.stock_actual ?? ''} onChange={(event) => update('stock_actual', event.target.value)} /></label>
-            <label>Stock mínimo<input type="number" min="0" step="1" value={form.stock_minimo ?? ''} onChange={(event) => update('stock_minimo', event.target.value)} /></label>
-            <label>Imagenes<input type="file" accept="image/*" onChange={(event) => update('imageFile', event.target.files?.[0])} /></label>
+            <label>
+              Aplicación (una por línea)
+              <textarea
+                rows={3}
+                placeholder={'Hilux 79 - 88\nHIERRO / METAL\n1" Pulgada (15/16)'}
+                value={[form.descripcion || '', form.specs?.aplicacion || '', form.specs?.medida || ''].join('\n')}
+                onChange={(event) => updateProductInfoLines(event.target.value)}
+              />
+            </label>
+            <div className="admin-product-stock-grid">
+              <label>Precio<input type="number" value={form.precio || ''} onChange={(event) => update('precio', Number(event.target.value))} /></label>
+              <label>Stock actual<input type="number" min="0" step="1" value={form.stock_actual ?? ''} onChange={(event) => update('stock_actual', event.target.value)} /></label>
+              <label>Stock mínimo<input type="number" min="0" step="1" value={form.stock_minimo ?? ''} onChange={(event) => update('stock_minimo', event.target.value)} /></label>
+            </div>
+            <label>Foto del producto<input type="file" accept="image/*" onChange={(event) => update('imageFile', event.target.files?.[0])} /></label>
           </div>
         )}
 
@@ -2382,14 +2452,31 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
   const [logoFile, setLogoFile] = useState(null);
   const supportsImage = label === 'Marca' || label === 'Categoría';
   const imageField = label === 'Marca' ? 'logo_url' : 'imagen_url';
+  const supportsOrdering = label === 'Categoría';
+  const orderedItems = supportsOrdering
+    ? [...items].sort((a, b) => (Number(a.posicion || 0) - Number(b.posicion || 0)) || String(a.nombre).localeCompare(String(b.nombre)))
+    : items;
+  const moveItem = (index, direction) => {
+    if (!supportsOrdering) return;
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= orderedItems.length) return;
+    const nextItems = [...orderedItems];
+    const [item] = nextItems.splice(index, 1);
+    nextItems.splice(targetIndex, 0, item);
+    nextItems.forEach((nextItem, nextIndex) => {
+      if (Number(nextItem.posicion || 0) !== nextIndex + 1) {
+        onSave({ ...nextItem, posicion: nextIndex + 1 });
+      }
+    });
+  };
   return (
     <div className="admin-entity-crud">
       <div className="admin-form">
         <label>{label}<input value={name} onChange={(event) => setName(event.target.value)} /></label>
         {supportsImage && <label>{label === 'Marca' ? 'Logo' : 'Imagen'}<input type="file" accept="image/*" onChange={(event) => setLogoFile(event.target.files?.[0])} /></label>}
-        <button className="primary-button" onClick={() => { if (!name) return; onSave({ nombre: name, [label === 'Marca' ? 'logoFile' : 'imageFile']: logoFile }); setName(''); setLogoFile(null); }}>Agregar</button>
+        <button className="primary-button" onClick={() => { if (!name) return; onSave({ nombre: name, posicion: supportsOrdering ? orderedItems.length + 1 : 0, [label === 'Marca' ? 'logoFile' : 'imageFile']: logoFile }); setName(''); setLogoFile(null); }}>Agregar</button>
       </div>
-      {items.map((item) => (
+      {orderedItems.map((item, index) => (
         <div className="admin-entity-row" key={item.id}>
           {supportsImage && (
             <span className="admin-entity-thumb">
@@ -2397,6 +2484,12 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
             </span>
           )}
           <strong>{item.nombre}</strong>
+          {supportsOrdering && (
+            <div className="admin-entity-order">
+              <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} aria-label={`Subir ${item.nombre}`}>↑</button>
+              <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}>↓</button>
+            </div>
+          )}
           <button onClick={() => onSave({ ...item, nombre: window.prompt(`Editar ${label}`, item.nombre) || item.nombre })}>Editar</button>
           {supportsImage && <button onClick={() => {
             const input = document.createElement('input');
@@ -2417,6 +2510,10 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
 
 function stateLabel(state) {
   return ({ pendiente: 'Pendiente', preparando: 'Preparando', enviado: 'Enviado' })[state] || state;
+}
+
+function sortByPositionThenName(a, b) {
+  return (Number(a?.posicion || 0) - Number(b?.posicion || 0)) || String(a?.nombre || '').localeCompare(String(b?.nombre || ''));
 }
 
 function prepareProductPayload(product, products, brands, categories) {

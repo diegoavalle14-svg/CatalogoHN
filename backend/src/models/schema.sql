@@ -91,6 +91,7 @@ CREATE TABLE categorias (
     nombre VARCHAR(100) NOT NULL,
     color VARCHAR(20),
     imagen_url TEXT,
+    posicion INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_categoria_name_per_tenant UNIQUE (empresa_id, nombre)
 );

@@ -93,7 +93,7 @@ router.get('/catalog', authenticate, async (req, res) => {
     await ensureBranchActiveColumn();
     const [brands, categories, products, branches, currentUser] = await Promise.all([
       db.query('SELECT * FROM marcas WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
-      db.query('SELECT * FROM categorias WHERE empresa_id = $1 ORDER BY nombre', [req.tenant.id]),
+      db.query('SELECT * FROM categorias WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
       db.query(
         `SELECT p.*, m.nombre AS marca, m.logo_url AS marca_logo_url, c.nombre AS categoria,
           COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,

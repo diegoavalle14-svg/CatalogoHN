@@ -16,6 +16,7 @@ async function ensureProductInventoryColumns(client = db) {
 async function ensureCategoryImageColumn(client = db) {
   if (categoryImageColumnReady) return;
   await client.query(`ALTER TABLE categorias ADD COLUMN IF NOT EXISTS imagen_url TEXT`);
+  await client.query(`ALTER TABLE categorias ADD COLUMN IF NOT EXISTS posicion INT DEFAULT 0`);
   categoryImageColumnReady = true;
 }
 

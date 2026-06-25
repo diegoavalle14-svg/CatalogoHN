@@ -114,7 +114,7 @@ router.get('/admin/catalog', authenticate, requireRole('admin', 'superadmin'), a
     await ensureCategoryImageColumn();
     const [brands, categories, products] = await Promise.all([
       db.query('SELECT * FROM marcas WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
-      db.query('SELECT * FROM categorias WHERE empresa_id = $1 ORDER BY nombre', [req.tenant.id]),
+      db.query('SELECT * FROM categorias WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
       queryAdminProducts(req.tenant.id)
     ]);
 
@@ -546,16 +546,16 @@ router.delete('/admin/brands/:id', authenticate, requireRole('admin', 'superadmi
 });
 
 router.post('/admin/categories', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const { nombre, color = '#F5C200', imagen_url = '' } = req.body || {};
+  const { nombre, color = '#F5C200', imagen_url = '', posicion = 0 } = req.body || {};
   if (!nombre) return res.status(400).json({ message: 'Nombre de categoria requerido' });
 
   try {
     await ensureCategoryImageColumn();
     const result = await db.query(
-      `INSERT INTO categorias (empresa_id, nombre, color, imagen_url)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO categorias (empresa_id, nombre, color, imagen_url, posicion)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [req.tenant.id, String(nombre).trim(), color, imagen_url]
+      [req.tenant.id, String(nombre).trim(), color, imagen_url, Number(posicion) || 0]
     );
     res.status(201).json({ categoria: result.rows[0] });
   } catch (error) {
@@ -564,17 +564,18 @@ router.post('/admin/categories', authenticate, requireRole('admin', 'superadmin'
 });
 
 router.patch('/admin/categories/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const { nombre, color, imagen_url } = req.body || {};
+  const { nombre, color, imagen_url, posicion } = req.body || {};
   try {
     await ensureCategoryImageColumn();
     const result = await db.query(
       `UPDATE categorias
        SET nombre = COALESCE($1, nombre),
            color = COALESCE($2, color),
-           imagen_url = COALESCE($3, imagen_url)
-       WHERE id = $4 AND empresa_id = $5
+           imagen_url = COALESCE($3, imagen_url),
+           posicion = COALESCE($4, posicion)
+       WHERE id = $5 AND empresa_id = $6
        RETURNING *`,
-      [nombre ? String(nombre).trim() : null, color ?? null, imagen_url ?? null, req.params.id, req.tenant.id]
+      [nombre ? String(nombre).trim() : null, color ?? null, imagen_url ?? null, Number.isFinite(Number(posicion)) ? Number(posicion) : null, req.params.id, req.tenant.id]
     );
     if (!result.rows[0]) return res.status(404).json({ message: 'Categoría no encontrada' });
     res.json({ categoria: result.rows[0] });
