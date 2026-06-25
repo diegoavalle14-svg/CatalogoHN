@@ -6774,6 +6774,8 @@ button {
 
   .admin-customer-preview {
     gap: 10px;
+    max-width: 100%;
+    overflow-x: hidden;
     padding: 10px;
   }
 
@@ -6794,27 +6796,16 @@ button {
   }
 
   .admin-preview-brands {
-    padding-top: 10px;
-    margin-inline: 8px;
+    padding-top: 0;
+    margin-inline: 0;
   }
 
-  .admin-preview-brands .brand-strip {
-    gap: 10px;
-    padding-inline: 12px;
-  }
-
-  .admin-preview-brands .brand-chip {
-    flex-basis: 52px;
-    min-width: 52px;
-  }
-
-  .admin-preview-brands .brand-orb {
-    width: 52px;
-    height: 52px;
+  .admin-preview-brands .filter-tab-strip {
+    padding-inline: 8px;
   }
 
   .admin-preview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
 
