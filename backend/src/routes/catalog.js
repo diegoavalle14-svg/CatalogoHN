@@ -95,7 +95,7 @@ router.get('/catalog', authenticate, async (req, res) => {
       db.query('SELECT * FROM marcas WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
       db.query('SELECT * FROM categorias WHERE empresa_id = $1 ORDER BY nombre', [req.tenant.id]),
       db.query(
-        `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
+        `SELECT p.*, m.nombre AS marca, m.logo_url AS marca_logo_url, c.nombre AS categoria,
           COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
           pr.precio,
           pr.precio_promocion,
@@ -114,7 +114,7 @@ router.get('/catalog', authenticate, async (req, res) => {
         WHERE p.empresa_id = $1
           AND p.visible = true
           AND COALESCE(pr.visible_cliente, true) = true
-        GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa
+        GROUP BY p.id, m.nombre, m.logo_url, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa
         ORDER BY p.posicion, p.created_at DESC`,
         [req.tenant.id, req.user.cliente_id]
       ),

@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, BadgeDollarSign, Building2, Check, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
+import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
@@ -706,6 +706,7 @@ function Catalog({ session, onSessionUpdated }) {
               key={product.id}
               product={product}
               categoryMeta={data.categorias.find((item) => Number(item.id) === Number(product.categoria_id))}
+              brandMeta={(data.marcas || []).find((item) => Number(item.id) === Number(product.marca_id))}
               branches={withBranchLetters(data.sucursales)}
               quantities={cart[product.id] || {}}
               onQty={updateQty}
@@ -745,7 +746,7 @@ function Catalog({ session, onSessionUpdated }) {
   );
 }
 
-function ProductCard({ product, categoryMeta, branches, quantities, onQty, onAdd }) {
+function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, onQty, onAdd }) {
   const availableBranches = Array.isArray(branches) ? branches : [];
   const [drafts, setDrafts] = useState({});
   const currentPrice = Number(product.precio_final || product.precio || 0);
@@ -787,7 +788,7 @@ function ProductCard({ product, categoryMeta, branches, quantities, onQty, onAdd
         ) : (
           <DefaultProductArtwork product={product} categoryMeta={categoryMeta} />
         )}
-        <CategoryImageBadge category={categoryMeta} label={product.categoria || categoryMeta?.nombre || 'Categoría'} />
+        <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
       </div>
       <div className="product-body">
         <div className="sku-stock-line">
@@ -844,11 +845,11 @@ function ProductCard({ product, categoryMeta, branches, quantities, onQty, onAdd
   );
 }
 
-function CategoryImageBadge({ category, label }) {
-  const image = category?.imagen_url ? resolveMediaUrl(category.imagen_url) : '';
+function BrandImageBadge({ brand, label }) {
+  const image = brand?.logo_url || brand?.marca_logo_url ? resolveMediaUrl(brand.logo_url || brand.marca_logo_url) : '';
   return (
-    <span className="product-category-logo" style={categoryBadgeStyle(category)} title={label} aria-label={label}>
-      {image ? <img src={image} alt="" /> : <Folder size={16} strokeWidth={2.4} />}
+    <span className="product-category-logo" title={label} aria-label={label}>
+      {image ? <img src={image} alt="" /> : <BadgeCheck size={16} strokeWidth={2.4} />}
     </span>
   );
 }
@@ -1878,7 +1879,7 @@ function DefaultProductArtwork({ product, categoryMeta }) {
   );
 }
 
-function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [], categories }) {
+function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [], brands = [], categories }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [clientId, setClientId] = useState(() => clients[0]?.id || '');
@@ -1966,6 +1967,7 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
               key={product.id}
               product={product}
               categoryMeta={(categories || []).find((item) => Number(item.id) === Number(product.categoria_id))}
+              brandMeta={(brands || []).find((item) => Number(item.id) === Number(product.marca_id))}
               branches={withBranchLetters(previewBranches)}
               quantities={{}}
               onQty={() => {}}
@@ -1978,7 +1980,7 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
   );
 }
 
-function AdminPreviewProductCard({ product, categoryMeta }) {
+function AdminPreviewProductCard({ product, categoryMeta, brandMeta }) {
   const productImages = cleanProductImages(product.imagenes);
   const currentPrice = Number(product.precio_final || product.precio || 0);
   const oldPrice = Number(product.precio || 0);
@@ -1990,7 +1992,7 @@ function AdminPreviewProductCard({ product, categoryMeta }) {
         ) : (
           <DefaultProductArtwork product={product} categoryMeta={categoryMeta} />
         )}
-        <CategoryImageBadge category={categoryMeta} label={product.categoria || categoryMeta?.nombre || 'Categoría'} />
+        <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
       </div>
       <div className="admin-preview-product-body">
         <div className="sku-stock-line">
@@ -2442,6 +2444,7 @@ function normalizeAdminProduct(product, brands = [], categories = []) {
   return {
     ...product,
     marca: product.marca || brand?.nombre || '',
+    marca_logo_url: product.marca_logo_url || brand?.logo_url || '',
     categoria: product.categoria || category?.nombre || '',
     specs: product.specs || {},
     imagenes: cleanProductImages(product.imagenes),

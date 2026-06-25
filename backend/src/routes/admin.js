@@ -745,7 +745,7 @@ async function queryAdminProducts(tenantId) {
   await ensureProductInventoryColumns();
   await ensurePricePromoActiveColumn();
   return db.query(
-    `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
+    `SELECT p.*, m.nombre AS marca, m.logo_url AS marca_logo_url, c.nombre AS categoria,
       COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
       pr.precio,
       pr.precio_promocion,
@@ -768,7 +768,7 @@ async function queryAdminProducts(tenantId) {
      ) default_lp ON true
      LEFT JOIN precios pr ON pr.producto_id = p.id AND pr.lista_precio_id = default_lp.id
      WHERE p.empresa_id = $1
-     GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa
+     GROUP BY p.id, m.nombre, m.logo_url, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa
      ORDER BY p.posicion, p.created_at DESC`,
     [tenantId]
   );
@@ -778,7 +778,7 @@ async function getAdminProduct(tenantId, productId) {
   await ensureProductInventoryColumns();
   await ensurePricePromoActiveColumn();
   const result = await db.query(
-    `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
+    `SELECT p.*, m.nombre AS marca, m.logo_url AS marca_logo_url, c.nombre AS categoria,
       COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
       pr.precio,
       pr.precio_promocion,
@@ -801,7 +801,7 @@ async function getAdminProduct(tenantId, productId) {
      ) default_lp ON true
      LEFT JOIN precios pr ON pr.producto_id = p.id AND pr.lista_precio_id = default_lp.id
      WHERE p.empresa_id = $1 AND p.id = $2
-     GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa`,
+     GROUP BY p.id, m.nombre, m.logo_url, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa`,
     [tenantId, productId]
   );
   return result.rows[0];
