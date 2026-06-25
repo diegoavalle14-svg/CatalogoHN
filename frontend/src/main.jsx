@@ -746,27 +746,34 @@ function Catalog({ session, onSessionUpdated }) {
 }
 
 function ProductCard({ product, categoryMeta, branches, quantities, onQty, onAdd }) {
-  const primaryBranch = branches[0] || null;
-  const branchId = primaryBranch?.id;
-  const [draft, setDraftValue] = useState(1);
+  const availableBranches = Array.isArray(branches) ? branches : [];
+  const [drafts, setDrafts] = useState({});
   const currentPrice = Number(product.precio_final || product.precio || 0);
   const oldPrice = Number(product.precio || 0);
   const productImages = cleanProductImages(product.imagenes);
   const stock = stockMeta(product);
   const isOutOfStock = stock.tone === 'out';
-  const canOrder = Boolean(branchId) && !isOutOfStock;
+  const canOrder = availableBranches.length > 0 && !isOutOfStock;
 
-  function setDraft(value) {
+  function draftFor(branchId) {
+    return drafts[branchId] || 1;
+  }
+
+  function setDraft(branchId, value) {
     const next = Math.max(1, Number(value) || 1);
-    setDraftValue(stock.stock > 0 ? Math.min(next, stock.stock) : 1);
+    setDrafts((current) => ({
+      ...current,
+      [branchId]: stock.stock > 0 ? Math.min(next, stock.stock) : 1
+    }));
   }
 
-  function stepDraft(delta) {
-    setDraft(Number(draft || 1) + delta);
+  function stepDraft(branchId, delta) {
+    setDraft(branchId, Number(draftFor(branchId) || 1) + delta);
   }
 
-  function addBranch() {
+  function addBranch(branchId) {
     if (!canOrder) return;
+    const draft = draftFor(branchId);
     const nextQty = Number(quantities[branchId] || 0) + Number(draft || 1);
     onAdd(product, branchId, nextQty);
   }
@@ -797,25 +804,40 @@ function ProductCard({ product, categoryMeta, branches, quantities, onQty, onAdd
         </div>
       </div>
       <div className="branch-qty">
-        <div className="product-cart-control">
-          <div className="quantity-stepper" aria-label={`Cantidad para ${product.sku}`}>
-            <button type="button" onClick={() => stepDraft(-1)} disabled={!canOrder || Number(draft || 1) <= 1} aria-label="Restar cantidad">-</button>
-            <input
-              type="number"
-              min="1"
-              max={stock.stock > 0 ? stock.stock : undefined}
-              inputMode="numeric"
-              value={draft || 1}
-              disabled={!canOrder}
-              onChange={(event) => setDraft(event.target.value)}
-              aria-label="Cantidad"
-            />
-            <button type="button" onClick={() => stepDraft(1)} disabled={!canOrder || (stock.stock > 0 && Number(draft || 1) >= stock.stock)} aria-label="Sumar cantidad">+</button>
+        {availableBranches.length === 0 && (
+          <div className="product-cart-control no-branches">
+            <button className="add-to-cart-button" type="button" disabled>
+              Sin sucursal
+            </button>
           </div>
-          <button className="add-to-cart-button" type="button" onClick={addBranch} disabled={!canOrder}>
-            {isOutOfStock ? 'Agotado' : 'Agregar al carrito'}
-          </button>
-        </div>
+        )}
+        {availableBranches.map((branch) => {
+          const branchId = branch.id;
+          const draft = draftFor(branchId);
+          const branchLabel = branch.nombre || branch.codigo || 'Sucursal';
+          return (
+            <div className="product-cart-control" key={branchId}>
+              <span className="branch-code" title={branch.direccion || branchLabel}>{branchLabel}</span>
+              <div className="quantity-stepper" aria-label={`Cantidad para ${product.sku} en ${branchLabel}`}>
+                <button type="button" onClick={() => stepDraft(branchId, -1)} disabled={!canOrder || Number(draft || 1) <= 1} aria-label={`Restar cantidad para ${branchLabel}`}>-</button>
+                <input
+                  type="number"
+                  min="1"
+                  max={stock.stock > 0 ? stock.stock : undefined}
+                  inputMode="numeric"
+                  value={draft || 1}
+                  disabled={!canOrder}
+                  onChange={(event) => setDraft(branchId, event.target.value)}
+                  aria-label={`Cantidad para ${branchLabel}`}
+                />
+                <button type="button" onClick={() => stepDraft(branchId, 1)} disabled={!canOrder || (stock.stock > 0 && Number(draft || 1) >= stock.stock)} aria-label={`Sumar cantidad para ${branchLabel}`}>+</button>
+              </div>
+              <button className="add-to-cart-button" type="button" onClick={() => addBranch(branchId)} disabled={!canOrder}>
+                {isOutOfStock ? 'Agotado' : 'Agregar'}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </article>
   );
@@ -856,6 +878,7 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
               <div className="cart-line-main">
                 <span className="cart-sku">{line.sku}</span>
                 <strong className="cart-line-title">{line.descripcion}</strong>
+                <small className="cart-branch-label">Sucursal: {line.sucursal}</small>
                 <label>
                   Cant.
                   <input
@@ -916,7 +939,7 @@ function History({ session }) {
             <b>{order.estado}</b>
           </div>
           {order.items?.map((item) => (
-            <p key={`${item.producto_id}-${item.sucursal_id}`}>{item.sku} · {item.cantidad}</p>
+            <p key={`${item.producto_id}-${item.sucursal_id}`}>{item.sku} · {item.sucursal || 'Sucursal'} · {item.cantidad}</p>
           ))}
           <strong>{money(order.total)}</strong>
         </article>
