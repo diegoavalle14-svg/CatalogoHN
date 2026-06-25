@@ -5630,7 +5630,7 @@ button {
 .client-branch-add,
 .client-branch-row {
   display: grid;
-  grid-template-columns: minmax(76px, 1fr) minmax(0, 1.5fr) auto;
+  grid-template-columns: 28px minmax(76px, 1fr) minmax(0, 1.5fr) auto;
   gap: 8px;
 }
 
@@ -5641,6 +5641,18 @@ button {
 
 .client-branch-row {
   align-items: center;
+}
+
+.client-branch-letter {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 4px;
+  background: #111111;
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .client-branch-row button {
@@ -5820,6 +5832,11 @@ button {
 [data-theme="dark"] .client-branch-row button {
   background: #242933;
   color: #c7ceda;
+}
+
+[data-theme="dark"] .client-branch-letter {
+  background: #05070a;
+  color: var(--yellow);
 }
 
 .admin-modal > .admin-site-save-button:hover {
@@ -6365,6 +6382,19 @@ button {
   .client-branch-add,
   .client-branch-row {
     grid-template-columns: 1fr;
+  }
+
+  .client-branch-row {
+    grid-template-columns: 24px 1fr;
+  }
+
+  .client-branch-row input,
+  .client-branch-row button {
+    grid-column: 1 / -1;
+  }
+
+  .client-branch-letter {
+    grid-column: 1;
   }
 
   .client-branches-head {

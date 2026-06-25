@@ -706,7 +706,7 @@ function Catalog({ session, onSessionUpdated }) {
               key={product.id}
               product={product}
               categoryMeta={data.categorias.find((item) => Number(item.id) === Number(product.categoria_id))}
-              branches={data.sucursales}
+              branches={withBranchLetters(data.sucursales)}
               quantities={cart[product.id] || {}}
               onQty={updateQty}
               onAdd={addProductQty}
@@ -814,10 +814,11 @@ function ProductCard({ product, categoryMeta, branches, quantities, onQty, onAdd
         {availableBranches.map((branch) => {
           const branchId = branch.id;
           const draft = draftFor(branchId);
-          const branchLabel = branch.nombre || branch.codigo || 'Sucursal';
+          const branchLabel = branch.letra || branch.codigo || branch.nombre || 'Sucursal';
+          const branchTitle = [branchLabel, branch.nombre, branch.direccion].filter(Boolean).join(' · ');
           return (
             <div className="product-cart-control" key={branchId}>
-              <span className="branch-code" title={branch.direccion || branchLabel}>{branchLabel}</span>
+              <span className="branch-code" title={branchTitle}>{branchLabel}</span>
               <div className="quantity-stepper" aria-label={`Cantidad para ${product.sku} en ${branchLabel}`}>
                 <button type="button" onClick={() => stepDraft(branchId, -1)} disabled={!canOrder || Number(draft || 1) <= 1} aria-label={`Restar cantidad para ${branchLabel}`}>-</button>
                 <input
@@ -2276,6 +2277,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 {clientBranches.length === 0 && <small className="admin-empty-inline">Sin sucursales todavía.</small>}
                 {clientBranches.map((branch, index) => (
                   <div className="client-branch-row" key={branch.id || `${branch.nombre}-${index}`}>
+                    <span className="client-branch-letter">{String.fromCharCode(65 + index)}</span>
                     <input value={branch.nombre || ''} onChange={(event) => updateClientBranch(index, 'nombre', event.target.value)} aria-label="Sucursal" />
                     <input value={branch.direccion || ''} onChange={(event) => updateClientBranch(index, 'direccion', event.target.value)} aria-label="Dirección" placeholder="Dirección opcional" />
                     <button type="button" onClick={() => removeClientBranch(index)} aria-label={`Quitar ${branch.nombre}`}>
@@ -2568,6 +2570,13 @@ function uniqueBranches(branches = []) {
     seen.add(key);
     return true;
   });
+}
+
+function withBranchLetters(branches = []) {
+  return uniqueBranches(Array.isArray(branches) ? branches : []).map((branch, index) => ({
+    ...branch,
+    letra: String.fromCharCode(65 + index)
+  }));
 }
 
 function AdminOrder({ order, token }) {
