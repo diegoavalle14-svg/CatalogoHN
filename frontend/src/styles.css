@@ -553,10 +553,10 @@ button {
 
 .filter-tab-strip {
   display: flex;
-  align-items: stretch;
-  gap: 18px;
+  align-items: center;
+  gap: 16px;
   overflow-x: auto;
-  padding: 0 10px;
+  padding: 4px 10px 0;
   scrollbar-width: none;
 }
 
@@ -566,7 +566,7 @@ button {
 
 .filter-tab {
   min-width: max-content;
-  min-height: 56px;
+  min-height: 60px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -575,7 +575,7 @@ button {
   border: 0;
   background: transparent;
   color: #7b7b7b;
-  padding: 0 2px;
+  padding: 0 4px;
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0;
@@ -604,7 +604,7 @@ button {
 }
 
 .brand-filter-section .filter-tab {
-  min-height: 48px;
+  min-height: 52px;
   font-size: 12px;
 }
 
@@ -2924,6 +2924,15 @@ button {
   border: 1px solid #303642;
   color: #f3f5f8;
   box-shadow: 0 -18px 55px rgba(0, 0, 0, .42);
+}
+
+[data-theme="dark"] .admin-modal header {
+  background: #151820;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+[data-theme="dark"] .admin-modal > .primary-button {
+  box-shadow: 0 -12px 24px rgba(21, 24, 32, .94);
 }
 
 [data-theme="dark"] .admin-modal header button {
@@ -5435,7 +5444,7 @@ button {
 .admin-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 1200;
   display: grid;
   place-items: end center;
   background: rgba(0, 0, 0, .42);
@@ -5447,14 +5456,20 @@ button {
   overflow-y: auto;
   border-radius: 16px 16px 0 0;
   background: #fff;
-  padding: 16px;
+  padding: 0 16px 16px;
 }
 
 .admin-modal header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
+  background: #fff;
+  padding: 16px 0 12px;
+  box-shadow: 0 1px 0 rgba(17, 17, 17, .08);
 }
 
 .admin-modal h2 {
@@ -5933,8 +5948,12 @@ button {
 
 .admin-form + .primary-button,
 .admin-modal > .primary-button {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
   width: 100%;
   margin-top: 14px;
+  box-shadow: 0 -12px 24px rgba(255, 255, 255, .94);
 }
 
 .admin-modal > .admin-site-save-button,
@@ -6211,7 +6230,16 @@ button {
   }
 
   .welcome-line {
-    display: none;
+    grid-column: 1 / -1;
+    display: flex;
+    min-height: 16px;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.1;
+  }
+
+  .welcome-line b {
+    min-width: 0;
   }
 
   .topbar-actions {
