@@ -5570,6 +5570,84 @@ button {
   resize: vertical;
 }
 
+.client-branches-editor {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 10px;
+}
+
+.client-branches-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.client-branches-head strong {
+  color: #15171d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.client-branches-head small {
+  color: #8b8e98;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.client-branch-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.client-branch-quick button,
+.client-branch-add button,
+.client-branch-row button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: #111111;
+  color: var(--yellow);
+  padding: 0 11px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.client-branch-quick button {
+  min-width: 34px;
+  padding-inline: 0;
+}
+
+.client-branch-quick button:disabled {
+  background: #dedede;
+  color: #8b8e98;
+}
+
+.client-branch-add,
+.client-branch-row {
+  display: grid;
+  grid-template-columns: minmax(76px, 1fr) minmax(0, 1.5fr) auto;
+  gap: 8px;
+}
+
+.client-branch-list {
+  display: grid;
+  gap: 8px;
+}
+
+.client-branch-row {
+  align-items: center;
+}
+
+.client-branch-row button {
+  background: #f0f0f0;
+  color: #a33a3a;
+}
+
 .admin-form input[type="color"] {
   padding: 4px;
 }
@@ -5723,6 +5801,25 @@ button {
   background: #ffffff;
   color: #111111;
   box-shadow: none;
+}
+
+[data-theme="dark"] .client-branches-editor {
+  border-color: #303642;
+  background: #10131a;
+}
+
+[data-theme="dark"] .client-branches-head strong {
+  color: #f3f5f8;
+}
+
+[data-theme="dark"] .client-branches-head small {
+  color: #aeb5c2;
+}
+
+[data-theme="dark"] .client-branch-quick button:disabled,
+[data-theme="dark"] .client-branch-row button {
+  background: #242933;
+  color: #c7ceda;
 }
 
 .admin-modal > .admin-site-save-button:hover {
@@ -6262,6 +6359,22 @@ button {
   .registration-request-form .primary-button {
     min-height: 36px;
     font-size: 11px;
+  }
+
+  .client-branches-head,
+  .client-branch-add,
+  .client-branch-row {
+    grid-template-columns: 1fr;
+  }
+
+  .client-branches-head {
+    display: grid;
+    gap: 3px;
+  }
+
+  .client-branch-row button,
+  .client-branch-add button {
+    width: 100%;
   }
 
   .cart-panel {

@@ -2063,10 +2063,41 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const [previewLogoUrl, setPreviewLogoUrl] = useState('');
   const [formFeedback, setFormFeedback] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [branchDraft, setBranchDraft] = useState({ nombre: '', direccion: '' });
   const [customSubnameMode, setCustomSubnameMode] = useState(() => Boolean(editor.value?.subnombre && !SITE_SUBNAME_OPTIONS.includes(editor.value.subnombre)));
   const update = (key, value) => {
     setFormFeedback(null);
     setForm((current) => ({ ...current, [key]: value }));
+  };
+  const clientBranches = uniqueBranches(Array.isArray(form.sucursales) ? form.sucursales : []);
+  const syncClientBranches = (branches) => {
+    const clean = uniqueBranches((branches || [])
+      .map((branch) => ({
+        id: branch.id,
+        nombre: String(branch.nombre || '').trim(),
+        direccion: String(branch.direccion || '').trim()
+      }))
+      .filter((branch) => branch.nombre));
+    setFormFeedback(null);
+    setForm((current) => ({
+      ...current,
+      sucursales: clean,
+      sucursales_text: clean.map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n')
+    }));
+  };
+  const addClientBranch = (branch = branchDraft) => {
+    const nombre = String(branch.nombre || '').trim();
+    if (!nombre) return;
+    syncClientBranches([...clientBranches, { nombre, direccion: String(branch.direccion || '').trim() }]);
+    setBranchDraft({ nombre: '', direccion: '' });
+  };
+  const updateClientBranch = (index, key, value) => {
+    syncClientBranches(clientBranches.map((branch, branchIndex) => (
+      branchIndex === index ? { ...branch, [key]: value } : branch
+    )));
+  };
+  const removeClientBranch = (index) => {
+    syncClientBranches(clientBranches.filter((_, branchIndex) => branchIndex !== index));
   };
   const selectedSubname = customSubnameMode ? '__custom__' : SITE_SUBNAME_OPTIONS.includes(form.subnombre) ? form.subnombre : '';
   const sitePreviewTenant = useMemo(
@@ -2209,7 +2240,51 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
             </select></label>
-            <label>Sucursales<textarea value={form.sucursales_text || ''} onChange={(event) => update('sucursales_text', event.target.value)} placeholder="Sucursal Centro | San Pedro Sula" /></label>
+            <section className="client-branches-editor">
+              <div className="client-branches-head">
+                <strong>Sucursales</strong>
+                <small>{clientBranches.length ? `${clientBranches.length} configuradas` : 'Agrega al menos una sucursal para pedidos'}</small>
+              </div>
+              <div className="client-branch-quick">
+                {['A', 'B', 'C', 'D', 'E'].map((name) => (
+                  <button
+                    type="button"
+                    key={name}
+                    onClick={() => addClientBranch({ nombre: name, direccion: '' })}
+                    disabled={clientBranches.some((branch) => String(branch.nombre).toUpperCase() === name)}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+              <div className="client-branch-add">
+                <input
+                  value={branchDraft.nombre}
+                  onChange={(event) => setBranchDraft((current) => ({ ...current, nombre: event.target.value }))}
+                  placeholder="Sucursal o código"
+                />
+                <input
+                  value={branchDraft.direccion}
+                  onChange={(event) => setBranchDraft((current) => ({ ...current, direccion: event.target.value }))}
+                  placeholder="Dirección opcional"
+                />
+                <button type="button" onClick={() => addClientBranch()} disabled={!branchDraft.nombre.trim()}>
+                  Agregar
+                </button>
+              </div>
+              <div className="client-branch-list">
+                {clientBranches.length === 0 && <small className="admin-empty-inline">Sin sucursales todavía.</small>}
+                {clientBranches.map((branch, index) => (
+                  <div className="client-branch-row" key={branch.id || `${branch.nombre}-${index}`}>
+                    <input value={branch.nombre || ''} onChange={(event) => updateClientBranch(index, 'nombre', event.target.value)} aria-label="Sucursal" />
+                    <input value={branch.direccion || ''} onChange={(event) => updateClientBranch(index, 'direccion', event.target.value)} aria-label="Dirección" placeholder="Dirección opcional" />
+                    <button type="button" onClick={() => removeClientBranch(index)} aria-label={`Quitar ${branch.nombre}`}>
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
             {formFeedback && <small className={formFeedback.type === 'success' ? 'form-success' : 'form-error'}>{formFeedback.message}</small>}
           </div>
         )}
@@ -2452,13 +2527,19 @@ function prepareClientPayload(client) {
     normalizeBranchKey(branch.nombre, branch.direccion),
     branch
   ]));
-  const sucursales = uniqueBranches(String(client.sucursales_text || '')
-    .split('\n')
-    .map((line) => {
-      const [name, ...addressParts] = line.split('|');
-      const nombre = name?.trim();
-      const direccion = addressParts.join('|').trim();
-      const existing = branchesByLine.get(normalizeBranchKey(nombre, direccion));
+  const sourceBranches = Array.isArray(client.sucursales)
+    ? client.sucursales
+    : String(client.sucursales_text || '')
+      .split('\n')
+      .map((line) => {
+        const [name, ...addressParts] = line.split('|');
+        return { nombre: name?.trim(), direccion: addressParts.join('|').trim() };
+      });
+  const sucursales = uniqueBranches(sourceBranches
+    .map((branch) => {
+      const nombre = String(branch.nombre || '').trim();
+      const direccion = String(branch.direccion || '').trim();
+      const existing = branch.id ? branch : branchesByLine.get(normalizeBranchKey(nombre, direccion));
       return { id: existing?.id, nombre, direccion };
     })
     .filter((branch) => branch.nombre));
