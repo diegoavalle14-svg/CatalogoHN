@@ -672,20 +672,6 @@ function Catalog({ session, onSessionUpdated }) {
 
   return (
     <section className="catalog-page">
-      <div className="catalog-hero-panel">
-        <div className="customer-welcome">
-          <span>Catálogo privado</span>
-          <strong>{session.user.nombre}</strong>
-          <small>{session.tenant?.nombre || 'Empresa'} mantiene este inventario actualizado para tus compras.</small>
-        </div>
-        <div className="catalog-hero-stats" aria-label="Resumen del catálogo">
-          <span><b>{catalogStats.total}</b> productos</span>
-          <span><b>{catalogStats.available}</b> disponibles</span>
-          <span><b>{catalogStats.promos}</b> promos</span>
-          <span><b>{catalogStats.categories}</b> categorías</span>
-        </div>
-      </div>
-
       <ClearableSearchInput
         className="search-box"
         iconSize={18}
