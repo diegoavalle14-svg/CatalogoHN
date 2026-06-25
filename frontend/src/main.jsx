@@ -1697,6 +1697,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
 function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [expandedClientIds, setExpandedClientIds] = useState({});
   const filteredClients = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return (clients || []).filter((client) => {
@@ -1736,20 +1737,33 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
             <span>{clients.length === 0 ? 'Usa Nuevo para crear el primer acceso mayorista de Kolben.' : 'Prueba con otro estado o una busqueda mas amplia.'}</span>
           </div>
         )}
-        {filteredClients.map((client) => (
-          <button className="admin-client-row" key={client.id} onClick={() => onEdit(client)}>
+        {filteredClients.map((client) => {
+          const isExpanded = Boolean(expandedClientIds[client.id]);
+          return (
+          <article className="admin-client-row" key={client.id}>
             <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
-            <span>
+            <span className="admin-client-main">
               <strong>{client.nombre}</strong>
-              <small>{client.usuario} · {client.lista} · {client.credito} · {client.tipo}</small>
-              <small>{client.acceso}</small>
+              <small>{client.usuario}</small>
             </span>
             <span className="admin-client-actions">
-              <b onClick={(event) => { event.stopPropagation(); onToggle(client); }} className={client.activo ? 'client-state on' : 'client-state'}>{client.activo ? 'Activo' : 'Inactivo'}</b>
-              <span role="button" tabIndex={0} className="danger-icon-button" onClick={(event) => { event.stopPropagation(); onDelete(client); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); onDelete(client); } }}>Eliminar</span>
+              <button type="button" className="client-row-button" onClick={() => onEdit(client)}>Editar</button>
+              <button type="button" className="client-row-button" onClick={() => setExpandedClientIds((current) => ({ ...current, [client.id]: !current[client.id] }))}>
+                {isExpanded ? 'Ocultar' : 'Ver detalle'}
+              </button>
+              <button type="button" onClick={() => onToggle(client)} className={client.activo ? 'client-state on' : 'client-state'}>{client.activo ? 'Activo' : 'Inactivo'}</button>
+              <button type="button" className="danger-icon-button" onClick={() => onDelete(client)}>Eliminar</button>
             </span>
-          </button>
-        ))}
+            {isExpanded && (
+              <div className="admin-client-detail">
+                <span><b>Lista</b>{client.lista}</span>
+                <span><b>Crédito</b>{client.credito}</span>
+                <span><b>Tipo</b>{client.tipo}</span>
+                <span><b>Acceso</b>{client.acceso}</span>
+              </div>
+            )}
+          </article>
+        );})}
       </div>
     </>
   );

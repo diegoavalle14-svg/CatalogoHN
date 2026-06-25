@@ -2617,6 +2617,25 @@ button {
   color: #7ee0b2;
 }
 
+[data-theme="dark"] .client-row-button {
+  border-color: #303642;
+  background: #20242d;
+  color: #f3f5f8;
+}
+
+[data-theme="dark"] .admin-client-detail {
+  border-color: #303642;
+  background: #10131a;
+}
+
+[data-theme="dark"] .admin-client-detail span {
+  color: #c3cad6;
+}
+
+[data-theme="dark"] .admin-client-detail b {
+  color: #8f98a8;
+}
+
 [data-theme="dark"] .admin-price-card th {
   background: #0d0f13;
   color: #f5c200;
@@ -4891,7 +4910,7 @@ button {
 .admin-client-row {
   width: 100%;
   display: grid;
-  grid-template-columns: 40px 1fr auto;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   border: 0;
@@ -4905,14 +4924,55 @@ button {
   border-bottom: 0;
 }
 
-.admin-client-row > span:nth-child(2) {
+.admin-client-main {
   min-width: 0;
   display: grid;
   gap: 3px;
 }
 
 .admin-client-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   justify-content: flex-end;
+}
+
+.client-row-button {
+  min-height: 28px;
+  border: 1px solid #e2e4e8;
+  border-radius: 7px;
+  background: #f5f6f8;
+  color: #111;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-client-detail {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  border: 1px solid #eceef2;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 9px;
+}
+
+.admin-client-detail span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  color: #5f6672;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.admin-client-detail b {
+  color: #8b8e98;
+  font-size: 9px;
+  text-transform: uppercase;
 }
 
 .client-avatar {
@@ -4933,6 +4993,7 @@ button {
 }
 
 .client-state {
+  border: 0;
   border-radius: 99px;
   background: #eeeeee;
   color: #888;
@@ -6683,6 +6744,21 @@ button {
   .add-to-cart-button {
     padding: 0 8px;
     font-size: 9px;
+  }
+
+  .admin-client-row {
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .admin-client-actions {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
+  }
+
+  .admin-client-detail {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
   }
 
 }
