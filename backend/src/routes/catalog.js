@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../config/database');
 const { authenticate } = require('../middleware/auth');
-const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn } = require('../services/schemaGuards');
+const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
 
 const router = express.Router();
 let tenantProfileColumnsReady = false;
@@ -89,6 +89,7 @@ router.get('/catalog', authenticate, async (req, res) => {
     await ensureProductInventoryColumns();
     await ensureCategoryImageColumn();
     await ensurePriceVisibilityColumn();
+    await ensureBranchActiveColumn();
     const [brands, categories, products, branches, currentUser] = await Promise.all([
       db.query('SELECT * FROM marcas WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
       db.query('SELECT * FROM categorias WHERE empresa_id = $1 ORDER BY nombre', [req.tenant.id]),
@@ -150,7 +151,7 @@ async function queryCatalogUser(userId) {
 }
 
 async function queryClientBranches(clientId) {
-  const branches = await db.query('SELECT * FROM sucursales WHERE cliente_id = $1 ORDER BY nombre', [clientId]);
+  const branches = await db.query('SELECT * FROM sucursales WHERE cliente_id = $1 AND COALESCE(activo, true) = true ORDER BY nombre', [clientId]);
   if (branches.rows.length > 0) return branches;
   const created = await db.query(
     `INSERT INTO sucursales (cliente_id, nombre, direccion)

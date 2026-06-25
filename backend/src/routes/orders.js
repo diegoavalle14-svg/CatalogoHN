@@ -3,7 +3,7 @@ const db = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { sendMail } = require('../services/mailer');
 const { buildAdminNewOrderEmail, buildClientStatusEmail } = require('../services/orderEmails');
-const { ensureProductInventoryColumns } = require('../services/schemaGuards');
+const { ensureProductInventoryColumns, ensureBranchActiveColumn } = require('../services/schemaGuards');
 const { enumValue, handleValidationError, positiveInt, validateOrderItems } = require('../services/validators');
 const { dispatchWebhookEvent } = require('../services/webhooks');
 
@@ -128,6 +128,7 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
 
   try {
     await ensureProductInventoryColumns();
+    await ensureBranchActiveColumn();
     const created = await db.pool.connect();
     try {
       await created.query('BEGIN');
@@ -148,7 +149,7 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
                   s.id AS sucursal_id,
                   COALESCE(pr.precio_promocion, pr.precio) AS precio_unitario
            FROM productos p
-           JOIN sucursales s ON s.id = $2 AND s.cliente_id = $3
+           JOIN sucursales s ON s.id = $2 AND s.cliente_id = $3 AND COALESCE(s.activo, true) = true
            LEFT JOIN cliente_lista_precio clp ON clp.cliente_id = $3
            LEFT JOIN precios pr ON pr.producto_id = p.id AND pr.lista_precio_id = clp.lista_precio_id
            WHERE p.id = $1

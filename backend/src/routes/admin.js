@@ -7,7 +7,7 @@ const db = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const multer = require('multer');
 const sharp = require('sharp');
-const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn } = require('../services/schemaGuards');
+const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
 
 const router = express.Router();
 let tenantProfileColumnsReady = false;
@@ -131,6 +131,7 @@ router.get('/admin/catalog', authenticate, requireRole('admin', 'superadmin'), a
 
 router.get('/admin/clients', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
+    await ensureBranchActiveColumn();
     const clients = await queryAdminClients(req.tenant.id);
     res.json({ clientes: clients.rows });
   } catch (error) {
@@ -140,6 +141,7 @@ router.get('/admin/clients', authenticate, requireRole('admin', 'superadmin'), a
 
 router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   await ensureClientPriceListConstraint();
+  await ensureBranchActiveColumn();
   let payload;
   try {
     payload = normalizeClientPayload(req.body || {});
@@ -185,6 +187,7 @@ router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), 
 
 router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   await ensureClientPriceListConstraint();
+  await ensureBranchActiveColumn();
   let payload;
   try {
     payload = normalizeClientPayload(req.body || {}, true);
@@ -867,7 +870,7 @@ async function queryAdminClients(tenantId) {
      JOIN usuarios u ON u.id = c.usuario_id
      LEFT JOIN cliente_lista_precio clp ON clp.cliente_id = c.id
      LEFT JOIN listas_precios lp ON lp.id = clp.lista_precio_id
-     LEFT JOIN sucursales s ON s.cliente_id = c.id
+     LEFT JOIN sucursales s ON s.cliente_id = c.id AND COALESCE(s.activo, true) = true
      LEFT JOIN LATERAL (
        SELECT a.fecha, a.ip, a.user_agent, a.geolocalizacion
        FROM accesos_log a
@@ -1019,7 +1022,9 @@ async function replaceClientBranches(client, clientId, branches = []) {
       const updated = await client.query(
         `UPDATE sucursales
          SET nombre = $1,
-             direccion = $2
+             direccion = $2,
+             activo = true,
+             updated_at = CURRENT_TIMESTAMP
          WHERE id = $3 AND cliente_id = $4
          RETURNING id`,
         [branch.nombre, branch.direccion || 'Direccion pendiente', branchId, clientId]
@@ -1030,13 +1035,26 @@ async function replaceClientBranches(client, clientId, branches = []) {
       }
     }
     const inserted = await client.query(
-      'INSERT INTO sucursales (cliente_id, nombre, direccion) VALUES ($1, $2, $3) RETURNING id',
+      'INSERT INTO sucursales (cliente_id, nombre, direccion, activo) VALUES ($1, $2, $3, true) RETURNING id',
       [clientId, branch.nombre, branch.direccion || 'Direccion pendiente']
     );
     keepIds.push(inserted.rows[0].id);
   }
 
   if (keepIds.length > 0) {
+    await client.query(
+      `UPDATE sucursales s
+       SET activo = false,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE s.cliente_id = $1
+         AND s.id <> ALL($2::int[])
+         AND EXISTS (
+           SELECT 1
+           FROM pedido_items pi
+           WHERE pi.sucursal_id = s.id
+         )`,
+      [clientId, keepIds]
+    );
     await client.query(
       `DELETE FROM sucursales s
        WHERE s.cliente_id = $1
@@ -1053,6 +1071,18 @@ async function replaceClientBranches(client, clientId, branches = []) {
       `DELETE FROM sucursales s
        WHERE s.cliente_id = $1
          AND NOT EXISTS (
+           SELECT 1
+           FROM pedido_items pi
+           WHERE pi.sucursal_id = s.id
+         )`,
+      [clientId]
+    );
+    await client.query(
+      `UPDATE sucursales s
+       SET activo = false,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE s.cliente_id = $1
+         AND EXISTS (
            SELECT 1
            FROM pedido_items pi
            WHERE pi.sucursal_id = s.id

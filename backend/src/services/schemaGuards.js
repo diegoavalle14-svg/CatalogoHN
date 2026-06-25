@@ -3,6 +3,7 @@ const db = require('../config/database');
 let productInventoryColumnsReady = false;
 let categoryImageColumnReady = false;
 let priceVisibilityColumnReady = false;
+let branchActiveColumnReady = false;
 
 async function ensureProductInventoryColumns(client = db) {
   if (productInventoryColumnsReady) return;
@@ -23,8 +24,16 @@ async function ensurePriceVisibilityColumn(client = db) {
   priceVisibilityColumnReady = true;
 }
 
+async function ensureBranchActiveColumn(client = db) {
+  if (branchActiveColumnReady) return;
+  await client.query(`ALTER TABLE sucursales ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true`);
+  await client.query(`UPDATE sucursales SET activo = true WHERE activo IS NULL`);
+  branchActiveColumnReady = true;
+}
+
 module.exports = {
   ensureProductInventoryColumns,
   ensureCategoryImageColumn,
-  ensurePriceVisibilityColumn
+  ensurePriceVisibilityColumn,
+  ensureBranchActiveColumn
 };

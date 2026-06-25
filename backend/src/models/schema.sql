@@ -68,6 +68,7 @@ CREATE TABLE sucursales (
     cliente_id INT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
     nombre VARCHAR(100) NOT NULL,
     direccion TEXT NOT NULL,
+    activo BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
