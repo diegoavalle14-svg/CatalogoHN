@@ -833,7 +833,7 @@ function ProductCard({ product, categoryMeta, branches, quantities, onQty, onAdd
                 <button type="button" onClick={() => stepDraft(branchId, 1)} disabled={!canOrder || (stock.stock > 0 && Number(draft || 1) >= stock.stock)} aria-label={`Sumar cantidad para ${branchLabel}`}>+</button>
               </div>
               <button className="add-to-cart-button" type="button" onClick={() => addBranch(branchId)} disabled={!canOrder}>
-                {isOutOfStock ? 'Agotado' : 'Agregar'}
+                {isOutOfStock ? 'Agotado' : '+ Agregar'}
               </button>
             </div>
           );
