@@ -590,6 +590,18 @@ function Catalog({ session, onSessionUpdated }) {
       return matchesQuery && matchesCategory;
     });
   }, [data, query, category]);
+  const catalogStats = useMemo(() => {
+    if (!data) return { total: 0, available: 0, promos: 0, categories: 0 };
+    const total = data.productos.length;
+    const available = data.productos.filter((product) => stockMeta(product).tone !== 'out').length;
+    const promos = data.productos.filter((product) => product.en_promocion).length;
+    return {
+      total,
+      available,
+      promos,
+      categories: (data.categorias || []).length
+    };
+  }, [data]);
 
   const lines = useMemo(() => flattenCart(cart, data), [cart, data]);
   const total = lines.reduce((sum, line) => sum + line.cantidad * line.precio_unitario, 0);
@@ -648,9 +660,18 @@ function Catalog({ session, onSessionUpdated }) {
 
   return (
     <section className="catalog-page">
-      <div className="customer-welcome">
-        <span>Bienvenido</span>
-        <strong>{session.user.nombre}</strong>
+      <div className="catalog-hero-panel">
+        <div className="customer-welcome">
+          <span>Catálogo privado</span>
+          <strong>{session.user.nombre}</strong>
+          <small>{session.tenant?.nombre || 'Empresa'} mantiene este inventario actualizado para tus compras.</small>
+        </div>
+        <div className="catalog-hero-stats" aria-label="Resumen del catálogo">
+          <span><b>{catalogStats.total}</b> productos</span>
+          <span><b>{catalogStats.available}</b> disponibles</span>
+          <span><b>{catalogStats.promos}</b> promos</span>
+          <span><b>{catalogStats.categories}</b> categorías</span>
+        </div>
       </div>
 
       <div className="search-box">
@@ -660,21 +681,39 @@ function Catalog({ session, onSessionUpdated }) {
 
       <CategoryFilterStrip categories={data.categorias || []} value={category} onChange={setCategory} />
 
-      <p className="product-count">{products.length} productos</p>
-
-      <div className="product-grid">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            categoryMeta={data.categorias.find((item) => Number(item.id) === Number(product.categoria_id))}
-            branches={data.sucursales}
-            quantities={cart[product.id] || {}}
-            onQty={updateQty}
-            onAdd={addProductQty}
-          />
-        ))}
+      <div className="product-count-row">
+        <p className="product-count">{products.length} productos</p>
+        {(query || category !== 'all') && (
+          <button type="button" onClick={() => {
+            setQuery('');
+            setCategory('all');
+          }}>
+            Limpiar filtros
+          </button>
+        )}
       </div>
+
+      {products.length === 0 ? (
+        <div className="catalog-empty-state">
+          <PackageSearch size={28} />
+          <strong>No encontramos productos con esos filtros</strong>
+          <span>Prueba buscando por SKU, marca, aplicación o categoría.</span>
+        </div>
+      ) : (
+        <div className="product-grid">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              categoryMeta={data.categorias.find((item) => Number(item.id) === Number(product.categoria_id))}
+              branches={data.sucursales}
+              quantities={cart[product.id] || {}}
+              onQty={updateQty}
+              onAdd={addProductQty}
+            />
+          ))}
+        </div>
+      )}
 
       {toast && <div className="catalog-toast">{toast}</div>}
 
@@ -1449,6 +1488,16 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
 function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const urgentLabel = pending > 0
+    ? `${pending} pedido${pending === 1 ? '' : 's'} por revisar`
+    : preparing > 0
+      ? `${preparing} pedido${preparing === 1 ? '' : 's'} en preparación`
+      : 'Operación al día';
+  const urgentCopy = pending > 0
+    ? 'Marca como Preparando al confirmar inventario y despacho.'
+    : preparing > 0
+      ? 'Cierra el flujo cuando el pedido salga hacia el cliente.'
+      : 'No hay pedidos pendientes en este momento.';
   const filteredOrders = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return (orders || []).filter((order) => {
@@ -1466,6 +1515,13 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         <AdminStat value={preparing} label="Preparando" tone="blue" />
         <AdminStat value={sentToday} label="Enviados hoy" tone="green" />
         <AdminStat value={orders.length} label="Pedidos" helper="total preview" />
+      </div>
+      <div className={`admin-priority-strip ${pending > 0 ? 'warning' : preparing > 0 ? 'active' : 'clear'}`}>
+        <Activity size={17} />
+        <span>
+          <strong>{urgentLabel}</strong>
+          <small>{urgentCopy}</small>
+        </span>
       </div>
       <div className="admin-filter-bar">
         <label className="admin-search-inline">
