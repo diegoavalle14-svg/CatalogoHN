@@ -6273,7 +6273,7 @@ button {
   .topbar {
     grid-template-columns: minmax(112px, 1fr) auto;
     gap: 8px;
-    min-height: 68px;
+    min-height: 60px;
     padding: 10px;
   }
 
@@ -6291,16 +6291,7 @@ button {
   }
 
   .welcome-line {
-    grid-column: 1 / -1;
-    display: flex;
-    min-height: 16px;
-    overflow: hidden;
-    font-size: 11px;
-    line-height: 1.1;
-  }
-
-  .welcome-line b {
-    min-width: 0;
+    display: none;
   }
 
   .topbar-actions {
