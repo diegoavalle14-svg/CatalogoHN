@@ -1962,7 +1962,7 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
               key={product.id}
               product={product}
               categoryMeta={(categories || []).find((item) => Number(item.id) === Number(product.categoria_id))}
-              branches={previewBranches}
+              branches={withBranchLetters(previewBranches)}
               quantities={{}}
               onQty={() => {}}
               onAdd={() => {}}
@@ -2247,16 +2247,16 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 <small>{clientBranches.length ? `${clientBranches.length} configuradas` : 'Agrega al menos una sucursal para pedidos'}</small>
               </div>
               <div className="client-branch-quick">
-                {['A', 'B', 'C', 'D', 'E'].map((name) => (
+                {['A', 'B', 'C', 'D', 'E'].slice(clientBranches.length).map((name) => (
                   <button
                     type="button"
                     key={name}
                     onClick={() => addClientBranch({ nombre: name, direccion: '' })}
-                    disabled={clientBranches.some((branch) => String(branch.nombre).toUpperCase() === name)}
                   >
                     {name}
                   </button>
                 ))}
+                {clientBranches.length >= 5 && <small>Todas las letras rápidas están usadas.</small>}
               </div>
               <div className="client-branch-add">
                 <input
