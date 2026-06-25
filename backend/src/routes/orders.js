@@ -3,7 +3,7 @@ const db = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { sendMail } = require('../services/mailer');
 const { buildAdminNewOrderEmail, buildClientStatusEmail } = require('../services/orderEmails');
-const { ensureProductInventoryColumns, ensureBranchActiveColumn } = require('../services/schemaGuards');
+const { ensureProductInventoryColumns, ensurePricePromoActiveColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
 const { enumValue, handleValidationError, positiveInt, validateOrderItems } = require('../services/validators');
 const { dispatchWebhookEvent } = require('../services/webhooks');
 
@@ -128,6 +128,7 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
 
   try {
     await ensureProductInventoryColumns();
+    await ensurePricePromoActiveColumn();
     await ensureBranchActiveColumn();
     const created = await db.pool.connect();
     try {
@@ -147,7 +148,10 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
                   p.sku,
                   p.descripcion,
                   s.id AS sucursal_id,
-                  COALESCE(pr.precio_promocion, pr.precio) AS precio_unitario
+                  CASE
+                    WHEN COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL THEN pr.precio_promocion
+                    ELSE pr.precio
+                  END AS precio_unitario
            FROM productos p
            JOIN sucursales s ON s.id = $2 AND s.cliente_id = $3 AND COALESCE(s.activo, true) = true
            LEFT JOIN cliente_lista_precio clp ON clp.cliente_id = $3

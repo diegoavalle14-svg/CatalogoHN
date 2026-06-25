@@ -1162,6 +1162,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
           producto_id: product.id,
           precio: Number(payload[`precio_${product.id}`] || 0),
           precio_promocion: payload[`promo_${product.id}`] === '' ? null : Number(payload[`promo_${product.id}`] || 0) || null,
+          promo_activa: payload[`promo_activa_${product.id}`] === true,
           visible_cliente: payload[`visible_${product.id}`] !== false
         }));
         await api.adminSaveListPrices(session.token, listId, precios);
@@ -1179,6 +1180,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       producto_id: product.id,
       precio: Number(payload[`precio_${product.id}`] || 0),
       precio_promocion: payload[`promo_${product.id}`] === '' ? null : Number(payload[`promo_${product.id}`] || 0) || null,
+      promo_activa: payload[`promo_activa_${product.id}`] === true,
       visible_cliente: payload[`visible_${product.id}`] !== false
     }));
     try {
@@ -1780,7 +1782,7 @@ function AdminPricesSection({ lists, products, clients, onEditPrices, onSyncList
         {filteredClients.map((client) => {
           const list = (lists || []).find((item) => Number(item.id) === Number(client.lista_precio_id)) || { precios: [], clientes_asignados: [] };
           const filledPrices = list.precios?.filter((price) => Number(price.precio) > 0) || [];
-          const promoCount = filledPrices.filter((price) => price.precio_promocion).length;
+          const promoCount = filledPrices.filter((price) => price.promo_activa === true && price.precio_promocion).length;
           const missing = Number(list.productos_faltantes ?? Math.max(0, products.length - (list.precios || []).length));
           const coverage = products.length ? Math.round((filledPrices.length / products.length) * 100) : 0;
           const hiddenCount = (list.precios || []).filter((price) => price.visible_cliente === false).length;
@@ -1900,7 +1902,9 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
         ...product,
         precio: Number(price.precio || 0),
         precio_promocion: price.precio_promocion,
-        precio_final: Number(price.precio_promocion || price.precio || 0)
+        promo_activa: price.promo_activa === true,
+        precio_final: Number(price.promo_activa && price.precio_promocion ? price.precio_promocion : price.precio || 0),
+        en_promocion: price.promo_activa === true && price.precio_promocion !== null && price.precio_promocion !== undefined
       }];
     });
   }, [visibleProducts, selectedList]);
@@ -2327,6 +2331,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                       <label className="price-visible-toggle"><input type="checkbox" checked={form[`visible_${product.id}`] !== false} onChange={(event) => update(`visible_${product.id}`, event.target.checked)} /> Visible</label>
                       <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
                       <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
+                      <label className="price-visible-toggle"><input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} /> Promo activa</label>
                     </div>
                   ))}
                 </section>
@@ -2345,6 +2350,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                     <span><strong>{product.sku}</strong><small>{product.marca} · {product.descripcion}</small><ProductStockPill product={product} /></span>
                     <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
                     <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
+                    <label className="price-visible-toggle"><input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} /> Promo activa</label>
                   </div>
                 ))}
               </section>
@@ -2498,6 +2504,7 @@ function buildAdminEditorForm(editor) {
     for (const price of editor.value.precios || []) {
       form[`precio_${price.producto_id}`] = price.precio ?? '';
       form[`promo_${price.producto_id}`] = price.precio_promocion ?? '';
+      form[`promo_activa_${price.producto_id}`] = price.promo_activa === true;
       form[`visible_${price.producto_id}`] = price.visible_cliente !== false;
     }
   }

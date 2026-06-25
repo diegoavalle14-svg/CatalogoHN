@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../config/database');
 const { authenticate } = require('../middleware/auth');
-const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
+const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn, ensurePricePromoActiveColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
 
 const router = express.Router();
 let tenantProfileColumnsReady = false;
@@ -89,6 +89,7 @@ router.get('/catalog', authenticate, async (req, res) => {
     await ensureProductInventoryColumns();
     await ensureCategoryImageColumn();
     await ensurePriceVisibilityColumn();
+    await ensurePricePromoActiveColumn();
     await ensureBranchActiveColumn();
     const [brands, categories, products, branches, currentUser] = await Promise.all([
       db.query('SELECT * FROM marcas WHERE empresa_id = $1 ORDER BY posicion, nombre', [req.tenant.id]),
@@ -97,7 +98,13 @@ router.get('/catalog', authenticate, async (req, res) => {
         `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
           COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
           pr.precio,
-          COALESCE(pr.precio_promocion, pr.precio) AS precio_final
+          pr.precio_promocion,
+          COALESCE(pr.promo_activa, false) AS promo_activa,
+          CASE
+            WHEN COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL THEN pr.precio_promocion
+            ELSE pr.precio
+          END AS precio_final,
+          (COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL) AS en_promocion
         FROM productos p
         LEFT JOIN marcas m ON m.id = p.marca_id
         LEFT JOIN categorias c ON c.id = p.categoria_id
@@ -107,7 +114,7 @@ router.get('/catalog', authenticate, async (req, res) => {
         WHERE p.empresa_id = $1
           AND p.visible = true
           AND COALESCE(pr.visible_cliente, true) = true
-        GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion
+        GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa
         ORDER BY p.posicion, p.created_at DESC`,
         [req.tenant.id, req.user.cliente_id]
       ),

@@ -7,7 +7,7 @@ const db = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const multer = require('multer');
 const sharp = require('sharp');
-const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
+const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn, ensurePricePromoActiveColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
 
 const router = express.Router();
 let tenantProfileColumnsReady = false;
@@ -389,6 +389,7 @@ router.patch('/admin/price-lists/:id', authenticate, requireRole('admin', 'super
 router.get('/admin/prices', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensurePriceVisibilityColumn();
+    await ensurePricePromoActiveColumn();
     res.json(await queryAdminPriceData(req.tenant.id));
   } catch (error) {
     res.status(500).json({ message: 'No se pudieron cargar los precios' });
@@ -402,6 +403,7 @@ router.post('/admin/price-lists/:id/sync', authenticate, requireRole('admin', 's
   try {
     await ensureProductInventoryColumns();
     await ensurePriceVisibilityColumn();
+    await ensurePricePromoActiveColumn();
     const list = await db.query('SELECT id FROM listas_precios WHERE id = $1 AND empresa_id = $2', [listId, req.tenant.id]);
     if (!list.rows[0]) return res.status(404).json({ message: 'Lista no encontrada' });
 
@@ -418,11 +420,12 @@ router.post('/admin/price-lists/:id/sync', authenticate, requireRole('admin', 's
          ORDER BY CASE WHEN nombre = 'Distribuidor Mayorista' THEN 0 ELSE 1 END, id
          LIMIT 1
        )
-       INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, visible_cliente)
+       INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, promo_activa, visible_cliente)
        SELECT p.id,
               target.id,
               COALESCE(base.precio, 0),
               base.precio_promocion,
+              COALESCE(base.promo_activa, false),
               true
        FROM productos p
        CROSS JOIN target
@@ -449,6 +452,7 @@ router.put('/admin/price-lists/:id/prices', authenticate, requireRole('admin', '
   try {
     await ensureProductInventoryColumns();
     await ensurePriceVisibilityColumn();
+    await ensurePricePromoActiveColumn();
     client = await db.pool.connect();
     await client.query('BEGIN');
     const list = await client.query('SELECT id FROM listas_precios WHERE id = $1 AND empresa_id = $2', [listId, req.tenant.id]);
@@ -462,25 +466,27 @@ router.put('/admin/price-lists/:id/prices', authenticate, requireRole('admin', '
       if (!productId) continue;
       const price = Number(row.precio);
       const promo = row.precio_promocion === '' || row.precio_promocion === null || row.precio_promocion === undefined ? null : Number(row.precio_promocion);
+      const promoActive = promo !== null && row.promo_activa === true;
       const visible = row.visible_cliente === undefined ? true : Boolean(row.visible_cliente);
       if (!Number.isFinite(price) || price < 0 || (promo !== null && (!Number.isFinite(promo) || promo < 0))) continue;
 
       await client.query(
-        `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, visible_cliente)
-         SELECT p.id, $2, $3, $4, $6
+        `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, promo_activa, visible_cliente)
+         SELECT p.id, $2, $3, $4, $7, $6
          FROM productos p
          WHERE p.id = $1 AND p.empresa_id = $5
          ON CONFLICT (producto_id, lista_precio_id)
          DO UPDATE SET precio = EXCLUDED.precio,
                        precio_promocion = EXCLUDED.precio_promocion,
+                       promo_activa = EXCLUDED.promo_activa,
                        visible_cliente = EXCLUDED.visible_cliente`,
-        [productId, listId, price, promo, req.tenant.id, visible]
+        [productId, listId, price, promo, req.tenant.id, visible, promoActive]
       );
     }
 
     await client.query('COMMIT');
     const updated = await db.query(
-      `SELECT producto_id, lista_precio_id, precio, precio_promocion, visible_cliente
+      `SELECT producto_id, lista_precio_id, precio, precio_promocion, COALESCE(promo_activa, false) AS promo_activa, visible_cliente
        FROM precios
        WHERE lista_precio_id = $1`,
       [listId]
@@ -737,12 +743,18 @@ function normalizeId(value, partial) {
 
 async function queryAdminProducts(tenantId) {
   await ensureProductInventoryColumns();
+  await ensurePricePromoActiveColumn();
   return db.query(
     `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
       COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
       pr.precio,
       pr.precio_promocion,
-      COALESCE(pr.precio_promocion, pr.precio) AS precio_final
+      COALESCE(pr.promo_activa, false) AS promo_activa,
+      CASE
+        WHEN COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL THEN pr.precio_promocion
+        ELSE pr.precio
+      END AS precio_final,
+      (COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL) AS en_promocion
      FROM productos p
      LEFT JOIN marcas m ON m.id = p.marca_id
      LEFT JOIN categorias c ON c.id = p.categoria_id
@@ -756,7 +768,7 @@ async function queryAdminProducts(tenantId) {
      ) default_lp ON true
      LEFT JOIN precios pr ON pr.producto_id = p.id AND pr.lista_precio_id = default_lp.id
      WHERE p.empresa_id = $1
-     GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion
+     GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa
      ORDER BY p.posicion, p.created_at DESC`,
     [tenantId]
   );
@@ -764,12 +776,18 @@ async function queryAdminProducts(tenantId) {
 
 async function getAdminProduct(tenantId, productId) {
   await ensureProductInventoryColumns();
+  await ensurePricePromoActiveColumn();
   const result = await db.query(
     `SELECT p.*, m.nombre AS marca, c.nombre AS categoria,
       COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes,
       pr.precio,
       pr.precio_promocion,
-      COALESCE(pr.precio_promocion, pr.precio) AS precio_final
+      COALESCE(pr.promo_activa, false) AS promo_activa,
+      CASE
+        WHEN COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL THEN pr.precio_promocion
+        ELSE pr.precio
+      END AS precio_final,
+      (COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL) AS en_promocion
      FROM productos p
      LEFT JOIN marcas m ON m.id = p.marca_id
      LEFT JOIN categorias c ON c.id = p.categoria_id
@@ -783,7 +801,7 @@ async function getAdminProduct(tenantId, productId) {
      ) default_lp ON true
      LEFT JOIN precios pr ON pr.producto_id = p.id AND pr.lista_precio_id = default_lp.id
      WHERE p.empresa_id = $1 AND p.id = $2
-     GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion`,
+     GROUP BY p.id, m.nombre, c.nombre, pr.precio, pr.precio_promocion, pr.promo_activa`,
     [tenantId, productId]
   );
   return result.rows[0];
@@ -792,6 +810,7 @@ async function getAdminProduct(tenantId, productId) {
 async function queryAdminPriceData(tenantId) {
   await ensureProductInventoryColumns();
   await ensurePriceVisibilityColumn();
+  await ensurePricePromoActiveColumn();
   const [lists, products, prices, assignedClients] = await Promise.all([
     db.query('SELECT * FROM listas_precios WHERE empresa_id = $1 ORDER BY nombre', [tenantId]),
     db.query(
@@ -804,7 +823,7 @@ async function queryAdminPriceData(tenantId) {
       [tenantId]
     ),
     db.query(
-      `SELECT pr.producto_id, pr.lista_precio_id, pr.precio, pr.precio_promocion, COALESCE(pr.visible_cliente, true) AS visible_cliente
+      `SELECT pr.producto_id, pr.lista_precio_id, pr.precio, pr.precio_promocion, COALESCE(pr.promo_activa, false) AS promo_activa, COALESCE(pr.visible_cliente, true) AS visible_cliente
        FROM precios pr
        JOIN productos p ON p.id = pr.producto_id
        JOIN listas_precios lp ON lp.id = pr.lista_precio_id
@@ -1102,6 +1121,7 @@ async function replaceProductImages(productId, images = []) {
 
 async function upsertProductPrice(tenantId, productId, price, promoPrice) {
   await ensurePriceVisibilityColumn();
+  await ensurePricePromoActiveColumn();
   if (price === null && promoPrice === null) return;
   const listResult = await db.query(
     `INSERT INTO listas_precios (empresa_id, nombre)
@@ -1113,11 +1133,12 @@ async function upsertProductPrice(tenantId, productId, price, promoPrice) {
   );
   const listId = listResult.rows[0].id;
   await db.query(
-    `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, visible_cliente)
-     VALUES ($1, $2, $3, $4, true)
+    `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, promo_activa, visible_cliente)
+     VALUES ($1, $2, $3, $4, false, true)
      ON CONFLICT (producto_id, lista_precio_id)
      DO UPDATE SET precio = COALESCE(EXCLUDED.precio, precios.precio),
-                   precio_promocion = EXCLUDED.precio_promocion`,
+                   precio_promocion = EXCLUDED.precio_promocion,
+                   promo_activa = CASE WHEN EXCLUDED.precio_promocion IS NULL THEN false ELSE precios.promo_activa END`,
     [productId, listId, price, promoPrice]
   );
 }

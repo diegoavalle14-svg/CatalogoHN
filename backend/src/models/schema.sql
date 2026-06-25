@@ -138,6 +138,7 @@ CREATE TABLE precios (
     lista_precio_id INT NOT NULL REFERENCES listas_precios(id) ON DELETE CASCADE,
     precio NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
     precio_promocion NUMERIC(12, 2) DEFAULT NULL,
+    promo_activa BOOLEAN DEFAULT FALSE,
     visible_cliente BOOLEAN DEFAULT TRUE,
     CONSTRAINT unique_precio_por_producto_y_lista UNIQUE (producto_id, lista_precio_id)
 );

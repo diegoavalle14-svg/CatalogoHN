@@ -4,6 +4,7 @@ let productInventoryColumnsReady = false;
 let categoryImageColumnReady = false;
 let priceVisibilityColumnReady = false;
 let branchActiveColumnReady = false;
+let pricePromoActiveColumnReady = false;
 
 async function ensureProductInventoryColumns(client = db) {
   if (productInventoryColumnsReady) return;
@@ -24,6 +25,13 @@ async function ensurePriceVisibilityColumn(client = db) {
   priceVisibilityColumnReady = true;
 }
 
+async function ensurePricePromoActiveColumn(client = db) {
+  if (pricePromoActiveColumnReady) return;
+  await client.query(`ALTER TABLE precios ADD COLUMN IF NOT EXISTS promo_activa BOOLEAN DEFAULT false`);
+  await client.query(`UPDATE precios SET promo_activa = false WHERE promo_activa IS NULL`);
+  pricePromoActiveColumnReady = true;
+}
+
 async function ensureBranchActiveColumn(client = db) {
   if (branchActiveColumnReady) return;
   await client.query(`ALTER TABLE sucursales ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true`);
@@ -35,5 +43,6 @@ module.exports = {
   ensureProductInventoryColumns,
   ensureCategoryImageColumn,
   ensurePriceVisibilityColumn,
+  ensurePricePromoActiveColumn,
   ensureBranchActiveColumn
 };

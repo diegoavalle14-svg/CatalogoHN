@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../config/database');
 const { requireApiKey } = require('../middleware/apiKeyAuth');
-const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
+const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePricePromoActiveColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
 const { dispatchWebhookEvent } = require('../services/webhooks');
 const { handleValidationError, validatePublicOrderPayload } = require('../services/validators');
 
@@ -13,6 +13,7 @@ router.get('/v1/catalog', requireApiKey('catalog:read'), async (req, res) => {
   try {
     await ensureProductInventoryColumns();
     await ensureCategoryImageColumn();
+    await ensurePricePromoActiveColumn();
     await ensureBranchActiveColumn();
     const [brands, categories, products] = await Promise.all([
       db.query(
@@ -81,6 +82,7 @@ router.post('/v1/orders', requireApiKey('orders:write'), async (req, res) => {
   let client;
   try {
     await ensureProductInventoryColumns();
+    await ensurePricePromoActiveColumn();
     await ensureBranchActiveColumn();
     client = await db.pool.connect();
     await client.query('BEGIN');
@@ -112,7 +114,10 @@ router.post('/v1/orders', requireApiKey('orders:write'), async (req, res) => {
                 p.sku,
                 p.descripcion,
                 s.id AS sucursal_id,
-                COALESCE(pr.precio_promocion, pr.precio) AS precio_unitario
+                CASE
+                  WHEN COALESCE(pr.promo_activa, false) = true AND pr.precio_promocion IS NOT NULL THEN pr.precio_promocion
+                  ELSE pr.precio
+                END AS precio_unitario
          FROM productos p
          JOIN sucursales s ON s.id = $2 AND s.cliente_id = $3 AND COALESCE(s.activo, true) = true
          LEFT JOIN cliente_lista_precio clp ON clp.cliente_id = $3
