@@ -121,7 +121,7 @@ router.post('/forgot-password', async (req, res) => {
        LEFT JOIN empresas e ON e.id = u.empresa_id
        WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
          AND (u.empresa_id = $2 OR u.rol = 'superadmin')
-         AND ($3 = '' OR lower(COALESCE(e.slug, '')) = $3)
+         AND (u.rol = 'superadmin' OR $3 = '' OR lower(COALESCE(e.slug, '')) = $3)
        LIMIT 1`,
       [lookupValues, tenantId, tenantSlug]
     );
