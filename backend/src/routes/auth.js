@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const { signToken } = require('../middleware/auth');
 const { authenticate } = require('../middleware/auth');
+const { sendMail, getMailerConfig } = require('../services/mailer');
 
 const router = express.Router();
 let userProfileColumnsReady = false;
@@ -89,9 +90,97 @@ router.post('/change-password', authenticate, async (req, res) => {
   }
 });
 
+router.post('/forgot-password', async (req, res) => {
+  const login = String(req.body?.username || req.body?.email || '').trim().toLowerCase();
+  const tenantSlug = String(req.body?.tenantSlug || '').trim().toLowerCase();
+  const aliases = {
+    cliente1: 'cliente1@autorepuestos.com',
+    admin: 'admin@kolben.com',
+    superadmin: 'superadmin@catalogohn.com'
+  };
+  const loginValue = aliases[login] || login;
+  const lookupValues = [...new Set([login, loginValue].filter(Boolean))];
+
+  if (!login) {
+    return res.status(400).json({ message: 'Usuario o correo requerido' });
+  }
+
+  try {
+    await ensureUserProfileColumns();
+    let tenantId = req.tenant?.id || null;
+    if (tenantSlug) {
+      const tenantResult = await db.query(
+        'SELECT id FROM empresas WHERE lower(slug) = $1 LIMIT 1',
+        [tenantSlug]
+      );
+      tenantId = tenantResult.rows[0]?.id || tenantId;
+    }
+    const result = await db.query(
+      `SELECT u.id, u.nombre, u.username, u.email, u.rol, e.nombre AS empresa_nombre, e.slug AS empresa_slug
+       FROM usuarios u
+       LEFT JOIN empresas e ON e.id = u.empresa_id
+       WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
+         AND (u.empresa_id = $2 OR u.rol = 'superadmin')
+         AND ($3 = '' OR lower(COALESCE(e.slug, '')) = $3)
+       LIMIT 1`,
+      [lookupValues, tenantId, tenantSlug]
+    );
+    const user = result.rows[0];
+    if (!user) {
+      return res.json({ ok: true, message: 'Si el usuario existe, se enviará una contraseña temporal.' });
+    }
+
+    const tempPassword = randomPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+    await db.query(
+      'UPDATE usuarios SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [passwordHash, user.id]
+    );
+
+    const mail = {
+      to: user.email,
+      subject: 'Recuperación de contraseña CatalogoHN',
+      text: `Hola ${user.nombre || user.username || 'usuario'},\n\nTu contraseña temporal es: ${tempPassword}\n\nIngresa a CatalogoHN y cámbiala después de entrar.\n`,
+      html: `<p>Hola ${escapeHtml(user.nombre || user.username || 'usuario')},</p><p>Tu contraseña temporal es: <b>${escapeHtml(tempPassword)}</b></p><p>Ingresa a CatalogoHN y cámbiala después de entrar.</p>`
+    };
+
+    const mailResult = await sendMail(mail);
+    const config = getMailerConfig();
+    if (!mailResult.ok && !mailResult.skipped) {
+      return res.status(500).json({ message: 'No se pudo enviar la recuperación' });
+    }
+
+    return res.json({
+      ok: true,
+      message: 'Si el usuario existe, se enviará una contraseña temporal.',
+      temp_password: config.enabled ? null : tempPassword
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'No se pudo procesar la recuperación' });
+  }
+});
+
 function sanitizeUser(user) {
   const { password_hash, ...safeUser } = user;
   return safeUser;
+}
+
+function randomPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let output = '';
+  for (let i = 0; i < 10; i += 1) {
+    output += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return output;
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 module.exports = router;

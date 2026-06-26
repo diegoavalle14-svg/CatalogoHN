@@ -3017,6 +3017,30 @@ button {
   text-align: left;
 }
 
+.forgot-password-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(17, 17, 17, .10);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .72);
+}
+
+[data-theme="dark"] .forgot-password-panel {
+  border-color: rgba(255, 255, 255, .10);
+  background: rgba(18, 22, 28, .72);
+}
+
+.forgot-password-panel label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+.forgot-password-panel input {
+  margin-top: 6px;
+}
+
 .list-page,
 .admin-page,
 .superadmin-page {

@@ -347,6 +347,11 @@ function Login({ onLogin, theme, onThemeToggle }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotValue, setForgotValue] = useState('');
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [forgotError, setForgotError] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState('kolben');
   const [selectedTenantName, setSelectedTenantName] = useState('');
@@ -396,6 +401,28 @@ function Login({ onLogin, theme, onThemeToggle }) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function submitForgotPassword(event) {
+    event.preventDefault();
+    setForgotLoading(true);
+    setForgotError('');
+    setForgotMessage('');
+    try {
+      const result = await api.forgotPassword({
+        username: forgotValue || username,
+        tenantSlug: superadminMode ? 'kolben' : selectedTenant
+      });
+      if (result?.temp_password) {
+        setForgotMessage(`Contraseña temporal: ${result.temp_password}`);
+      } else {
+        setForgotMessage(result?.message || 'Si el usuario existe, recibirás una contraseña temporal.');
+      }
+    } catch (err) {
+      setForgotError(err.message || 'No se pudo iniciar la recuperación');
+    } finally {
+      setForgotLoading(false);
     }
   }
 
@@ -527,9 +554,27 @@ function Login({ onLogin, theme, onThemeToggle }) {
               <label>Usuario<input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label>
               <label>Contraseña<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" /></label>
               {error && <small className="form-error">{error}</small>}
-              <button className="forgot-password-button" type="button" onClick={() => window.alert('Recuperación de contraseña: próximamente')}>
+              <button className="forgot-password-button" type="button" onClick={() => {
+                setForgotOpen((current) => !current);
+                setForgotError('');
+                setForgotMessage('');
+                setForgotValue(username);
+              }}>
                 ¿Olvidaste la contraseña?
               </button>
+              {forgotOpen && (
+                <div className="forgot-password-panel">
+                  <label>
+                    Usuario o correo
+                    <input value={forgotValue} onChange={(event) => setForgotValue(event.target.value)} autoComplete="username" />
+                  </label>
+                  {forgotError && <small className="form-error">{forgotError}</small>}
+                  {forgotMessage && <small className="form-success">{forgotMessage}</small>}
+                  <button className="secondary-button" type="button" onClick={submitForgotPassword} disabled={forgotLoading}>
+                    {forgotLoading ? 'Enviando...' : 'Enviar recuperación'}
+                  </button>
+                </div>
+              )}
               <button className="primary-button" disabled={loading}>
                 {loading ? 'Validando...' : 'Ingresar'}
               </button>

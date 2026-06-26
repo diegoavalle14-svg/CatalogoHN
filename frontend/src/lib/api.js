@@ -84,6 +84,9 @@ export const api = {
     activeTenantSlug = result?.tenant?.slug || loginTenantSlug;
     return result;
   },
+  forgotPassword: async (payload) => {
+    return request('/auth/forgot-password', { method: 'POST', body: JSON.stringify(payload) });
+  },
   changePassword: async (token, payload) => {
     return request('/auth/change-password', { method: 'POST', token, body: JSON.stringify(payload) });
   },
