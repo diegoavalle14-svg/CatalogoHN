@@ -131,29 +131,37 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     const tempPassword = randomPassword();
-    const passwordHash = await bcrypt.hash(tempPassword, 10);
-    await db.query(
-      'UPDATE usuarios SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [passwordHash, user.id]
-    );
+    const recoveryEmail = user.rol === 'superadmin'
+      ? String(process.env.SUPERADMIN_RECOVERY_EMAIL || 'diego.avalle14@gmail.com').trim().toLowerCase()
+      : String(user.email || '').trim().toLowerCase();
 
     const mail = {
-      to: user.email,
+      to: recoveryEmail,
       subject: 'Recuperación de contraseña CatalogoHN',
       text: `Hola ${user.nombre || user.username || 'usuario'},\n\nTu contraseña temporal es: ${tempPassword}\n\nIngresa a CatalogoHN y cámbiala después de entrar.\n`,
       html: `<p>Hola ${escapeHtml(user.nombre || user.username || 'usuario')},</p><p>Tu contraseña temporal es: <b>${escapeHtml(tempPassword)}</b></p><p>Ingresa a CatalogoHN y cámbiala después de entrar.</p>`
     };
 
     const mailResult = await sendMail(mail);
-    const config = getMailerConfig();
     if (!mailResult.ok && !mailResult.skipped) {
       return res.status(500).json({ message: 'No se pudo enviar la recuperación' });
     }
 
+    if (mailResult.skipped || !getMailerConfig().enabled) {
+      return res.status(503).json({
+        message: 'La recuperación por correo requiere configurar SMTP en el servidor.'
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+    await db.query(
+      'UPDATE usuarios SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [passwordHash, user.id]
+    );
+
     return res.json({
       ok: true,
-      message: 'Si el usuario existe, se enviará una contraseña temporal.',
-      temp_password: config.enabled ? null : tempPassword
+      message: 'Se envió una contraseña temporal al correo registrado.'
     });
   } catch (error) {
     return res.status(500).json({ message: 'No se pudo procesar la recuperación' });
