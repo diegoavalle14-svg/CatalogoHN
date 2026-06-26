@@ -446,6 +446,16 @@ function Login({ onLogin, theme, onThemeToggle }) {
     setRequestForm((current) => ({ ...current, [field]: value }));
   }
 
+  function closeLoginModal() {
+    if (loading || forgotLoading) return;
+    setLoginOpen(false);
+    setError('');
+    setForgotOpen(false);
+    setForgotValue('');
+    setForgotError('');
+    setForgotMessage('');
+  }
+
   return (
     <main className="login-screen">
       <div className="welcome-float" aria-live="polite">Bienvenido. Tu acceso sigue siendo privado para cada empresa.</div>
@@ -486,6 +496,10 @@ function Login({ onLogin, theme, onThemeToggle }) {
                 setSelectedTenant(tenant.slug);
                 setSelectedTenantName(tenant.name);
                 setSuperadminMode(false);
+                setForgotOpen(false);
+                setForgotValue('');
+                setForgotError('');
+                setForgotMessage('');
                 setLoginOpen(true);
               }}
               aria-label={`Seleccionar ${tenant.name}`}
@@ -505,6 +519,10 @@ function Login({ onLogin, theme, onThemeToggle }) {
             setSuperadminMode(true);
             setUsername('');
             setPassword('');
+            setForgotOpen(false);
+            setForgotValue('');
+            setForgotError('');
+            setForgotMessage('');
             setLoginOpen(true);
           }}
         >
@@ -541,11 +559,11 @@ function Login({ onLogin, theme, onThemeToggle }) {
       </section>
 
       {loginOpen && (
-        <div className="login-modal-backdrop" onClick={() => !loading && setLoginOpen(false)}>
+        <div className="login-modal-backdrop" onClick={closeLoginModal}>
           <section className="login-modal" onClick={(e) => e.stopPropagation()}>
             <div className="login-modal-head">
               <h2>{superadminMode ? 'Ingreso superadministrador' : `Ingreso ${selectedTenantName}`}</h2>
-              <button className="icon-button" onClick={() => !loading && setLoginOpen(false)} aria-label="Cerrar">
+              <button className="icon-button" onClick={closeLoginModal} aria-label="Cerrar">
                 <X size={18} />
               </button>
             </div>
