@@ -1042,6 +1042,8 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
   const [categories, setCategories] = useState([]);
   const [clients, setClients] = useState([]);
   const [priceData, setPriceData] = useState(null);
+  const [adminLoadError, setAdminLoadError] = useState('');
+  const [adminReloadKey, setAdminReloadKey] = useState(0);
   const [editor, setEditor] = useState(null);
   const [liveTenantDraft, setLiveTenantDraft] = useState(null);
   const adminHeaderRef = useRef(null);
@@ -1049,6 +1051,14 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
 
   useEffect(() => {
     let cancelled = false;
+    setAdminLoadError('');
+    setSummary(null);
+    setCatalog(null);
+    setPriceData(null);
+    const reportLoadError = (label) => (error) => {
+      if (cancelled) return;
+      setAdminLoadError(`${label}: ${error.message || 'No se pudo cargar'}`);
+    };
     const applyCatalogPayload = (payload) => {
       if (cancelled) return;
       setCatalog(payload);
@@ -1062,14 +1072,20 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       }).catch(console.error);
     };
     const loadCatalog = () => {
-      api.adminCatalog(session.token).then(applyCatalogPayload).catch(console.error);
+      api.adminCatalog(session.token).then(applyCatalogPayload).catch(reportLoadError('Catálogo'));
     };
 
     api.setTenantSlug(tenantSlug);
-    api.adminSummary(session.token).then(setSummary).catch(console.error);
+    api.adminSummary(session.token).then((payload) => {
+      if (!cancelled) setSummary(payload);
+    }).catch(reportLoadError('Resumen'));
     loadOrders();
     api.adminClients(session.token).then((payload) => setClients((payload.clientes || []).map(normalizeAdminClient))).catch(() => setClients([]));
-    api.adminPrices(session.token).then((payload) => setPriceData(normalizeAdminPriceData(payload))).catch(() => setPriceData(normalizeAdminPriceData({ listas: [], productos: [] })));
+    api.adminPrices(session.token).then((payload) => {
+      if (!cancelled) setPriceData(normalizeAdminPriceData(payload));
+    }).catch(() => {
+      if (!cancelled) setPriceData(normalizeAdminPriceData({ listas: [], productos: [] }));
+    });
     loadCatalog();
 
     const ordersTimer = window.setInterval(loadOrders, 5000);
@@ -1079,7 +1095,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       window.clearInterval(ordersTimer);
       window.clearInterval(catalogTimer);
     };
-  }, [session.token, tenantSlug]);
+  }, [session.token, tenantSlug, adminReloadKey]);
 
   useEffect(() => {
     const storedTab = loadUiState().adminTabByTenant?.[tenantSlug];
@@ -1121,6 +1137,19 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       window.removeEventListener('resize', updateHeaderSpace);
     };
   }, [summary, tab, onRestoreSuperadmin]);
+
+  if (adminLoadError) {
+    return (
+      <section className="admin-load-error">
+        <strong>No se pudo cargar el panel admin</strong>
+        <span>{adminLoadError}</span>
+        <div>
+          <button className="primary-button" type="button" onClick={() => setAdminReloadKey((current) => current + 1)}>Reintentar</button>
+          {onLogout && <button className="secondary-button" type="button" onClick={onLogout}>Salir</button>}
+        </div>
+      </section>
+    );
+  }
 
   if (!summary || !catalog || !priceData) return <Loading label="Cargando panel admin" />;
 

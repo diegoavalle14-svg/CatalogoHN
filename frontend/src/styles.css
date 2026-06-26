@@ -4932,6 +4932,46 @@ button {
   text-align: center;
 }
 
+.admin-load-error {
+  width: min(460px, calc(100% - 28px));
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  margin: 32px auto;
+  border: 1px solid rgba(220, 38, 38, .18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: var(--glass-shadow-soft);
+  padding: 22px;
+  text-align: center;
+}
+
+.admin-load-error strong {
+  color: #111827;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.admin-load-error span {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-load-error div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.admin-load-error button {
+  width: auto;
+  min-width: 128px;
+}
+
 .admin-client-card {
   margin-top: 20px;
   padding: 4px 14px;
