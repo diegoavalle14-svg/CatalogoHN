@@ -1164,6 +1164,10 @@ button {
   position: fixed;
   inset: 0;
   z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(72px, 10vh, 110px) 14px 14px;
 }
 
 .cart-scrim {
@@ -1174,9 +1178,7 @@ button {
 }
 
 .cart-panel {
-  position: absolute;
-  top: clamp(72px, 10vh, 110px);
-  left: 50%;
+  position: relative;
   width: min(420px, calc(100vw - 28px));
   max-height: min(86vh, 720px);
   min-width: 320px;
@@ -1186,7 +1188,6 @@ button {
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 24px 64px rgba(0, 0, 0, .34);
-  transform: translateX(-50%);
 }
 
 .cart-head {
@@ -6624,9 +6625,6 @@ button {
   }
 
   .cart-panel {
-    inset: auto;
-    top: 76px;
-    left: 50%;
     width: min(420px, calc(100vw - 20px));
     max-height: min(86vh, 680px);
     min-width: 0;
@@ -6634,7 +6632,6 @@ button {
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 22px 52px rgba(0, 0, 0, .34);
-    transform: translateX(-50%);
   }
 
   .cart-head {
