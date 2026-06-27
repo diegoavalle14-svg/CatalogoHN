@@ -67,8 +67,9 @@ $sourcePaths = @(
   "$root/frontend/src",
   "$root/README.md",
   "$root/DEPLOYMENT.md",
-  "$root/docs/AWS_PREVIEW.md",
-  "$root/docs/AWS_PREVIEW_UPDATE.md"
+  "$root/docs/DIGITALOCEAN_DROPLET.md",
+  "$root/docs/archive/AWS_PREVIEW.md",
+  "$root/docs/archive/AWS_PREVIEW_UPDATE.md"
 )
 $sourceSearchExit = Search-Pattern -Pattern "local-demo|VITE_DEMO_MODE=true" -Paths $sourcePaths
 if ($sourceSearchExit -eq 0) {

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
@@ -357,10 +357,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
   const [selectedTenantName, setSelectedTenantName] = useState('');
   const [superadminMode, setSuperadminMode] = useState(false);
   const [tenantTiles, setTenantTiles] = useState([]);
-  const [requestForm, setRequestForm] = useState({ empresa_nombre: '', contacto: '', email: '', telefono: '', rubro: '', mensaje: '' });
-  const [requestStatus, setRequestStatus] = useState('');
-  const [requestError, setRequestError] = useState('');
-  const [requestSaving, setRequestSaving] = useState(false);
 
   useEffect(() => {
     api.publicTenants()
@@ -424,26 +420,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
     } finally {
       setForgotLoading(false);
     }
-  }
-
-  async function submitRegistrationRequest(event) {
-    event.preventDefault();
-    setRequestSaving(true);
-    setRequestError('');
-    setRequestStatus('');
-    try {
-      await api.createRegistrationRequest(requestForm);
-      setRequestStatus('Solicitud enviada. Te contactaremos para revisar el alta de la empresa.');
-      setRequestForm({ empresa_nombre: '', contacto: '', email: '', telefono: '', rubro: '', mensaje: '' });
-    } catch (err) {
-      setRequestError(err.message || 'No se pudo enviar la solicitud');
-    } finally {
-      setRequestSaving(false);
-    }
-  }
-
-  function updateRequestField(field, value) {
-    setRequestForm((current) => ({ ...current, [field]: value }));
   }
 
   function closeLoginModal() {
@@ -529,33 +505,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
           Superadministrador
         </button>
 
-        <div className="tenant-footer">
-          <p>¿Eres una empresa distribuidora?</p>
-          <strong>Solicita el alta desde este formulario.</strong>
-        </div>
 
-        <form className="registration-request-form" onSubmit={submitRegistrationRequest}>
-          <div className="registration-request-head">
-            <Building2 size={18} />
-            <div>
-              <strong>Solicitud de registro</strong>
-              <small>Para distribuidoras que quieren publicar su catálogo privado en CatálogoHN.</small>
-            </div>
-          </div>
-          <div className="registration-request-grid">
-            <label>Empresa<input value={requestForm.empresa_nombre} onChange={(event) => updateRequestField('empresa_nombre', event.target.value)} /></label>
-            <label>Contacto<input value={requestForm.contacto} onChange={(event) => updateRequestField('contacto', event.target.value)} /></label>
-            <label>Correo<input type="email" value={requestForm.email} onChange={(event) => updateRequestField('email', event.target.value)} /></label>
-            <label>Teléfono<input value={requestForm.telefono} onChange={(event) => updateRequestField('telefono', event.target.value)} /></label>
-            <label>Rubro<input value={requestForm.rubro} onChange={(event) => updateRequestField('rubro', event.target.value)} placeholder="Repuestos, ferretería, suministros..." /></label>
-              <label>Mensaje<textarea value={requestForm.mensaje} onChange={(event) => updateRequestField('mensaje', event.target.value)} rows={3} /></label>
-          </div>
-          {requestError && <small className="form-error">{requestError}</small>}
-          {requestStatus && <small className="form-success">{requestStatus}</small>}
-          <button className="primary-button" disabled={requestSaving || !requestForm.empresa_nombre || !requestForm.contacto || (!requestForm.email && !requestForm.telefono)}>
-            {requestSaving ? 'Enviando...' : 'Enviar solicitud'}
-          </button>
-        </form>
       </section>
 
       {loginOpen && (

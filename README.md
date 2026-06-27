@@ -11,11 +11,11 @@ Plataforma SaaS multi-tenant para distribuidoras en Honduras. El primer inquilin
 - Configuracion del inquilino desde admin: nombre, subnombre, logo, colores, fuente y vista previa.
 - CRUD de admin para productos, marcas y categorias conectado a endpoints backend reales.
 - Subida de imagenes desde admin con compresion a WebP/JPEG y limite objetivo de 300 KB.
-- Almacenamiento local de imagenes en desarrollo y soporte opcional para S3 en AWS.
+- Almacenamiento local de imagenes en desarrollo/preview y soporte opcional para S3-compatible object storage mas adelante.
 - CRUD de clientes, listas de precios y precios conectado al backend.
 - Superadmin separado para control de empresas/inquilinos.
 
-> Nota: productos, marcas, categorias y subida de imagenes ya tienen endpoints base. Clientes, precios y configuracion final de S3 son el siguiente bloque.
+> Nota: productos, marcas, categorias y subida de imagenes ya tienen endpoints base. Clientes, precios y configuracion final de almacenamiento son el siguiente bloque.
 
 ## Roles
 
@@ -39,17 +39,7 @@ Gestiona empresas/inquilinos y debe ser el unico rol con capacidad de asignar o 
 
 ## Credenciales Seed
 
-El seed inicial crea credenciales reales para desarrollo/preview:
-
-- Cliente: `cliente1` / `ClientPassword123`
-- Admin Kolben: `admin` / `KolbenAdminPassword123`
-- Superadmin: `superadmin` / `SuperAdminPassword123`
-
-Tambien se mantiene compatibilidad con correos:
-
-- `cliente1@autorepuestos.com`
-- `admin@kolben.com`
-- `superadmin@catalogohn.com`
+El seed inicial crea usuarios de prueba para desarrollo y preview. Ver [docs/SEED_CREDENTIALS.md](docs/SEED_CREDENTIALS.md) para detalles.
 
 ## Estructura
 
@@ -88,14 +78,15 @@ VITE_TENANT_SLUG=kolben
 VITE_DEMO_MODE=false
 ```
 
-## GitHub y AWS
+## GitHub y DigitalOcean
 
-La guia de publicacion esta en [DEPLOYMENT.md](DEPLOYMENT.md) y el runbook inicial esta en [docs/AWS_PREVIEW.md](docs/AWS_PREVIEW.md). El camino recomendado por ahora es:
+La guia de publicacion esta en [DEPLOYMENT.md](DEPLOYMENT.md) y el runbook inicial para DigitalOcean esta en [docs/DIGITALOCEAN_DROPLET.md](docs/DIGITALOCEAN_DROPLET.md). El camino recomendado por ahora es:
 
 - GitHub para versionar el monorepo.
-- AWS Amplify Hosting para el frontend.
-- AWS Elastic Beanstalk para el backend Node/Express.
-- Amazon RDS PostgreSQL para la base de datos.
+- DigitalOcean Droplet para frontend, backend y PostgreSQL en una sola maquina.
+- Nginx para servir el frontend y hacer proxy al backend.
+- PostgreSQL local para evitar costos administrados mientras el MVP valida mercado.
+- Backups/snapshots del Droplet y respaldos de PostgreSQL/uploads.
 
 El despliegue debe manejar dos entornos:
 
@@ -112,7 +103,7 @@ KOLBEN es el inquilino inicial. En produccion deberia operar como:
 kolben.catalogohn.com
 ```
 
-En desarrollo el inquilino se resuelve con:
+En desarrollo y despliegue inicial el inquilino se resuelve con:
 
 - `VITE_TENANT_SLUG=kolben` en frontend.
 - Header `x-tenant-slug` hacia la API.
@@ -125,11 +116,12 @@ La direccion correcta del producto es que los admins suban imagenes desde el Pan
 - Logos de marcas: seccion `Catalogo` -> `Marcas`.
 - Imagenes de productos: seccion `Catalogo` -> `+ Nuevo` o `Editar`.
 
-En desarrollo, si S3 no esta configurado, las imagenes se guardan en `backend/uploads/` y Git las ignora. En AWS preview/produccion, configurar `S3_BUCKET`, `AWS_REGION`, `S3_PUBLIC_URL` y credenciales seguras para guardar en S3.
+Las imagenes se guardan en `backend/uploads/` y Git las ignora. En DigitalOcean Droplet esta es la opcion inicial para controlar costos. Cuando haya mas trafico, se puede mover a DigitalOcean Spaces (S3-compatible) u otro almacenamiento de objetos.
 
 ## Pendientes Tecnicos
 
-- Configurar bucket S3 definitivo para preview y produccion.
+- Configurar DigitalOcean Droplet, Nginx, PostgreSQL local y Certbot.
+- Definir rutina de backups de PostgreSQL y `backend/uploads/`.
 - Crear flujo real de recuperacion de contrasena.
 - Agregar gestion de admins de empresa desde superadmin.
 - Reemplazar datos seed por datos reales administrables desde UI.
@@ -137,7 +129,7 @@ En desarrollo, si S3 no esta configurado, las imagenes se guardan en `backend/up
 
 ## Seguridad
 
-Los archivos `.env`, `.env.local`, `node_modules/`, `dist/` y `*.pem` estan excluidos en `.gitignore`. Las credenciales reales deben inyectarse en AWS Amplify/EC2 u otro entorno seguro y nunca guardarse en el repositorio. En `NODE_ENV=production`, el backend requiere `JWT_SECRET` y `CORS_ORIGIN`; no debe arrancar con valores abiertos o de desarrollo.
+Los archivos `.env`, `.env.local`, `node_modules/`, `dist/` y `*.pem` estan excluidos en `.gitignore`. Las credenciales reales deben configurarse en `/etc/catalogohn/backend.env` u otro entorno seguro y nunca guardarse en el repositorio. En `NODE_ENV=production`, el backend requiere `JWT_SECRET` y `CORS_ORIGIN`; no debe arrancar con valores abiertos o de desarrollo.
 
 Rate limiting backend:
 
