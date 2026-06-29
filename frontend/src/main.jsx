@@ -2442,7 +2442,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <textarea
                 rows={3}
                 placeholder={'Hilux 79 - 88\nHIERRO / METAL\n1" Pulgada (15/16)'}
-                value={[form.descripcion || '', form.specs?.aplicacion || '', form.specs?.medida || ''].join('\n')}
+                value={(!form.descripcion && !form.specs?.aplicacion && !form.specs?.medida) ? '' : [form.descripcion || '', form.specs?.aplicacion || '', form.specs?.medida || ''].join('\n')}
                 onChange={(event) => updateProductInfoLines(event.target.value)}
               />
             </label>
