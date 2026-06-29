@@ -599,28 +599,84 @@ router.post('/admin/products', authenticate, requireRole('admin', 'superadmin'),
     return res.status(400).json({ message: 'Código y descripción son requeridos' });
   }
 
+  let client;
   try {
     await ensureProductInventoryColumns();
-    const result = await db.query(
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // Desplazar las posiciones de los productos existentes para hacer espacio
+    await client.query(
+      `UPDATE productos 
+       SET posicion = posicion + 1 
+       WHERE empresa_id = $1 AND posicion >= $2`,
+      [req.tenant.id, payload.posicion]
+    );
+
+    const result = await client.query(
       `INSERT INTO productos (empresa_id, marca_id, categoria_id, sku, descripcion, specs, stock_actual, stock_minimo, visible, en_promocion, posicion)
        VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11)
        RETURNING id`,
       [req.tenant.id, payload.marca_id, payload.categoria_id, payload.sku, payload.descripcion, JSON.stringify(payload.specs), payload.stock_actual, payload.stock_minimo, payload.visible, payload.en_promocion, payload.posicion]
     );
-    await replaceProductImages(result.rows[0].id, payload.imagenes);
-    await upsertProductPrice(req.tenant.id, result.rows[0].id, payload.precio, payload.precio_promocion);
-    res.status(201).json({ producto: await getAdminProduct(req.tenant.id, result.rows[0].id) });
+
+    const newProductId = result.rows[0].id;
+    await replaceProductImages(newProductId, payload.imagenes, client);
+    await upsertProductPrice(req.tenant.id, newProductId, payload.precio, payload.precio_promocion, client);
+
+    await client.query('COMMIT');
+    res.status(201).json({ producto: await getAdminProduct(req.tenant.id, newProductId) });
   } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(error.code === '23505' ? 409 : 500).json({ message: error.code === '23505' ? 'El codigo ya existe' : 'No se pudo crear el producto' });
+  } finally {
+    if (client) client.release();
   }
 });
 
 router.patch('/admin/products/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const payload = normalizeProductPayload(req.body || {}, true);
 
+  let client;
   try {
     await ensureProductInventoryColumns();
-    const result = await db.query(
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // Obtener producto y su posicion actual
+    const currentRes = await client.query(
+      `SELECT posicion FROM productos WHERE id = $1 AND empresa_id = $2 LIMIT 1`,
+      [req.params.id, req.tenant.id]
+    );
+    const oldProduct = currentRes.rows[0];
+    if (!oldProduct) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    const oldPos = oldProduct.posicion;
+    const newPos = payload.posicion;
+
+    // Desplazar las posiciones si la posición cambió
+    if (newPos !== null && newPos !== undefined && newPos !== oldPos) {
+      if (newPos > oldPos) {
+        await client.query(
+          `UPDATE productos 
+           SET posicion = posicion - 1 
+           WHERE empresa_id = $1 AND posicion > $2 AND posicion <= $3`,
+          [req.tenant.id, oldPos, newPos]
+        );
+      } else {
+        await client.query(
+          `UPDATE productos 
+           SET posicion = posicion + 1 
+           WHERE empresa_id = $1 AND posicion >= $2 AND posicion < $3`,
+          [req.tenant.id, newPos, oldPos]
+        );
+      }
+    }
+
+    const result = await client.query(
       `UPDATE productos
        SET marca_id = COALESCE($1, marca_id),
            categoria_id = COALESCE($2, categoria_id),
@@ -650,14 +706,21 @@ router.patch('/admin/products/:id', authenticate, requireRole('admin', 'superadm
         req.tenant.id
       ]
     );
-    if (!result.rows[0]) return res.status(404).json({ message: 'Producto no encontrado' });
-    if (Array.isArray(payload.imagenes)) await replaceProductImages(result.rows[0].id, payload.imagenes);
-    if (payload.precio !== null || payload.precio_promocion !== null) {
-      await upsertProductPrice(req.tenant.id, result.rows[0].id, payload.precio, payload.precio_promocion);
+
+    if (Array.isArray(payload.imagenes)) {
+      await replaceProductImages(req.params.id, payload.imagenes, client);
     }
-    res.json({ producto: await getAdminProduct(req.tenant.id, result.rows[0].id) });
+    if (payload.precio !== null || payload.precio_promocion !== null) {
+      await upsertProductPrice(req.tenant.id, req.params.id, payload.precio, payload.precio_promocion, client);
+    }
+
+    await client.query('COMMIT');
+    res.json({ producto: await getAdminProduct(req.tenant.id, req.params.id) });
   } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     res.status(error.code === '23505' ? 409 : 500).json({ message: error.code === '23505' ? 'El codigo ya existe' : 'No se pudo actualizar el producto' });
+  } finally {
+    if (client) client.release();
   }
 });
 
@@ -668,6 +731,7 @@ router.delete('/admin/products/:id', authenticate, requireRole('admin', 'superad
     await client.query('BEGIN');
     const current = await client.query(
       `SELECT p.id,
+              p.posicion,
               EXISTS (
                 SELECT 1
                 FROM pedido_items pi
@@ -691,6 +755,15 @@ router.delete('/admin/products/:id', authenticate, requireRole('admin', 'superad
     await client.query('DELETE FROM producto_imagenes WHERE producto_id = $1', [target.id]);
     await client.query('DELETE FROM precios WHERE producto_id = $1', [target.id]);
     await client.query('DELETE FROM productos WHERE id = $1 AND empresa_id = $2', [target.id, req.tenant.id]);
+
+    // Desplazar las posiciones de los productos restantes
+    await client.query(
+      `UPDATE productos 
+       SET posicion = posicion - 1 
+       WHERE empresa_id = $1 AND posicion > $2`,
+      [req.tenant.id, target.posicion]
+    );
+
     await client.query('COMMIT');
     res.status(204).end();
   } catch (error) {
@@ -1112,19 +1185,19 @@ async function replaceClientBranches(client, clientId, branches = []) {
   }
 }
 
-async function replaceProductImages(productId, images = []) {
+async function replaceProductImages(productId, images = [], client = db) {
   if (!Array.isArray(images)) return;
-  await db.query('DELETE FROM producto_imagenes WHERE producto_id = $1', [productId]);
+  await client.query('DELETE FROM producto_imagenes WHERE producto_id = $1', [productId]);
   for (const [index, url] of images.filter(Boolean).entries()) {
-    await db.query('INSERT INTO producto_imagenes (producto_id, url, orden) VALUES ($1, $2, $3)', [productId, url, index + 1]);
+    await client.query('INSERT INTO producto_imagenes (producto_id, url, orden) VALUES ($1, $2, $3)', [productId, url, index + 1]);
   }
 }
 
-async function upsertProductPrice(tenantId, productId, price, promoPrice) {
+async function upsertProductPrice(tenantId, productId, price, promoPrice, client = db) {
   await ensurePriceVisibilityColumn();
   await ensurePricePromoActiveColumn();
   if (price === null && promoPrice === null) return;
-  const listResult = await db.query(
+  const listResult = await client.query(
     `INSERT INTO listas_precios (empresa_id, nombre)
      VALUES ($1, 'Distribuidor Mayorista')
      ON CONFLICT (empresa_id, nombre)
@@ -1133,7 +1206,7 @@ async function upsertProductPrice(tenantId, productId, price, promoPrice) {
     [tenantId]
   );
   const listId = listResult.rows[0].id;
-  await db.query(
+  await client.query(
     `INSERT INTO precios (producto_id, lista_precio_id, precio, precio_promocion, promo_activa, visible_cliente)
      VALUES ($1, $2, $3, $4, false, true)
      ON CONFLICT (producto_id, lista_precio_id)

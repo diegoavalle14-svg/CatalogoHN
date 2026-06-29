@@ -1151,6 +1151,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       brands,
       categories
     );
+    console.log('[DEBUG saveProduct] payload.sku=', payload.sku, 'nextPayload.sku=', nextPayload.sku, 'nextPayload=', JSON.stringify(nextPayload));
     try {
       const saved = await api.adminSaveProduct(session.token, nextPayload);
       const product = normalizeAdminProduct(saved.producto, brands, categories);
@@ -1670,9 +1671,54 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   );
 }
 
+function ProductPositionInput({ product, onPosition }) {
+  const [localVal, setLocalVal] = useState(() => String(product.posicion || ''));
+
+  useEffect(() => {
+    setLocalVal(String(product.posicion || ''));
+  }, [product.posicion]);
+
+  const handleBlurOrEnter = () => {
+    const num = parseInt(localVal, 10);
+    if (!isNaN(num) && num > 0 && num !== product.posicion) {
+      onPosition(product, num);
+    } else {
+      setLocalVal(String(product.posicion || ''));
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      min="1"
+      value={localVal}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onBlur={handleBlurOrEnter}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          handleBlurOrEnter();
+          e.target.blur();
+        }
+      }}
+      className="admin-posicion-input"
+      style={{
+        width: '60px',
+        padding: '3px 6px',
+        border: '1px solid var(--border-color, #ccc)',
+        borderRadius: '4px',
+        fontSize: '0.85rem',
+        textAlign: 'center',
+        background: 'var(--bg-input, #fff)',
+        color: 'var(--text-color, #111)'
+      }}
+    />
+  );
+}
+
 function AdminCatalogSection({ products, brands, categories, onNew, onProductEdit, onToggle, onPosition, onDelete, onBrands, onCategories }) {
   const [query, setQuery] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('all');
+  const [lightboxSrc, setLightboxSrc] = useState(null);
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return (products || []).filter((product) => {
@@ -1713,7 +1759,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
         {filteredProducts.map((product) => (
           <article className={product.visible ? 'admin-product-row' : 'admin-product-row muted'} key={product.id}>
             <div className="admin-product-top">
-              <ProductImageThumb images={product.imagenes} />
+              <ProductImageThumb images={product.imagenes} onClick={() => { const src = cleanProductImages(product.imagenes)[0]; if (src) setLightboxSrc(src); }} />
               <div>
                 <span className="sku-code">{product.sku}</span>
                 <small>{product.marca} · {product.specs?.aplicacion || product.descripcion}</small>
@@ -1725,13 +1771,14 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
               </div>
             </div>
             <footer>
-              <label>Pos.<input value={product.posicion || 1} onChange={(event) => onPosition(product, Number(event.target.value) || 1)} /></label>
+              <label>Pos.<ProductPositionInput product={product} onPosition={onPosition} /></label>
               <label className="switch-line">{product.visible ? 'Visible' : 'Oculto'}<input type="checkbox" checked={product.visible} onChange={() => onToggle(product)} /><span /></label>
             </footer>
           </article>
         ))}
       </div>
       <small className="admin-muted-note">{brands.length} marcas · {categories.length} categorias</small>
+      <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </>
   );
 }
@@ -1928,13 +1975,30 @@ function BrandFilterStrip({ brands = [], value, onChange, className = '' }) {
   );
 }
 
-function ProductImageThumb({ images }) {
+function ProductImageThumb({ images, onClick }) {
   const image = cleanProductImages(images)[0];
-  if (image) return <img src={image} alt="" />;
+  if (image) return <img src={image} alt="" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined} />;
   return (
     <span className="product-thumb-fallback" aria-hidden="true">
       <PackageSearch size={20} strokeWidth={1.8} />
     </span>
+  );
+}
+
+function ImageLightbox({ src, onClose }) {
+  if (!src) return null;
+  return (
+    <div className="image-lightbox-backdrop" onClick={onClose}>
+      <button className="image-lightbox-close" onClick={onClose} aria-label="Cerrar">
+        <X size={22} />
+      </button>
+      <img
+        className="image-lightbox-img"
+        src={src}
+        alt=""
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
   );
 }
 
@@ -2199,14 +2263,19 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     syncClientBranches(clientBranches.filter((_, branchIndex) => branchIndex !== index));
   };
   const updateProductInfoLines = (value) => {
-    const lines = String(value || '').split(/\r?\n/);
-    update('descripcion', lines[0] || '');
+    const raw = String(value || '');
+    const lines = raw.split(/\r?\n/);
+    const descripcion = (lines[0] || '').trim();
+    const aplicacion = (lines[1] || '').trim();
+    const medida = lines.slice(2).join('\n').trim();
+    setFormFeedback(null);
     setForm((current) => ({
       ...current,
+      descripcion,
       specs: {
         ...(current.specs || {}),
-        aplicacion: lines[1] || '',
-        medida: lines.slice(2).join('\n')
+        aplicacion,
+        medida
       }
     }));
   };

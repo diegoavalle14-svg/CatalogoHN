@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS api_request_logs CASCADE;
 DROP TABLE IF EXISTS api_keys CASCADE;
 DROP TABLE IF EXISTS superadmin_eventos CASCADE;
 DROP TABLE IF EXISTS solicitudes_registro CASCADE;
+DROP TABLE IF EXISTS superadmin_subnombres CASCADE;
 DROP TABLE IF EXISTS pedido_items CASCADE;
 DROP TABLE IF EXISTS pedidos CASCADE;
 DROP TABLE IF EXISTS cliente_lista_precio CASCADE;
