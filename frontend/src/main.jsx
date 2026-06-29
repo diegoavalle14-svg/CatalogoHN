@@ -812,9 +812,9 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           <span className={`stock-pill ${stock.tone}`}>{stock.label}</span>
         </div>
         <span className="product-category-badge" style={categoryBadgeStyle(categoryMeta)}>{product.categoria || categoryMeta?.nombre || 'Sin categoría'}</span>
-        <h3>{product.specs?.aplicacion || product.descripcion}</h3>
-        <p>{product.descripcion}</p>
-        <p>{product.specs?.medida}</p>
+        <h3>{product.descripcion}</h3>
+        {product.specs?.aplicacion && <p>{product.specs.aplicacion}</p>}
+        {product.specs?.medida && <p>{product.specs.medida}</p>}
         <div className="price-line">
           {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
           <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
@@ -2196,8 +2196,8 @@ function AdminPreviewProductCard({ product, categoryMeta, brandMeta }) {
           <span className="sku-code">{product.sku}</span>
           <ProductStockPill product={product} />
         </div>
-        <strong>{product.specs?.aplicacion || product.descripcion}</strong>
-        <small>{product.descripcion}</small>
+        <strong>{product.descripcion}</strong>
+        {product.specs?.aplicacion && <small>{product.specs.aplicacion}</small>}
         <small>{product.specs?.medida || product.categoria || 'Producto visible'}</small>
         <div className="price-line">
           {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
