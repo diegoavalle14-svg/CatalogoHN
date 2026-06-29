@@ -805,11 +805,11 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
     <article className="product-card">
       {product.en_promocion && <span className="promo-ribbon">PROMO</span>}
       <div className="product-image">
-        {productImages[0] ? (
-          <img src={productImages[0]} alt={product.descripcion} />
-        ) : (
-          <DefaultProductArtwork product={product} categoryMeta={categoryMeta} />
-        )}
+        <SafeImage 
+          src={productImages[0]} 
+          alt={product.descripcion} 
+          fallback={<DefaultProductArtwork product={product} categoryMeta={categoryMeta} />} 
+        />
         <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
       </div>
       <div className="product-body">
@@ -2042,12 +2042,13 @@ function BrandFilterStrip({ brands = [], value, onChange, className = '' }) {
 
 function ProductImageThumb({ images, onClick }) {
   const image = cleanProductImages(images)[0];
-  if (image) return <img src={image} alt="" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined} />;
-  return (
+  const fallback = (
     <span className="product-thumb-fallback" aria-hidden="true">
       <PackageSearch size={20} strokeWidth={1.8} />
     </span>
   );
+  if (!image) return fallback;
+  return <SafeImage src={image} fallback={fallback} alt="" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined} />;
 }
 
 function ImageLightbox({ src, onClose }) {
@@ -2071,7 +2072,7 @@ function DefaultProductArtwork({ product, categoryMeta }) {
   if (categoryMeta?.imagen_url) {
     return (
       <div className="default-product-artwork category-image-artwork">
-        <img src={resolveMediaUrl(categoryMeta.imagen_url)} alt="" />
+        <SafeImage src={resolveMediaUrl(categoryMeta.imagen_url)} alt="" />
       </div>
     );
   }
@@ -2082,6 +2083,17 @@ function DefaultProductArtwork({ product, categoryMeta }) {
       </div>
     </div>
   );
+}
+
+function SafeImage({ src, fallback = null, alt = '', ...props }) {
+  const [failed, setFailed] = useState(false);
+  
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  if (!src || failed) return fallback;
+  return <img src={src} alt={alt} onError={() => setFailed(true)} {...props} />;
 }
 
 function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [], brands = [], categories }) {
@@ -2208,11 +2220,11 @@ function AdminPreviewProductCard({ product, categoryMeta, brandMeta }) {
   return (
     <article className="admin-preview-product-card">
       <div className="admin-preview-product-image">
-        {productImages[0] ? (
-          <img src={productImages[0]} alt={product.descripcion} />
-        ) : (
-          <DefaultProductArtwork product={product} categoryMeta={categoryMeta} />
-        )}
+        <SafeImage 
+          src={productImages[0]} 
+          alt={product.descripcion} 
+          fallback={<DefaultProductArtwork product={product} categoryMeta={categoryMeta} />} 
+        />
         <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
       </div>
       <div className="admin-preview-product-body">
