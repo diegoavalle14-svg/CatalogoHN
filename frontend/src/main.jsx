@@ -755,6 +755,7 @@ function Catalog({ session, onSessionUpdated }) {
           onConfirm={() => setConfirming(true)}
           onSend={sendOrder}
         />
+      )}
     </section>
   );
 }
