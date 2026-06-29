@@ -998,6 +998,14 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
   const [liveTenantDraft, setLiveTenantDraft] = useState(null);
   const adminHeaderRef = useRef(null);
   const [adminHeaderSpace, setAdminHeaderSpace] = useState(116);
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef(null);
+
+  function showToast(message) {
+    setToast(message);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(''), 3200);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -1193,7 +1201,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
         visible: product.visible !== false 
       })));
       setEditor(null);
-      window.alert(payload.id ? 'Producto actualizado correctamente' : 'Producto agregado correctamente');
+      showToast(payload.id ? 'Producto actualizado correctamente' : 'Producto agregado correctamente');
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar el producto');
       return;
@@ -1232,8 +1240,8 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       }
       const latestPrices = await api.adminPrices(session.token);
       setPriceData(normalizeAdminPriceData(latestPrices));
-      if (saved.password_changed) window.alert('Contraseña del cliente actualizada correctamente.');
-      else window.alert(nextPayload.id ? 'Cliente actualizado correctamente' : 'Cliente agregado correctamente');
+      if (saved.password_changed) showToast('Contraseña del cliente actualizada correctamente.');
+      else showToast(nextPayload.id ? 'Cliente actualizado correctamente' : 'Cliente agregado correctamente');
       setEditor(null);
     } catch (error) {
       setClients(previousClients);
@@ -1341,6 +1349,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
         posicion: product.posicion || index + 1, 
         visible: product.visible !== false 
       })));
+      showToast('Producto eliminado');
     } catch (error) {
       setProducts(previousProducts);
       window.alert(error.message || 'No se pudo eliminar el producto');
@@ -1356,6 +1365,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       await api.adminDeleteClient(session.token, client.id);
       const latestPrices = await api.adminPrices(session.token);
       setPriceData(normalizeAdminPriceData(latestPrices));
+      showToast('Cliente eliminado');
     } catch (error) {
       setClients(previousClients);
       window.alert(error.message || 'No se pudo eliminar el cliente');
@@ -1389,7 +1399,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
     try {
       const saved = await api.adminSaveBrand(session.token, nextPayload);
       setBrands((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? saved.marca : item)) : [saved.marca, ...current]));
-      window.alert(nextPayload.id ? 'Marca actualizada correctamente' : 'Marca agregada correctamente');
+      showToast(nextPayload.id ? 'Marca actualizada correctamente' : 'Marca agregada correctamente');
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar la marca');
     }
@@ -1437,7 +1447,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
           ? current.map((item) => (item.id === nextPayload.id ? saved.categoria : item))
           : [saved.categoria, ...current]
       ).sort(sortByPositionThenName));
-      window.alert(nextPayload.id ? 'Categoría actualizada correctamente' : 'Categoría agregada correctamente');
+      showToast(nextPayload.id ? 'Categoría actualizada correctamente' : 'Categoría agregada correctamente');
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar la categoria');
     }
@@ -1447,6 +1457,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
     try {
       await api.adminDeleteBrand(session.token, id);
       setBrands((current) => current.filter((item) => item.id !== id));
+      showToast('Marca eliminada');
     } catch (error) {
       window.alert(error.message || 'No se pudo eliminar la marca');
     }
@@ -1456,6 +1467,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
     try {
       await api.adminDeleteCategory(session.token, id);
       setCategories((current) => current.filter((item) => item.id !== id));
+      showToast('Categoría eliminada');
     } catch (error) {
       window.alert(error.message || 'No se pudo eliminar la categoria');
     }
@@ -1496,6 +1508,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
 
   return (
     <div className="admin-mobile-shell" style={adminShellStyle}>
+      {toast && <div className="catalog-toast admin-toast">{toast}</div>}
       <header className="admin-mobile-topbar admin-mobile-topbar-fixed" ref={adminHeaderRef}>
         <button className="admin-brand-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
           <TenantLogoMark tenant={liveTenant} size="small" />
