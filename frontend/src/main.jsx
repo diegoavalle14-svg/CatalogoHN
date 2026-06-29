@@ -1193,6 +1193,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
         visible: product.visible !== false 
       })));
       setEditor(null);
+      window.alert(payload.id ? 'Producto actualizado correctamente' : 'Producto agregado correctamente');
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar el producto');
       return;
@@ -1232,6 +1233,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       const latestPrices = await api.adminPrices(session.token);
       setPriceData(normalizeAdminPriceData(latestPrices));
       if (saved.password_changed) window.alert('Contraseña del cliente actualizada correctamente.');
+      else window.alert(nextPayload.id ? 'Cliente actualizado correctamente' : 'Cliente agregado correctamente');
       setEditor(null);
     } catch (error) {
       setClients(previousClients);
@@ -1387,6 +1389,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
     try {
       const saved = await api.adminSaveBrand(session.token, nextPayload);
       setBrands((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? saved.marca : item)) : [saved.marca, ...current]));
+      window.alert(nextPayload.id ? 'Marca actualizada correctamente' : 'Marca agregada correctamente');
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar la marca');
     }
@@ -1434,6 +1437,7 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
           ? current.map((item) => (item.id === nextPayload.id ? saved.categoria : item))
           : [saved.categoria, ...current]
       ).sort(sortByPositionThenName));
+      window.alert(nextPayload.id ? 'Categoría actualizada correctamente' : 'Categoría agregada correctamente');
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar la categoria');
     }
