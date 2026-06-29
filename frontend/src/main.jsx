@@ -2679,7 +2679,7 @@ function sortByPositionThenName(a, b) {
 
 function prepareProductPayload(product, products, brands, categories) {
   const lines = String(product.infoText ?? '').split(/\r?\n/);
-  const descripcion = (lines[0] || '').trim() || product.descripcion;
+  const descripcion = (lines[0] || '').trim() || product.descripcion || product.sku;
   const aplicacion = (lines[1] || '').trim();
   const medida = lines.slice(2).join('\n').trim();
 
