@@ -1820,7 +1820,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
               <ProductImageThumb images={product.imagenes} onClick={() => { const src = cleanProductImages(product.imagenes)[0]; if (src) setLightboxSrc(src); }} />
               <div>
                 <span className="sku-code">{product.sku}</span>
-                <small>{product.marca} · {product.specs?.aplicacion || product.descripcion}</small>
+                <small>{[product.marca, product.specs?.aplicacion || product.descripcion].filter(Boolean).join(' · ')}</small>
                 <ProductStockPill product={product} className="admin-stock-badge" />
               </div>
               <div className="admin-row-actions">
@@ -2560,7 +2560,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                   <h3>{group.category}</h3>
                   {group.items.map((product) => (
                     <div className="admin-price-editor-row" key={product.id}>
-                      <span><strong>{product.sku}</strong><small>{product.marca} · {product.descripcion}</small><ProductStockPill product={product} /></span>
+                      <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small><ProductStockPill product={product} /></span>
                       <label className="price-visible-toggle"><input type="checkbox" checked={form[`visible_${product.id}`] !== false} onChange={(event) => update(`visible_${product.id}`, event.target.checked)} /> Visible</label>
                       <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
                       <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
@@ -2580,7 +2580,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 <h3>{group.category}</h3>
                 {group.items.map((product) => (
                   <div className="admin-price-editor-row" key={product.id}>
-                    <span><strong>{product.sku}</strong><small>{product.marca} · {product.descripcion}</small><ProductStockPill product={product} /></span>
+                    <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small><ProductStockPill product={product} /></span>
                     <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
                     <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
                     <label className="price-visible-toggle"><input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} /> Promo activa</label>
