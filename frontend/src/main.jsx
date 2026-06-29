@@ -570,8 +570,14 @@ function Catalog({ session, onSessionUpdated }) {
   const [confirming, setConfirming] = useState(false);
   const [sending, setSending] = useState(false);
   const [orderError, setOrderError] = useState('');
-  const [orderSent, setOrderSent] = useState(null);
   const [toast, setToast] = useState('');
+  const toastTimer = useRef(null);
+
+  function showToast(message) {
+    setToast(message);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(''), 3200);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -659,9 +665,7 @@ function Catalog({ session, onSessionUpdated }) {
 
   function addProductQty(product, branchId, qty) {
     updateQty(product, branchId, qty);
-    setToast('Producto agregado al pedido');
-    window.clearTimeout(addProductQty.toastTimer);
-    addProductQty.toastTimer = window.setTimeout(() => setToast(''), 2200);
+    showToast('Producto agregado al pedido');
   }
 
   async function sendOrder() {
@@ -673,7 +677,7 @@ function Catalog({ session, onSessionUpdated }) {
       setCart({});
       setConfirming(false);
       setCartOpen(false);
-      setOrderSent(payload.pedido);
+      showToast(payload.pedido?.numero ? `Pedido ${payload.pedido.numero} enviado correctamente` : 'Pedido enviado correctamente');
     } catch (error) {
       setOrderError(error.message || 'No se pudo enviar el pedido');
     } finally {
@@ -751,13 +755,6 @@ function Catalog({ session, onSessionUpdated }) {
           onConfirm={() => setConfirming(true)}
           onSend={sendOrder}
         />
-      )}
-
-      {orderSent && (
-        <ConfirmModal title="Pedido enviado" onCancel={() => setOrderSent(null)} onConfirm={() => setOrderSent(null)} confirmLabel="Listo" cancelLabel="Cerrar">
-          {orderSent.numero ? `Se registro el pedido ${orderSent.numero}.` : 'Se registro el pedido correctamente.'}
-        </ConfirmModal>
-      )}
     </section>
   );
 }
@@ -773,26 +770,34 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
   const canOrder = availableBranches.length > 0 && !isOutOfStock;
 
   function draftFor(branchId) {
-    return drafts[branchId] || 1;
+    return drafts[branchId] !== undefined ? drafts[branchId] : '';
   }
 
   function setDraft(branchId, value) {
-    const next = Math.max(1, Number(value) || 1);
+    if (value === '') {
+      setDrafts((current) => ({ ...current, [branchId]: '' }));
+      return;
+    }
+    const next = Math.max(0, Number(value) || 0);
     setDrafts((current) => ({
       ...current,
-      [branchId]: stock.stock > 0 ? Math.min(next, stock.stock) : 1
+      [branchId]: stock.stock > 0 ? Math.min(next, stock.stock) : next
     }));
   }
 
   function stepDraft(branchId, delta) {
-    setDraft(branchId, Number(draftFor(branchId) || 1) + delta);
+    if (!canOrder) return;
+    const currentVal = Number(draftFor(branchId)) || 0;
+    setDraft(branchId, currentVal + delta);
   }
 
   function addBranch(branchId) {
     if (!canOrder) return;
-    const draft = draftFor(branchId);
-    const nextQty = Number(quantities[branchId] || 0) + Number(draft || 1);
+    const draftNum = Number(draftFor(branchId)) || 0;
+    if (draftNum <= 0) return;
+    const nextQty = Number(quantities[branchId] || 0) + draftNum;
     onAdd(product, branchId, nextQty);
+    setDraft(branchId, '');
   }
 
   return (
@@ -837,20 +842,21 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
             <div className="product-cart-control" key={branchId}>
               <span className="branch-code" title={branchTitle}>{branchLabel}</span>
               <div className="quantity-stepper" aria-label={`Cantidad para ${product.sku} en ${branchLabel}`}>
-                <button type="button" onClick={() => stepDraft(branchId, -1)} disabled={!canOrder || Number(draft || 1) <= 1} aria-label={`Restar cantidad para ${branchLabel}`}>-</button>
+                <button type="button" onClick={() => stepDraft(branchId, -1)} disabled={!canOrder || (Number(draftFor(branchId)) || 0) <= 0} aria-label={`Restar cantidad para ${branchLabel}`}>-</button>
                 <input
                   type="number"
-                  min="1"
+                  min="0"
+                  placeholder="0"
                   max={stock.stock > 0 ? stock.stock : undefined}
                   inputMode="numeric"
-                  value={draft || 1}
+                  value={draftFor(branchId)}
                   disabled={!canOrder}
                   onChange={(event) => setDraft(branchId, event.target.value)}
                   aria-label={`Cantidad para ${branchLabel}`}
                 />
-                <button type="button" onClick={() => stepDraft(branchId, 1)} disabled={!canOrder || (stock.stock > 0 && Number(draft || 1) >= stock.stock)} aria-label={`Sumar cantidad para ${branchLabel}`}>+</button>
+                <button type="button" onClick={() => stepDraft(branchId, 1)} disabled={!canOrder || (stock.stock > 0 && (Number(draftFor(branchId)) || 0) >= stock.stock)} aria-label={`Sumar cantidad para ${branchLabel}`}>+</button>
               </div>
-              <button className="add-to-cart-button" type="button" onClick={() => addBranch(branchId)} disabled={!canOrder}>
+              <button className="add-to-cart-button" type="button" onClick={() => addBranch(branchId)} disabled={!canOrder || (Number(draftFor(branchId)) || 0) <= 0}>
                 {isOutOfStock ? 'Agotado' : '+ Agregar'}
               </button>
             </div>
