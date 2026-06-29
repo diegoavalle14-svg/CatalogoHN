@@ -2263,7 +2263,16 @@ function AdminSitePreview({ tenant }) {
 }
 
 function AdminEditor({ editor, brands, categories, priceLists, priceProducts, clients, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onSaveSite, onSiteDraftChange, onSaveAccountPassword, onDeleteBrand, onDeleteCategory }) {
-  const [form, setForm] = useState(() => buildAdminEditorForm(editor));
+  const [form, setForm] = useState(() => {
+    const f = buildAdminEditorForm(editor);
+    if (editor.type === 'product') {
+      const d = f.descripcion || '';
+      const a = f.specs?.aplicacion || '';
+      const m = f.specs?.medida || '';
+      f.infoText = (!d && !a && !m) ? '' : [d, a, m].join('\n');
+    }
+    return f;
+  });
   const [previewLogoUrl, setPreviewLogoUrl] = useState('');
   const [formFeedback, setFormFeedback] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -2302,23 +2311,6 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   };
   const removeClientBranch = (index) => {
     syncClientBranches(clientBranches.filter((_, branchIndex) => branchIndex !== index));
-  };
-  const updateProductInfoLines = (value) => {
-    const raw = String(value || '');
-    const lines = raw.split(/\r?\n/);
-    const descripcion = (lines[0] || '').trim();
-    const aplicacion = (lines[1] || '').trim();
-    const medida = lines.slice(2).join('\n').trim();
-    setFormFeedback(null);
-    setForm((current) => ({
-      ...current,
-      descripcion,
-      specs: {
-        ...(current.specs || {}),
-        aplicacion,
-        medida
-      }
-    }));
   };
   const selectedSubname = customSubnameMode ? '__custom__' : SITE_SUBNAME_OPTIONS.includes(form.subnombre) ? form.subnombre : '';
   const sitePreviewTenant = useMemo(
@@ -2442,8 +2434,8 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <textarea
                 rows={3}
                 placeholder={'Hilux 79 - 88\nHIERRO / METAL\n1" Pulgada (15/16)'}
-                value={(!form.descripcion && !form.specs?.aplicacion && !form.specs?.medida) ? '' : [form.descripcion || '', form.specs?.aplicacion || '', form.specs?.medida || ''].join('\n')}
-                onChange={(event) => updateProductInfoLines(event.target.value)}
+                value={form.infoText ?? ''}
+                onChange={(event) => update('infoText', event.target.value)}
               />
             </label>
             <div className="admin-product-stock-grid">
@@ -2669,10 +2661,21 @@ function sortByPositionThenName(a, b) {
 }
 
 function prepareProductPayload(product, products, brands, categories) {
+  const lines = String(product.infoText ?? '').split(/\r?\n/);
+  const descripcion = (lines[0] || '').trim() || product.descripcion;
+  const aplicacion = (lines[1] || '').trim();
+  const medida = lines.slice(2).join('\n').trim();
+
   const productImages = cleanProductImages(product.imagenes);
   return normalizeAdminProduct(
     {
       ...product,
+      descripcion,
+      specs: {
+        ...(product.specs || {}),
+        aplicacion,
+        medida
+      },
       marca_id: product.marca_id || brands[0]?.id || null,
       categoria_id: product.categoria_id || categories[0]?.id || null,
       visible: product.visible !== false,
