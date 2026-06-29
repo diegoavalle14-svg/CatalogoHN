@@ -1119,11 +1119,44 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
   async function updateProduct(id, changes) {
     const currentProduct = products.find((product) => product.id === id);
     const previousProducts = products;
-    const optimistic = { ...currentProduct, ...changes };
-    setProducts((current) => current.map((product) => (product.id === id ? optimistic : product)));
+    
+    // Shift positions locally for instant feedback
+    if (changes.posicion !== undefined && changes.posicion !== currentProduct.posicion) {
+      const oldPos = currentProduct.posicion;
+      const newPos = changes.posicion;
+      setProducts((current) => {
+        const next = current.map((product) => {
+          let pos = product.posicion;
+          if (product.id === id) {
+            pos = newPos;
+          } else {
+            if (newPos > oldPos) {
+              if (pos > oldPos && pos <= newPos) {
+                pos = pos - 1;
+              }
+            } else {
+              if (pos >= newPos && pos < oldPos) {
+                pos = pos + 1;
+              }
+            }
+          }
+          return { ...product, posicion: pos };
+        });
+        return [...next].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
+      });
+    } else {
+      const optimistic = { ...currentProduct, ...changes };
+      setProducts((current) => current.map((product) => (product.id === id ? optimistic : product)));
+    }
+
     try {
-      const saved = await api.adminSaveProduct(session.token, changes.id ? changes : { ...changes, id });
-      setProducts((current) => current.map((product) => (product.id === id ? normalizeAdminProduct(saved.producto, brands, categories) : product)));
+      await api.adminSaveProduct(session.token, changes.id ? changes : { ...changes, id });
+      const freshCatalog = await api.adminCatalog(session.token);
+      setProducts(freshCatalog.productos.map((product, index) => ({ 
+        ...product, 
+        posicion: product.posicion || index + 1, 
+        visible: product.visible !== false 
+      })));
     } catch (error) {
       setProducts(previousProducts);
       window.alert(error.message || 'No se pudo guardar el producto');
@@ -1151,16 +1184,18 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       brands,
       categories
     );
-    console.log('[DEBUG saveProduct] payload.sku=', payload.sku, 'nextPayload.sku=', nextPayload.sku, 'nextPayload=', JSON.stringify(nextPayload));
     try {
-      const saved = await api.adminSaveProduct(session.token, nextPayload);
-      const product = normalizeAdminProduct(saved.producto, brands, categories);
-      setProducts((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? product : item)) : [product, ...current]));
+      await api.adminSaveProduct(session.token, nextPayload);
+      const freshCatalog = await api.adminCatalog(session.token);
+      setProducts(freshCatalog.productos.map((product, index) => ({ 
+        ...product, 
+        posicion: product.posicion || index + 1, 
+        visible: product.visible !== false 
+      })));
       setEditor(null);
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar el producto');
       return;
-    } finally {
     }
   }
 
@@ -1298,6 +1333,12 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
       await api.adminDeleteProduct(session.token, product.id);
       const latestPrices = await api.adminPrices(session.token);
       setPriceData(normalizeAdminPriceData(latestPrices));
+      const freshCatalog = await api.adminCatalog(session.token);
+      setProducts(freshCatalog.productos.map((product, index) => ({ 
+        ...product, 
+        posicion: product.posicion || index + 1, 
+        visible: product.visible !== false 
+      })));
     } catch (error) {
       setProducts(previousProducts);
       window.alert(error.message || 'No se pudo eliminar el producto');
