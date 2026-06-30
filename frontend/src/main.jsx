@@ -2875,6 +2875,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
             </select></label>
+            <label className="price-visible-toggle"><input type="checkbox" checked={form.aplica_isv === true} onChange={(event) => update('aplica_isv', event.target.checked)} /> Aplica ISV</label>
             <section className="client-branches-editor">
               <div className="client-branches-head">
                 <strong>Sucursales</strong>
@@ -3231,6 +3232,7 @@ function prepareClientPayload(client) {
     password: String(client.password || '').trim() || undefined,
     condicion_credito: String(client.condicion_credito || client.credito || 'Contado').trim(),
     activo: client.activo !== false,
+    aplica_isv: client.aplica_isv === true,
     lista_precio_id: client.lista_precio_id || null,
     sucursales
   };
