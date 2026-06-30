@@ -746,7 +746,7 @@ function Catalog({ session, onSessionUpdated }) {
         </div>
       )}
 
-      {toast && <div className="catalog-toast">{toast}</div>}
+      {toast && createPortal(<div className="catalog-toast">{toast}</div>, document.body)}
 
       {cartOpen && (
         <CartPanel
