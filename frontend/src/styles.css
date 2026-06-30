@@ -1205,19 +1205,19 @@ button {
 .catalog-toast {
   position: fixed;
   left: 50%;
-  top: 24px;
+  top: 50%;
   z-index: 95;
   width: min(340px, calc(100% - 28px));
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   border-radius: 8px;
   background: #111;
   color: var(--yellow);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, .24);
-  padding: 13px 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .44);
+  padding: 18px 24px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
-  animation: toastSlideDown 2200ms ease forwards;
+  animation: toastFadeScale 2200ms ease forwards;
 }
 
 .cart-overlay {
@@ -6480,19 +6480,19 @@ button {
   }
 }
 
-@keyframes toastSlideDown {
+@keyframes toastFadeScale {
   0% {
     opacity: 0;
-    transform: translate(-50%, -28px);
+    transform: translate(-50%, -50%) scale(0.85);
   }
   12%,
   82% {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -50%) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -28px);
+    transform: translate(-50%, -50%) scale(0.85);
   }
 }
 
