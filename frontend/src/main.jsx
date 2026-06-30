@@ -2083,8 +2083,9 @@ function ProductImageThumb({ images, onClick }) {
   );
 }
 
-function ImageLightbox({ src, images = [], index = 0, onClose, onIndexChange }) {
+function ImageLightbox({ src, images = [], index = null, onClose, onIndexChange }) {
   const gallery = cleanProductImages(images.length ? images : (src ? [src] : []));
+  if (index === null || index === undefined) return null;
   const activeIndex = Math.min(Math.max(Number(index) || 0, 0), Math.max(gallery.length - 1, 0));
   const activeSrc = gallery[activeIndex];
   const canSlide = gallery.length > 1;
