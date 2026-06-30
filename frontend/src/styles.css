@@ -4,6 +4,7 @@
   color-scheme: light;
   font-family: "Open Sans", "Barlow", "Segoe UI", Arial, Helvetica, sans-serif;
   --yellow: #F5C200;
+  --yellow-strong: #c59b00;
   --black: #111111;
   --paper: #ffffff;
   --mist: #f0f0f0;
@@ -62,6 +63,7 @@ body {
   --soft-line: #2a2c31;
   --text: #f1f2f4;
   --muted: #a7adb7;
+  --yellow-strong: var(--yellow);
   --glass-bg: rgba(25, 26, 30, 0.74);
   --glass-bg-strong: rgba(31, 32, 36, 0.86);
   --glass-border: rgba(255, 255, 255, 0.10);
@@ -2766,6 +2768,29 @@ button {
 [data-theme="dark"] .admin-preview-compact-header {
   background: rgba(8, 10, 14, .72);
   border-color: rgba(255, 255, 255, .10);
+}
+
+[data-theme="dark"] .admin-preview-sticky-tools,
+[data-theme="dark"] .admin-filter-bar {
+  background: rgba(16, 17, 20, 0.94);
+}
+
+[data-theme="dark"] .filter-tab-section {
+  background: rgba(24, 26, 31, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .brand-filter-section {
+  background: rgba(18, 20, 24, 0.76);
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .filter-tab {
+  color: #aeb7c4;
+}
+
+[data-theme="dark"] .filter-tab.active {
+  color: var(--yellow) !important;
 }
 
 [data-theme="dark"] .admin-preview-search,

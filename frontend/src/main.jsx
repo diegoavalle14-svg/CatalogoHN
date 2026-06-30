@@ -2548,18 +2548,18 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <strong style={{ fontSize: '12px' }}>{tenant?.nombre || 'Empresa'}</strong>
-            <small style={{ color: '#888', fontSize: '10px' }}>{tenant?.subnombre || ''}</small>
+            <small style={{ color: 'var(--muted)', fontSize: '10px' }}>{tenant?.subnombre || ''}</small>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <select
               value={clientId || ''}
               onChange={(event) => setClientId(Number(event.target.value) || '')}
-              style={{ flex: 1, maxWidth: '200px', height: '28px', fontSize: '11px', fontWeight: '700', border: '1px solid #ccc', borderRadius: '4px', padding: '0 6px' }}
+              style={{ flex: 1, maxWidth: '200px', height: '28px', fontSize: '11px', fontWeight: '700', border: '1px solid var(--line)', borderRadius: '4px', padding: '0 6px', background: 'var(--paper)', color: 'var(--text)' }}
             >
               {clients.length === 0 && <option value="">Sin clientes</option>}
               {clients.map((client) => <option value={client.id} key={client.id}>{client.nombre}</option>)}
             </select>
-            <small style={{ color: '#666', fontSize: '10px', fontWeight: '700' }}>
+            <small style={{ color: 'var(--muted)', fontSize: '10px', fontWeight: '700' }}>
               {selectedList?.nombre || 'Sin lista'} · {selectedClient?.usuario || ''}
             </small>
           </div>
