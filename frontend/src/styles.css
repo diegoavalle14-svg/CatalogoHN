@@ -2858,6 +2858,30 @@ button {
   color: #dce4ef;
 }
 
+[data-theme="dark"] .admin-entity-row {
+  border-color: #303642;
+}
+
+[data-theme="dark"] .admin-entity-thumb {
+  background: #111318;
+  border-color: #303642;
+  color: #aeb7c4;
+}
+
+[data-theme="dark"] .admin-entity-row button {
+  background: #222226;
+  border: 1px solid #3a3a40;
+  color: #f4f4f5;
+}
+
+[data-theme="dark"] .admin-entity-row button:hover {
+  background: #3a3a40;
+}
+
+[data-theme="dark"] .admin-entity-order button:disabled {
+  opacity: .25;
+}
+
 [data-theme="dark"] .admin-preview-search,
 [data-theme="dark"] .admin-preview-client-picker,
 [data-theme="dark"] .admin-preview-brands {
@@ -6547,7 +6571,7 @@ button {
 
 .admin-entity-row {
   display: grid;
-  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-columns: auto 1fr repeat(4, auto);
   align-items: center;
   gap: 8px;
   border: 1px solid #eeeeee;

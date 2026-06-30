@@ -3003,7 +3003,7 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
   const [logoFile, setLogoFile] = useState(null);
   const supportsImage = label === 'Marca' || label === 'Categoría';
   const imageField = label === 'Marca' ? 'logo_url' : 'imagen_url';
-  const supportsOrdering = label === 'Categoría';
+  const supportsOrdering = label === 'Categoría' || label === 'Marca';
   const orderedItems = supportsOrdering
     ? [...items].sort((a, b) => (Number(a.posicion || 0) - Number(b.posicion || 0)) || String(a.nombre).localeCompare(String(b.nombre)))
     : items;
