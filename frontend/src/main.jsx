@@ -1776,10 +1776,41 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrders, setExpandedOrders] = useState({});
+  const [selectedHistoryOrder, setSelectedHistoryOrder] = useState(null);
 
   const toggleOrder = (orderId) => {
     setExpandedOrders(current => ({ ...current, [orderId]: !current[orderId] }));
   };
+
+  const groupedOrders = useMemo(() => {
+    const sent = (orders || []).filter(o => o.estado === 'enviado');
+    const sorted = [...sent].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    const yearsMap = {};
+    sorted.forEach(order => {
+      const date = new Date(order.fecha);
+      const year = date.getFullYear();
+      const monthNum = date.getMonth();
+      const monthName = date.toLocaleString('es-HN', { month: 'long' });
+      const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+      
+      if (!yearsMap[year]) {
+        yearsMap[year] = { year, monthsMap: {} };
+      }
+      if (!yearsMap[year].monthsMap[monthNum]) {
+        yearsMap[year].monthsMap[monthNum] = { monthName: capitalizedMonth, monthNum, orders: [] };
+      }
+      yearsMap[year].monthsMap[monthNum].orders.push(order);
+    });
+
+    return Object.values(yearsMap)
+      .sort((a, b) => b.year - a.year)
+      .map(y => ({
+        year: y.year,
+        months: Object.values(y.monthsMap)
+          .sort((a, b) => b.monthNum - a.monthNum)
+      }));
+  }, [orders]);
   const urgentLabel = pending > 0
     ? `${pending} pedido${pending === 1 ? '' : 's'} por revisar`
     : preparing > 0
@@ -1891,17 +1922,93 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
           );
         })}
       </div>
-      <h2 className="admin-small-heading">Ranking de clientes</h2>
-      <div className="admin-ranking-card">
-        <div><span>Cliente</span><span>Lista</span><span>Credito</span><span>Estado</span><span>Acceso</span></div>
-        {clients.length === 0 && <p className="admin-empty-inline">Sin clientes creados todavia.</p>}
-        {clients.slice(0, 5).map((client) => (
-          <button key={client.id}>
-            <strong>{client.nombre}</strong>
-            <b>{client.lista || 'Sin lista'}</b><b>{client.credito}</b><b>{client.activo ? 'Activo' : 'Inactivo'}</b><span>{client.acceso_corto || client.acceso}</span>
-          </button>
-        ))}
-      </div>
+      <h2 className="admin-small-heading" style={{ marginTop: '40px' }}>Historial de pedidos (Enviados)</h2>
+      
+      {groupedOrders.length === 0 ? (
+        <div className="admin-empty-state" style={{ marginTop: '10px' }}>
+          <strong>No hay pedidos enviados en el historial</strong>
+          <span>Los pedidos con estado "Enviado" aparecerán aquí clasificados por fecha.</span>
+        </div>
+      ) : (
+        groupedOrders.map(({ year, months }) => (
+          <div key={year} className="history-year-group">
+            <h3 className="history-year-title">{year}</h3>
+            {months.map(({ monthName, orders }) => (
+              <div key={monthName} className="history-month-group">
+                <h4 className="history-month-title">{monthName}</h4>
+                <div className="history-table-card">
+                  <div className="history-header-row">
+                    <span>Fecha</span>
+                    <span>Cliente</span>
+                    <span>N. Pedido</span>
+                    <span>Monto</span>
+                    <span>Detalle</span>
+                  </div>
+                  {orders.map((order) => (
+                    <div key={order.id} className="history-item-row">
+                      <span>{formatShortDate(order.fecha)}</span>
+                      <strong style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={order.cliente_nombre}>{order.cliente_nombre || 'Cliente'}</strong>
+                      <span className="history-ticket">{order.numero}</span>
+                      <b>{money(order.total)}</b>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedHistoryOrder(order)}
+                        className="pill-blue small-pill"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        Ver Pedido
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+
+      {selectedHistoryOrder && (
+        <div className="cart-overlay" style={{ zIndex: 2000 }}>
+          <button className="cart-scrim" onClick={() => setSelectedHistoryOrder(null)} aria-label="Cerrar detalle" />
+          <aside className="cart-panel" style={{ maxHeight: '85vh', overflow: 'hidden' }}>
+            <div className="cart-head">
+              <h2>Detalle de Pedido {selectedHistoryOrder.numero}</h2>
+              <button className="cart-close-button" onClick={() => setSelectedHistoryOrder(null)} aria-label="Cerrar"><X size={18} /></button>
+            </div>
+            <div style={{ padding: '16px', overflowY: 'auto' }}>
+              <div style={{ marginBottom: '16px', fontSize: '12px', background: '#f8f8f8', padding: '10px', borderRadius: '6px' }}>
+                <p style={{ margin: '0 0 6px 0' }}><strong>Cliente:</strong> {selectedHistoryOrder.cliente_nombre}</p>
+                <p style={{ margin: '0 0 6px 0' }}><strong>Fecha:</strong> {new Date(selectedHistoryOrder.fecha).toLocaleString('es-HN')}</p>
+                <p style={{ margin: 0 }}><strong>Monto Total:</strong> {money(selectedHistoryOrder.total)}</p>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left', color: '#666' }}>
+                      <th style={{ padding: '6px 4px 6px 0', fontSize: '10px' }}>Código</th>
+                      <th style={{ padding: '6px 4px', fontSize: '10px' }}>Descripción</th>
+                      <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px' }}>Sucursal</th>
+                      <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px' }}>Cantidad</th>
+                      <th style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px' }}>Precio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedHistoryOrder.items || []).map((item) => (
+                      <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                        <td style={{ padding: '8px 4px 8px 0', fontWeight: '700', fontFamily: 'monospace' }}>{item.sku}</td>
+                        <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
+                        <td style={{ padding: '8px 4px', textAlign: 'center' }}>{item.sucursal}</td>
+                        <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>
+                        <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
     </>
   );
 }
