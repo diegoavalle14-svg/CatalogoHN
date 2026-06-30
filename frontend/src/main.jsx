@@ -218,7 +218,7 @@ function App() {
       const previousUser = current.user || {};
       const tenantChanged = tenant && ['nombre', 'subnombre', 'slug', 'logo_url', 'color_primario', 'color_secundario', 'fuente']
         .some((key) => String(previous[key] || '') !== String(tenant[key] || ''));
-      const userChanged = user && ['nombre', 'username', 'email', 'condicion_credito', 'cliente_activo']
+      const userChanged = user && ['nombre', 'username', 'email', 'condicion_credito', 'cliente_activo', 'aplica_isv']
         .some((key) => String(previousUser[key] || '') !== String(user[key] || ''));
       const changed = tenantChanged || userChanged;
       if (!changed) return current;
