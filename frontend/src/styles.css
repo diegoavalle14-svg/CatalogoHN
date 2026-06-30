@@ -885,14 +885,6 @@ button {
   background: rgba(17, 17, 17, 0.48);
 }
 
-.photo-count::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #70c8ff;
-  box-shadow: inset -2px -2px 0 #2d6b91;
-}
 
 .promo-ribbon {
   position: absolute;
@@ -5659,14 +5651,6 @@ button {
   font-weight: 900;
 }
 
-.admin-preview-photo-count::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  margin-right: 5px;
-  border-radius: 50%;
-  background: #8bc4e9;
-}
 
 .admin-preview-product-body {
   display: grid;
