@@ -7,7 +7,8 @@
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "db:setup": "node src/models/setup.js",
-    "superadmin:ensure": "node src/models/ensureSuperadmin.js"
+    "superadmin:ensure": "node src/models/ensureSuperadmin.js",
+    "user:reset-password": "node src/models/resetUserPassword.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.699.0",

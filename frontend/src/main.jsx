@@ -194,7 +194,7 @@ function App() {
   }
 
   if (session.user.rol === 'admin') {
-    return <Admin session={session} onLogout={logout} onRestoreSuperadmin={session?.impersonated_from?.user?.rol === 'superadmin' ? () => {
+    return <Admin session={session} onLogout={logout} onAuthExpired={logout} onRestoreSuperadmin={session?.impersonated_from?.user?.rol === 'superadmin' ? () => {
       const originalSession = session.impersonated_from;
       api.setTenantSlug(originalSession?.tenant?.slug || 'kolben');
       clearTemporarySession();
@@ -987,7 +987,7 @@ function History({ session }) {
   );
 }
 
-function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme, onThemeToggle }) {
+function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenantUpdated, theme, onThemeToggle }) {
   const [summary, setSummary] = useState(null);
   const [orders, setOrders] = useState([]);
   const [catalog, setCatalog] = useState(null);
@@ -1022,6 +1022,10 @@ function Admin({ session, onLogout, onRestoreSuperadmin, onTenantUpdated, theme,
     setPriceData(null);
     const reportLoadError = (label) => (error) => {
       if (cancelled) return;
+      if (error?.status === 401 && onAuthExpired) {
+        onAuthExpired();
+        return;
+      }
       setAdminLoadError(`${label}: ${error.message || 'No se pudo cargar'}`);
     };
     const applyCatalogPayload = (payload) => {
