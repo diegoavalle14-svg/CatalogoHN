@@ -2279,7 +2279,7 @@ function AdminPreviewProductCard({ product, categoryMeta, brandMeta, branches = 
           fallback={<DefaultProductArtwork product={product} categoryMeta={categoryMeta} />} 
         />
         <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
-        {productImages.length > 1 && <span className="admin-preview-photo-count">2 fotos</span>}
+        {productImages.length > 1 && <span className="admin-preview-photo-count">{productImages.length} fotos</span>}
       </div>
       <div className="admin-preview-product-body">
         <span className="sku-code">{product.sku}</span>
