@@ -948,7 +948,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
         })}
         {availableBranches.length > 1 && (
           <div className="product-cart-control global-control" style={{ borderTop: '2px dashed #cfcfcf', marginTop: '4px', paddingTop: '10px' }}>
-            <span className="branch-code" style={{ background: '#2563eb', color: '#fff' }} title="Todas las sucursales">TODAS</span>
+            <span className="branch-code" title="Todas las sucursales">*</span>
             <div className="quantity-stepper" aria-label={`Cantidad para todas las sucursales`}>
               <button type="button" onClick={() => stepGlobalDraft(-1)} disabled={!canOrder || (Number(globalDraft) || 0) <= 0}>-</button>
               <input
