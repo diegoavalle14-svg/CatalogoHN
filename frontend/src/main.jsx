@@ -2245,16 +2245,12 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
       ) : (
         <div className="product-grid admin-preview-grid">
           {previewProducts.map((product) => (
-            <ProductCard
+            <AdminPreviewProductCard
               key={product.id}
               product={product}
               categoryMeta={(categories || []).find((item) => Number(item.id) === Number(product.categoria_id))}
               brandMeta={(brands || []).find((item) => Number(item.id) === Number(product.marca_id))}
               branches={withBranchLetters(previewBranches)}
-              quantities={{}}
-              onQty={() => {}}
-              onAdd={() => {}}
-              enableLightbox={false}
             />
           ))}
         </div>
@@ -2263,10 +2259,11 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
   );
 }
 
-function AdminPreviewProductCard({ product, categoryMeta, brandMeta }) {
+function AdminPreviewProductCard({ product, categoryMeta, brandMeta, branches = [] }) {
   const productImages = cleanProductImages(product.imagenes);
   const currentPrice = Number(product.precio_final || product.precio || 0);
   const oldPrice = Number(product.precio || 0);
+  const previewBranches = branches.length ? branches.slice(0, 2) : [{ id: 'preview', letra: 'A', nombre: 'Principal' }];
   return (
     <article className="admin-preview-product-card">
       <div className="admin-preview-product-image">
@@ -2288,6 +2285,15 @@ function AdminPreviewProductCard({ product, categoryMeta, brandMeta }) {
         <div className="price-line">
           {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
           <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
+        </div>
+        <div className="admin-preview-cart-actions">
+          {previewBranches.map((branch) => (
+            <div key={branch.id || branch.nombre}>
+              {previewBranches.length > 1 && <span>{branch.letra || branch.nombre}</span>}
+              <input value="1" readOnly aria-label="Cantidad de vista previa" />
+              <button type="button">+ Agregar</button>
+            </div>
+          ))}
         </div>
       </div>
     </article>

@@ -5579,9 +5579,9 @@ button {
 }
 
 .admin-preview-product-card {
-  min-height: 258px;
+  min-height: 332px;
   display: grid;
-  grid-template-rows: 120px auto;
+  grid-template-rows: 150px auto;
   overflow: hidden;
   border: 1px solid rgba(17, 17, 17, .10);
   border-radius: 10px;
@@ -5624,6 +5624,53 @@ button {
   font-size: 11px;
   font-weight: 700;
   line-height: 1.35;
+}
+
+.admin-preview-cart-actions {
+  display: grid;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.admin-preview-cart-actions > div {
+  display: grid;
+  grid-template-columns: auto 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-preview-cart-actions span {
+  min-width: 24px;
+  min-height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: #111;
+  color: var(--yellow);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-preview-cart-actions input {
+  width: 44px;
+  min-height: 32px;
+  border: 1px solid rgba(17, 17, 17, .16);
+  border-radius: 5px;
+  background: #fff;
+  color: #111;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-preview-cart-actions button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 5px;
+  background: #111;
+  color: var(--yellow);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .admin-bottom-nav button {
@@ -7093,8 +7140,25 @@ button {
   }
 
   .admin-preview-product-card {
-    min-height: 238px;
-    grid-template-rows: 108px auto;
+    min-height: 318px;
+    grid-template-rows: 132px auto;
+  }
+
+  .admin-preview-product-body {
+    padding: 9px;
+  }
+
+  .admin-preview-cart-actions > div {
+    grid-template-columns: auto 38px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .admin-preview-cart-actions input {
+    width: 38px;
+  }
+
+  .admin-preview-cart-actions button {
+    font-size: 10px;
   }
 }
 
