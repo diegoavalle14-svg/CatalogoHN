@@ -2264,8 +2264,14 @@ function AdminPreviewProductCard({ product, categoryMeta, brandMeta, branches = 
   const currentPrice = Number(product.precio_final || product.precio || 0);
   const oldPrice = Number(product.precio || 0);
   const previewBranches = branches.length ? branches.slice(0, 2) : [{ id: 'preview', letra: 'A', nombre: 'Principal' }];
+  const detailLines = [
+    product.descripcion,
+    product.specs?.aplicacion,
+    product.specs?.medida || product.categoria
+  ].filter(Boolean);
   return (
     <article className="admin-preview-product-card">
+      {product.en_promocion && <span className="promo-ribbon">PROMO</span>}
       <div className="admin-preview-product-image">
         <SafeImage 
           src={productImages[0]} 
@@ -2273,15 +2279,13 @@ function AdminPreviewProductCard({ product, categoryMeta, brandMeta, branches = 
           fallback={<DefaultProductArtwork product={product} categoryMeta={categoryMeta} />} 
         />
         <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
+        {productImages.length > 1 && <span className="admin-preview-photo-count">2 fotos</span>}
       </div>
       <div className="admin-preview-product-body">
-        <div className="sku-stock-line">
-          <span className="sku-code">{product.sku}</span>
-          <ProductStockPill product={product} />
+        <span className="sku-code">{product.sku}</span>
+        <div className="admin-preview-product-lines">
+          {detailLines.map((line, index) => <small key={`${product.id}-line-${index}`}>{line}</small>)}
         </div>
-        <strong>{product.descripcion}</strong>
-        {product.specs?.aplicacion && <small>{product.specs.aplicacion}</small>}
-        <small>{product.specs?.medida || product.categoria || 'Producto visible'}</small>
         <div className="price-line">
           {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
           <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
