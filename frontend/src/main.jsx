@@ -750,7 +750,7 @@ function Catalog({ session, onSessionUpdated }) {
 
       {cartOpen && (
         <CartPanel
-          aplicaIsv={session?.user?.aplica_isv !== false}
+          aplicaIsv={session?.user?.aplica_isv === true}
           lines={lines}
           total={total}
           confirming={confirming}
