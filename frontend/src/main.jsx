@@ -760,7 +760,7 @@ function Catalog({ session, onSessionUpdated }) {
   );
 }
 
-function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, onQty, onAdd }) {
+function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, onQty, onAdd, enableLightbox = true }) {
   const availableBranches = Array.isArray(branches) ? branches : [];
   const [drafts, setDrafts] = useState({});
   const [lightboxIndex, setLightboxIndex] = useState(null);
@@ -805,7 +805,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
   return (
     <article className="product-card">
       {product.en_promocion && <span className="promo-ribbon">PROMO</span>}
-      <button className="product-image" type="button" onClick={() => productImages.length && setLightboxIndex(0)} aria-label={`Ver fotos de ${product.descripcion}`}>
+      <button className="product-image" type="button" onClick={() => enableLightbox && productImages.length && setLightboxIndex(0)} aria-label={`Ver fotos de ${product.descripcion}`}>
         <SafeImage 
           src={productImages[0]} 
           alt={product.descripcion} 
@@ -866,7 +866,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           );
         })}
       </div>
-      <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />
+      {enableLightbox && <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />}
     </article>
   );
 }
@@ -2254,6 +2254,7 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
               quantities={{}}
               onQty={() => {}}
               onAdd={() => {}}
+              enableLightbox={false}
             />
           ))}
         </div>
