@@ -2127,12 +2127,12 @@ function ProductPositionInput({ product, onPosition }) {
       style={{
         width: '60px',
         padding: '3px 6px',
-        border: '1px solid var(--border-color, #ccc)',
+        border: '1px solid var(--line)',
         borderRadius: '4px',
         fontSize: '0.85rem',
         textAlign: 'center',
-        background: 'var(--bg-input, #fff)',
-        color: 'var(--text-color, #111)'
+        background: 'var(--paper)',
+        color: 'var(--text)'
       }}
     />
   );

@@ -2793,6 +2793,47 @@ button {
   color: var(--yellow) !important;
 }
 
+[data-theme="dark"] .admin-title-row button:not(.admin-new-button) {
+  background: #222226;
+  border: 1px solid #3a3a40;
+  color: #f4f4f5;
+}
+
+[data-theme="dark"] .admin-title-row button:not(.admin-new-button):hover {
+  background: #3a3a40;
+}
+
+[data-theme="dark"] .admin-category-filter {
+  background: #171b22;
+  border-color: #3b4452;
+  color: #f4f6f8;
+}
+
+[data-theme="dark"] .admin-category-filter select {
+  background: transparent;
+  color: #f4f6f8;
+}
+
+[data-theme="dark"] .admin-product-top button {
+  background: #222226;
+  border: 1px solid #3a3a40;
+  color: #f4f4f5;
+}
+
+[data-theme="dark"] .admin-product-top button:hover {
+  background: #3a3a40;
+}
+
+[data-theme="dark"] .danger-icon-button {
+  background: #3f181d;
+  color: #ff9eab;
+  border: 1px solid #7f1d1d;
+}
+
+[data-theme="dark"] .danger-icon-button:hover {
+  background: #5c141d;
+}
+
 [data-theme="dark"] .admin-preview-search,
 [data-theme="dark"] .admin-preview-client-picker,
 [data-theme="dark"] .admin-preview-brands {
