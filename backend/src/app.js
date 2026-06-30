@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const db = require('./models/db');
 const { resolveTenant } = require('./services/tenant');
 const { createRateLimiter, readPositiveInt } = require('./middleware/rateLimit');
 const { auditPublicApi } = require('./middleware/apiAudit');
@@ -83,4 +84,5 @@ app.use((error, req, res, next) => {
 
 app.listen(port, () => {
   console.log(`CatalogoHN API escuchando en http://localhost:${port}`);
+  db.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS aplica_isv BOOLEAN DEFAULT TRUE;').catch(() => {});
 });
