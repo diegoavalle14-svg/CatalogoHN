@@ -689,16 +689,18 @@ function Catalog({ session, onSessionUpdated }) {
 
   return (
     <section className="catalog-page">
-      <ClearableSearchInput
-        className="search-box"
-        iconSize={18}
-        placeholder="Buscar por codigo, marca o categoria..."
-        value={query}
-        onChange={setQuery}
-      />
+      <div className="catalog-sticky-tools">
+        <ClearableSearchInput
+          className="search-box"
+          iconSize={18}
+          placeholder="Buscar por codigo, marca o categoria..."
+          value={query}
+          onChange={setQuery}
+        />
 
-      <CategoryFilterStrip categories={data.categorias || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} />
-      {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} />}
+        <CategoryFilterStrip categories={data.categorias || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} />
+        {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} />}
+      </div>
 
       <div className="product-count-row">
         <p className="product-count">{products.length} productos</p>

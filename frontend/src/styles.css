@@ -20,6 +20,7 @@
   --glass-shadow: 0 14px 40px rgba(10, 10, 16, 0.08);
   --glass-shadow-soft: 0 10px 24px rgba(10, 10, 16, 0.06);
   --focus-ring: 0 0 0 4px rgba(250, 196, 0, 0.18);
+  --catalog-topbar-height: 64px;
 }
 
 .admin-mobile-topbar-fixed {
@@ -314,10 +315,38 @@ button {
 .catalog-page {
   width: min(100%, 1120px);
   max-width: 100%;
-  overflow-x: hidden;
   margin: 0 auto;
-  padding: 14px 22px 38px;
+  padding: 0 22px 38px;
   animation: pageIn 220ms ease both;
+}
+
+.catalog-sticky-tools {
+  position: sticky;
+  top: var(--catalog-topbar-height);
+  z-index: 35;
+  display: grid;
+  gap: 0;
+  margin: 0 -22px 12px;
+  padding: 12px 22px 10px;
+  background: rgba(238, 241, 246, 0.94);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+  box-shadow: 0 10px 24px rgba(10, 10, 16, 0.06);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.catalog-sticky-tools .search-box {
+  margin-top: 0;
+}
+
+.catalog-sticky-tools .filter-tab-section {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.catalog-sticky-tools .brand-filter-section {
+  margin-top: 0;
+  border-top: 1px solid rgba(17, 17, 17, 0.06);
 }
 
 .customer-welcome {
@@ -6540,6 +6569,10 @@ button {
     overflow: visible;
   }
 
+  :root {
+    --catalog-topbar-height: 108px;
+  }
+
   .brand-lockup {
     min-width: 0;
     width: 100%;
@@ -6632,16 +6665,9 @@ button {
     padding-inline: 14px;
   }
 
-  .catalog-hero-panel {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-    gap: 12px;
-    margin-top: 12px;
-    padding: 12px;
-  }
-
-  .catalog-hero-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .catalog-sticky-tools {
+    margin-inline: -14px;
+    padding-inline: 14px;
   }
 
   .search-box {
@@ -6655,6 +6681,10 @@ button {
 }
 
 @media (max-width: 520px) {
+  :root {
+    --catalog-topbar-height: 100px;
+  }
+
   .topbar {
     padding: 8px 10px 10px;
     gap: 8px;
@@ -7324,6 +7354,21 @@ button {
 [data-theme="dark"] .catalog-page {
   background: #101114;
   color: #f1f2f4;
+}
+
+[data-theme="dark"] .catalog-sticky-tools {
+  background: rgba(16, 17, 20, 0.94);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .catalog-sticky-tools .brand-filter-section {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .catalog-sticky-tools .filter-tab-section {
+  background: rgba(24, 26, 31, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .topbar {
