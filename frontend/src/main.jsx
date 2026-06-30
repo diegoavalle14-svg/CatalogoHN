@@ -1782,8 +1782,39 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
     setExpandedOrders(current => ({ ...current, [orderId]: !current[orderId] }));
   };
 
-  const groupedOrders = useMemo(() => {
+  const [selectedYearFilter, setSelectedYearFilter] = useState('all');
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState('all');
+
+  const uniqueYears = useMemo(() => {
     const sent = (orders || []).filter(o => o.estado === 'enviado');
+    const years = sent.map(o => new Date(o.fecha).getFullYear());
+    return ['all', ...new Set(years)].sort((a, b) => b - a);
+  }, [orders]);
+
+  const monthsList = [
+    { value: 'all', label: 'Todos los meses' },
+    { value: '0', label: 'Enero' },
+    { value: '1', label: 'Febrero' },
+    { value: '2', label: 'Marzo' },
+    { value: '3', label: 'Abril' },
+    { value: '4', label: 'Mayo' },
+    { value: '5', label: 'Junio' },
+    { value: '6', label: 'Julio' },
+    { value: '7', label: 'Agosto' },
+    { value: '8', label: 'Septiembre' },
+    { value: '9', label: 'Octubre' },
+    { value: '10', label: 'Noviembre' },
+    { value: '11', label: 'Diciembre' }
+  ];
+
+  const groupedOrders = useMemo(() => {
+    const sent = (orders || []).filter(o => {
+      if (o.estado !== 'enviado') return false;
+      const date = new Date(o.fecha);
+      if (selectedYearFilter !== 'all' && date.getFullYear() !== Number(selectedYearFilter)) return false;
+      if (selectedMonthFilter !== 'all' && date.getMonth() !== Number(selectedMonthFilter)) return false;
+      return true;
+    });
     const sorted = [...sent].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
     
     const yearsMap = {};
@@ -1810,7 +1841,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         months: Object.values(y.monthsMap)
           .sort((a, b) => b.monthNum - a.monthNum)
       }));
-  }, [orders]);
+  }, [orders, selectedYearFilter, selectedMonthFilter]);
   const urgentLabel = pending > 0
     ? `${pending} pedido${pending === 1 ? '' : 's'} por revisar`
     : preparing > 0
@@ -1833,18 +1864,35 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   return (
     <>
       <AdminSectionTitle title="Pedidos" subtitle="Gestiona los pedidos recibidos" />
-      <div className="admin-stat-grid">
-        <AdminStat value={pending} label="Pendientes" tone="orange" />
-        <AdminStat value={preparing} label="Preparando" tone="blue" />
-        <AdminStat value={sentToday} label="Enviados hoy" tone="green" />
-        <AdminStat value={orders.length} label="Pedidos" helper="total preview" />
-      </div>
-      <div className={`admin-priority-strip ${pending > 0 ? 'warning' : preparing > 0 ? 'active' : 'clear'}`}>
-        <Activity size={17} />
-        <span>
-          <strong>{urgentLabel}</strong>
-          <small>{urgentCopy}</small>
-        </span>
+      <div className="admin-priority-strips-container" style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
+        <div className="admin-priority-strip warning">
+          <ClipboardList size={17} />
+          <span>
+            <strong>{pending} {pending === 1 ? 'pedido pendiente' : 'pedidos pendientes'} por revisar</strong>
+            <small>Marca como 'Preparando' al confirmar inventario y despacho.</small>
+          </span>
+        </div>
+        <div className="admin-priority-strip active">
+          <Activity size={17} />
+          <span>
+            <strong>{preparing} {preparing === 1 ? 'pedido' : 'pedidos'} en preparación</strong>
+            <small>Cierra el flujo cuando el pedido salga hacia el cliente.</small>
+          </span>
+        </div>
+        <div className="admin-priority-strip clear">
+          <Check size={17} />
+          <span>
+            <strong>{sentToday} {sentToday === 1 ? 'pedido enviado' : 'pedidos enviados'} hoy</strong>
+            <small>Historial de despachos del día de hoy.</small>
+          </span>
+        </div>
+        <div className="admin-priority-strip historic">
+          <Package size={17} />
+          <span>
+            <strong>{orders.filter(o => o.estado === 'enviado').length} pedidos en total (Historial)</strong>
+            <small>Pedidos enviados en el registro histórico (filtrable abajo).</small>
+          </span>
+        </div>
       </div>
       <div className="admin-filter-bar">
         <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar pedido o cliente" value={query} onChange={setQuery} />
@@ -1923,6 +1971,31 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         })}
       </div>
       <h2 className="admin-small-heading" style={{ marginTop: '40px' }}>Historial de pedidos (Enviados)</h2>
+      
+      <div className="history-filters" style={{ display: 'flex', gap: '10px', marginTop: '14px', marginBottom: '14px' }}>
+        <select
+          value={selectedYearFilter}
+          onChange={(e) => {
+            setSelectedYearFilter(e.target.value);
+            setSelectedMonthFilter('all');
+          }}
+          style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '12px', background: '#fff', fontWeight: 'bold' }}
+        >
+          <option value="all">Todos los años</option>
+          {uniqueYears.filter(y => y !== 'all').map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+        <select
+          value={selectedMonthFilter}
+          onChange={(e) => setSelectedMonthFilter(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '12px', background: '#fff', fontWeight: 'bold' }}
+        >
+          {monthsList.map(({ value, label }) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </div>
       
       {groupedOrders.length === 0 ? (
         <div className="admin-empty-state" style={{ marginTop: '10px' }}>

@@ -4600,6 +4600,16 @@ button {
   color: #16724a;
 }
 
+.admin-priority-strip.historic {
+  border-color: #dcdfe6;
+  background: #f4f4f5;
+}
+
+.admin-priority-strip.historic svg {
+  background: #909399;
+  color: #ffffff;
+}
+
 .admin-filter-bar {
   display: grid;
   gap: 10px;
