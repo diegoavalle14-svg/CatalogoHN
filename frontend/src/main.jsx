@@ -1864,7 +1864,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   return (
     <>
       <AdminSectionTitle title="Pedidos" subtitle="Gestiona los pedidos recibidos" />
-      <div className="admin-priority-strips-container" style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
+      <div className="admin-priority-strips-container" style={{ display: 'grid', gap: '6px', marginTop: '12px' }}>
         <div className="admin-priority-strip warning">
           <ClipboardList size={17} />
           <span>
