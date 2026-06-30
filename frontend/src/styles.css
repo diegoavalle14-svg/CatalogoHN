@@ -5573,15 +5573,15 @@ button {
 }
 
 .admin-price-health article {
-  min-height: 58px;
+  min-height: 42px;
   display: grid;
   align-content: center;
-  gap: 3px;
+  gap: 1px;
   border: 1px solid #dddddd;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #ffffff;
-  padding: 10px 12px;
-  box-shadow: 0 10px 22px rgba(20, 24, 31, .05);
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(20, 24, 31, .03);
 }
 
 .admin-price-health article.needs-sync {
@@ -5591,14 +5591,14 @@ button {
 
 .admin-price-health strong {
   color: #15171d;
-  font-size: 21px;
+  font-size: 16px;
   font-weight: 900;
   line-height: 1;
 }
 
 .admin-price-health span {
   color: #777f8c;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -8122,5 +8122,83 @@ button {
     justify-content: center;
     display: inline-flex;
     align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-price-health article {
+    min-height: 36px;
+    padding: 4px 8px;
+  }
+  .admin-price-health strong {
+    font-size: 13px;
+  }
+  .admin-price-health span {
+    font-size: 7px;
+  }
+
+  .admin-price-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  
+  .admin-price-group {
+    padding: 10px;
+    gap: 8px;
+  }
+  
+  .admin-price-group header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  
+  .admin-price-group header > span strong {
+    font-size: 12px;
+  }
+  
+  .admin-price-group header > span small {
+    font-size: 9px;
+    white-space: normal;
+  }
+  
+  .admin-price-group-metrics {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  
+  .admin-price-group-metrics span {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 6px;
+    font-size: 9px;
+    border-radius: 4px;
+  }
+  
+  .admin-price-group-metrics span b {
+    font-size: 8px;
+  }
+  
+  .admin-price-group-metrics strong {
+    font-size: 11px;
+  }
+  
+  .admin-price-group footer {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  
+  .admin-price-group footer button {
+    min-height: 28px;
+    font-size: 10px;
+    padding: 0 4px;
+    width: 100%;
+  }
+}
+
+@media (min-width: 481px) {
+  .admin-price-groups {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
