@@ -946,28 +946,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
             </div>
           );
         })}
-        {availableBranches.length > 1 && (
-          <div className="product-cart-control global-control" style={{ borderTop: '2px dashed #cfcfcf', marginTop: '4px', paddingTop: '10px' }}>
-            <span className="branch-code" title="Todas las sucursales">*</span>
-            <div className="quantity-stepper" aria-label={`Cantidad para todas las sucursales`}>
-              <button type="button" onClick={() => stepGlobalDraft(-1)} disabled={!canOrder || (Number(globalDraft) || 0) <= 0}>-</button>
-              <input
-                type="number"
-                min="0"
-                placeholder="0"
-                inputMode="numeric"
-                value={globalDraft}
-                disabled={!canOrder}
-                onChange={(event) => setGlobalDraftValue(event.target.value)}
-                aria-label={`Cantidad para todas las sucursales`}
-              />
-              <button type="button" onClick={() => stepGlobalDraft(1)} disabled={!canOrder || (stock.stock > 0 && stock.stock <= availableBranches.reduce((sum, b) => sum + (Number(quantities[b.id])||0), 0) + ((Number(globalDraft)||0) * availableBranches.length))}>+</button>
-            </div>
-            <button className="add-to-cart-button" type="button" onClick={addGlobalDraft} disabled={!canOrder || (Number(globalDraft) || 0) <= 0}>
-              {isOutOfStock ? 'Agotado' : '+ Agregar a Todas'}
-            </button>
-          </div>
-        )}
+
       </div>
       {enableLightbox && <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />}
     </article>
@@ -1028,7 +1007,9 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                 <strong className="cart-line-title">{line.descripcion}</strong>
                 <small className="cart-branch-label">Sucursal: {line.sucursal}</small>
                 <label>
-                  {line.stock_actual > 0 && <span className="cart-stock-label">Stock {line.stock_actual}</span>}
+                  {line.stock_actual !== undefined && line.stock_actual !== null && (
+                    <span className="cart-stock-label">Stock {Number(line.stock_actual) || 0}</span>
+                  )}
                   Cant.
                   <input
                     type="number"

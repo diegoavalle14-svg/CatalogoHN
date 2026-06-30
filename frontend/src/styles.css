@@ -7239,13 +7239,15 @@ button {
   }
 
   .cart-line {
-    grid-template-columns: 60px 1fr 24px;
-    gap: 10px;
+    grid-template-columns: 55px 1fr 20px;
+    gap: 8px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
   }
 
   .cart-line img {
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
   }
 
   .product-grid {
@@ -7295,13 +7297,14 @@ button {
     -webkit-line-clamp: 2;
   }
 
-  .product-category-badge,
-  .stock-pill {
+  .product-category-badge {
     display: none;
   }
 
   .sku-stock-line {
-    display: block;
+    display: flex;
+    gap: 4px;
+    align-items: center;
   }
 
   .product-category-logo {
