@@ -807,6 +807,27 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
     setDraft(branchId, '');
   }
 
+  const hasAnyDrafts = availableBranches.some((b) => (Number(draftFor(b.id)) || 0) > 0);
+
+  function addAllDrafts() {
+    if (!canOrder) return;
+    let first = true;
+    availableBranches.forEach((branch) => {
+      const branchId = branch.id;
+      const draftNum = Number(draftFor(branchId)) || 0;
+      if (draftNum > 0) {
+        const nextQty = Number(quantities[branchId] || 0) + draftNum;
+        if (first) {
+          onAdd(product, branchId, nextQty);
+          first = false;
+        } else {
+          onQty(product, branchId, nextQty);
+        }
+        setDraft(branchId, '');
+      }
+    });
+  }
+
   return (
     <article className="product-card">
       {product.en_promocion && <span className="promo-ribbon">PROMO</span>}
@@ -870,6 +891,13 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
             </div>
           );
         })}
+        {availableBranches.length > 0 && (
+          <div className="product-cart-control-actions">
+            <button className="add-to-cart-button global-add" type="button" onClick={addAllDrafts} disabled={!canOrder || (!isOutOfStock && !hasAnyDrafts)}>
+              {isOutOfStock ? 'Agotado' : '+ Agregar todas'}
+            </button>
+          </div>
+        )}
       </div>
       {enableLightbox && <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />}
     </article>

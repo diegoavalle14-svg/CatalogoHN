@@ -1191,6 +1191,17 @@ button {
   grid-template-columns: 1fr;
 }
 
+.product-cart-control-actions {
+  display: flex;
+  margin-top: 6px;
+}
+
+.product-cart-control-actions .add-to-cart-button.global-add {
+  flex: 1;
+  height: 34px;
+  font-size: 11px;
+}
+
 .catalog-toast {
   position: fixed;
   left: 50%;
