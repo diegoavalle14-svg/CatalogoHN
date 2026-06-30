@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createPortal } from 'react-dom';
 import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
@@ -2100,7 +2101,7 @@ function ImageLightbox({ src, images = [], index = null, onClose, onIndexChange 
     onIndexChange?.((activeIndex + 1) % gallery.length);
   };
   if (!activeSrc) return null;
-  return (
+  return createPortal(
     <div className="image-lightbox-backdrop" onClick={onClose}>
       <button className="image-lightbox-close" onClick={onClose} aria-label="Cerrar">
         <X size={22} />
@@ -2114,7 +2115,8 @@ function ImageLightbox({ src, images = [], index = null, onClose, onIndexChange 
       />
       {canSlide && <button className="image-lightbox-nav next" type="button" onClick={showNext} aria-label="Foto siguiente">&gt;</button>}
       {canSlide && <span className="image-lightbox-count">{activeIndex + 1} / {gallery.length}</span>}
-    </div>
+    </div>,
+    document.body
   );
 }
 
