@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
@@ -263,11 +263,11 @@ function Shell({ session, view, setView, onLogout, theme, onThemeToggle, childre
   return (
     <div className="app-shell" style={tenantBrandStyle(tenant)}>
       <header className="topbar">
-        <button className="brand-lockup" onClick={() => setView('catalog')} aria-label="Abrir catálogo">
+        <button className="brand-lockup" onClick={() => setView('catalog')} aria-label="Abrir catÃ¡logo">
           <TenantLogoMark tenant={tenant} />
           <span>
             <strong>{tenant.nombre || 'Empresa'}</strong>
-            <small>{tenant.subnombre || 'Catálogo privado'}</small>
+            <small>{tenant.subnombre || 'CatÃ¡logo privado'}</small>
           </span>
         </button>
 
@@ -411,12 +411,12 @@ function Login({ onLogin, theme, onThemeToggle }) {
         tenantSlug: superadminMode ? 'kolben' : selectedTenant
       });
       if (result?.temp_password) {
-        setForgotMessage(`Contraseña temporal: ${result.temp_password}`);
+        setForgotMessage(`ContraseÃ±a temporal: ${result.temp_password}`);
       } else {
-        setForgotMessage(result?.message || 'Si el usuario existe, recibirás una contraseña temporal.');
+        setForgotMessage(result?.message || 'Si el usuario existe, recibirÃ¡s una contraseÃ±a temporal.');
       }
     } catch (err) {
-      setForgotError(err.message || 'No se pudo iniciar la recuperación');
+      setForgotError(err.message || 'No se pudo iniciar la recuperaciÃ³n');
     } finally {
       setForgotLoading(false);
     }
@@ -436,9 +436,9 @@ function Login({ onLogin, theme, onThemeToggle }) {
     <main className="login-screen">
       <div className="welcome-float" aria-live="polite">Bienvenido. Tu acceso sigue siendo privado para cada empresa.</div>
       <header className="login-header">
-        <strong>CatálogoHN</strong>
+        <strong>CatÃ¡logoHN</strong>
         <div className="login-header-actions">
-          <span>Catálogos mayoristas privados</span>
+          <span>CatÃ¡logos mayoristas privados</span>
           <ThemeToggle theme={theme} onToggle={onThemeToggle} />
         </div>
       </header>
@@ -447,15 +447,15 @@ function Login({ onLogin, theme, onThemeToggle }) {
         <div className="public-hero">
           <div>
             <span className="hero-kicker">Acceso privado para empresas</span>
-            <h1>CatálogoHN</h1>
-            <p>Selecciona la empresa con la que trabajas para entrar a su catálogo y realizar pedidos.</p>
+            <h1>CatÃ¡logoHN</h1>
+            <p>Selecciona la empresa con la que trabajas para entrar a su catÃ¡logo y realizar pedidos.</p>
           </div>
         </div>
 
         <div className="public-section-head">
           <div>
             <h2>Empresas activas</h2>
-            <p>Selecciona una empresa para ingresar a su catálogo privado.</p>
+            <p>Selecciona una empresa para ingresar a su catÃ¡logo privado.</p>
           </div>
           <span className="status-pill">
             <strong>{tenantTiles.length}</strong>
@@ -520,7 +520,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
             <p>{superadminMode ? 'Acceso exclusivo de plataforma' : `Acceso privado de ${selectedTenantName}`}</p>
             <form onSubmit={submit} className="login-modal-form">
               <label>Usuario<input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label>
-              <label>Contraseña<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" /></label>
+              <label>ContraseÃ±a<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" /></label>
               {error && <small className="form-error">{error}</small>}
               <button className="forgot-password-button" type="button" onClick={() => {
                 setForgotOpen((current) => !current);
@@ -528,7 +528,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
                 setForgotMessage('');
                 setForgotValue(username);
               }}>
-                ¿Olvidaste la contraseña?
+                Â¿Olvidaste la contraseÃ±a?
               </button>
               {forgotOpen && (
                 <div className="forgot-password-panel">
@@ -539,7 +539,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
                   {forgotError && <small className="form-error">{forgotError}</small>}
                   {forgotMessage && <small className="form-success">{forgotMessage}</small>}
                   <button className="secondary-button" type="button" onClick={submitForgotPassword} disabled={forgotLoading}>
-                    {forgotLoading ? 'Enviando...' : 'Enviar recuperación'}
+                    {forgotLoading ? 'Enviando...' : 'Enviar recuperaciÃ³n'}
                   </button>
                 </div>
               )}
@@ -685,7 +685,7 @@ function Catalog({ session, onSessionUpdated }) {
     }
   }
 
-  if (!data) return <Loading label="Cargando catálogo" />;
+  if (!data) return <Loading label="Cargando catÃ¡logo" />;
 
   return (
     <section className="catalog-page">
@@ -717,7 +717,7 @@ function Catalog({ session, onSessionUpdated }) {
         <div className="catalog-empty-state">
           <PackageSearch size={28} />
           <strong>No encontramos productos con esos filtros</strong>
-          <span>Prueba buscando por SKU, marca, aplicación o categoría.</span>
+          <span>Prueba buscando por SKU, marca, aplicaciÃ³n o categorÃ­a.</span>
         </div>
       ) : (
         <div className="product-grid">
@@ -819,7 +819,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           <span className="sku-code">{product.sku}</span>
           <span className={`stock-pill ${stock.tone}`}>{stock.label}</span>
         </div>
-        <span className="product-category-badge" style={categoryBadgeStyle(categoryMeta)}>{product.categoria || categoryMeta?.nombre || 'Sin categoría'}</span>
+        <span className="product-category-badge" style={categoryBadgeStyle(categoryMeta)}>{product.categoria || categoryMeta?.nombre || 'Sin categorÃ­a'}</span>
         <h3>{product.descripcion}</h3>
         {product.specs?.aplicacion && <p>{product.specs.aplicacion}</p>}
         {product.specs?.medida && <p>{product.specs.medida}</p>}
@@ -840,7 +840,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           const branchId = branch.id;
           const draft = draftFor(branchId);
           const branchLabel = branch.letra || branch.codigo || branch.nombre || 'Sucursal';
-          const branchTitle = [branchLabel, branch.nombre, branch.direccion].filter(Boolean).join(' · ');
+          const branchTitle = [branchLabel, branch.nombre, branch.direccion].filter(Boolean).join(' Â· ');
           return (
             <div className="product-cart-control" key={branchId}>
               <span className="branch-code" title={branchTitle}>{branchLabel}</span>
@@ -877,7 +877,7 @@ function ClearableSearchInput({ className, iconSize = 16, placeholder, value, on
       <Search size={iconSize} />
       <input placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} />
       {value && (
-        <button type="button" className="search-clear-button" onClick={() => onChange('')} aria-label="Borrar búsqueda">
+        <button type="button" className="search-clear-button" onClick={() => onChange('')} aria-label="Borrar bÃºsqueda">
           <X size={iconSize} />
         </button>
       )}
@@ -911,7 +911,7 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
           {lines.length === 0 && (
             <div className="cart-empty-state">
               <p>Aun no hay productos agregados.</p>
-              <button type="button" onClick={onClose}>Volver al catálogo</button>
+              <button type="button" onClick={onClose}>Volver al catÃ¡logo</button>
             </div>
           )}
           {lines.map((line) => (
@@ -981,7 +981,7 @@ function History({ session }) {
             <b>{order.estado}</b>
           </div>
           {order.items?.map((item) => (
-            <p key={`${item.producto_id}-${item.sucursal_id}`}>{item.sku} · {item.sucursal || 'Sucursal'} · {item.cantidad}</p>
+            <p key={`${item.producto_id}-${item.sucursal_id}`}>{item.sku} Â· {item.sucursal || 'Sucursal'} Â· {item.cantidad}</p>
           ))}
           <strong>{money(order.total)}</strong>
         </article>
@@ -1044,7 +1044,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       }).catch(console.error);
     };
     const loadCatalog = () => {
-      api.adminCatalog(session.token).then(applyCatalogPayload).catch(reportLoadError('Catálogo'));
+      api.adminCatalog(session.token).then(applyCatalogPayload).catch(reportLoadError('CatÃ¡logo'));
     };
 
     api.setTenantSlug(tenantSlug);
@@ -1262,7 +1262,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       }
       const latestPrices = await api.adminPrices(session.token);
       setPriceData(normalizeAdminPriceData(latestPrices));
-      if (saved.password_changed) showToast('Contraseña del cliente actualizada correctamente.');
+      if (saved.password_changed) showToast('ContraseÃ±a del cliente actualizada correctamente.');
       else showToast(nextPayload.id ? 'Cliente actualizado correctamente' : 'Cliente agregado correctamente');
       setEditor(null);
     } catch (error) {
@@ -1334,7 +1334,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function updateOrderState(id, estado) {
-    const ok = window.confirm(`Confirmar cambio a "${stateLabel(estado)}"`) && window.confirm('Segunda confirmación requerida');
+    const ok = window.confirm(`Confirmar cambio a "${stateLabel(estado)}"`) && window.confirm('Segunda confirmaciÃ³n requerida');
     if (!ok) return;
     const previous = orders;
     setOrders((current) => current.map((order) => (order.id === id ? { ...order, estado } : order)));
@@ -1357,7 +1357,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function deleteProduct(product) {
-    const ok = window.confirm(`Eliminar producto ${product.sku || product.descripcion}?`) && window.confirm('Segunda confirmación requerida');
+    const ok = window.confirm(`Eliminar producto ${product.sku || product.descripcion}?`) && window.confirm('Segunda confirmaciÃ³n requerida');
     if (!ok) return;
     const previousProducts = products;
     setProducts((current) => current.filter((item) => item.id !== product.id));
@@ -1379,7 +1379,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function deleteClient(client) {
-    const ok = window.confirm(`Eliminar cliente ${client.nombre}?`) && window.confirm('Segunda confirmación requerida');
+    const ok = window.confirm(`Eliminar cliente ${client.nombre}?`) && window.confirm('Segunda confirmaciÃ³n requerida');
     if (!ok) return;
     const previousClients = clients;
     setClients((current) => current.filter((item) => item.id !== client.id));
@@ -1395,7 +1395,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function deleteOrder(id) {
-    const ok = window.confirm('Confirmar eliminación del pedido') && window.confirm('Segunda confirmación requerida');
+    const ok = window.confirm('Confirmar eliminaciÃ³n del pedido') && window.confirm('Segunda confirmaciÃ³n requerida');
     if (!ok) return;
     const previous = orders;
     setOrders((current) => current.filter((order) => order.id !== id));
@@ -1457,7 +1457,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         const upload = await api.adminUploadImage(session.token, payload.imageFile, 'category');
         imageUrl = upload.url;
       } catch (error) {
-        window.alert(error.message || 'No se pudo subir la imagen de la categoría');
+        window.alert(error.message || 'No se pudo subir la imagen de la categorÃ­a');
         return;
       }
     }
@@ -1469,7 +1469,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
           ? current.map((item) => (item.id === nextPayload.id ? saved.categoria : item))
           : [saved.categoria, ...current]
       ).sort(sortByPositionThenName));
-      showToast(nextPayload.id ? 'Categoría actualizada correctamente' : 'Categoría agregada correctamente');
+      showToast(nextPayload.id ? 'CategorÃ­a actualizada correctamente' : 'CategorÃ­a agregada correctamente');
     } catch (error) {
       window.alert(error.message || 'No se pudo guardar la categoria');
     }
@@ -1489,7 +1489,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     try {
       await api.adminDeleteCategory(session.token, id);
       setCategories((current) => current.filter((item) => item.id !== id));
-      showToast('Categoría eliminada');
+      showToast('CategorÃ­a eliminada');
     } catch (error) {
       window.alert(error.message || 'No se pudo eliminar la categoria');
     }
@@ -1515,7 +1515,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       onTenantUpdated?.(nextTenant);
       setEditor(null);
     } catch (error) {
-      window.alert(error.message || 'No se pudo guardar la configuración');
+      window.alert(error.message || 'No se pudo guardar la configuraciÃ³n');
       return;
     } finally {
     }
@@ -1532,12 +1532,12 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     <div className="admin-mobile-shell" style={adminShellStyle}>
       {toast && <div className="catalog-toast admin-toast">{toast}</div>}
       <header className="admin-mobile-topbar admin-mobile-topbar-fixed" ref={adminHeaderRef}>
-        <button className="admin-brand-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
+        <button className="admin-brand-button" onClick={() => setEditor({ type: 'site', title: 'ConfiguraciÃ³n del sitio', value: liveTenant })}>
           <TenantLogoMark tenant={liveTenant} size="small" />
           <span><strong>{liveTenant?.nombre || 'Empresa'}</strong><small>{liveTenant?.subnombre || 'Panel Admin'}</small></span>
         </button>
         <div className="admin-quick-actions">
-          <button className="admin-logo-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
+          <button className="admin-logo-button" onClick={() => setEditor({ type: 'site', title: 'ConfiguraciÃ³n del sitio', value: liveTenant })}>
             <Settings2 size={14} /> Configurar
           </button>
           {onRestoreSuperadmin && (
@@ -1545,8 +1545,8 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
               <Users size={14} /> Volver al superadmin
             </button>
           )}
-          <button className="admin-logo-button" onClick={() => setEditor({ type: 'account-password', title: 'Cambiar contraseña', value: {} })}>
-            Contraseña
+          <button className="admin-logo-button" onClick={() => setEditor({ type: 'account-password', title: 'Cambiar contraseÃ±a', value: {} })}>
+            ContraseÃ±a
           </button>
           <button className="admin-logo-button" onClick={onThemeToggle}>
             {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />} Tema
@@ -1579,7 +1579,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             onPosition={(product, posicion) => updateProduct(product.id, { posicion })}
             onDelete={deleteProduct}
             onBrands={() => setEditor({ type: 'brands', title: 'Marcas', value: brands })}
-            onCategories={() => setEditor({ type: 'categories', title: 'Categorías', value: categories })}
+            onCategories={() => setEditor({ type: 'categories', title: 'CategorÃ­as', value: categories })}
           />
         )}
 
@@ -1662,8 +1662,8 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   const urgentLabel = pending > 0
     ? `${pending} pedido${pending === 1 ? '' : 's'} por revisar`
     : preparing > 0
-      ? `${preparing} pedido${preparing === 1 ? '' : 's'} en preparación`
-      : 'Operación al día';
+      ? `${preparing} pedido${preparing === 1 ? '' : 's'} en preparaciÃ³n`
+      : 'OperaciÃ³n al dÃ­a';
   const urgentCopy = pending > 0
     ? 'Marca como Preparando al confirmar inventario y despacho.'
     : preparing > 0
@@ -1723,7 +1723,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
               <div className="admin-order-main">
               <span>Pedido</span>
               <strong>{order.cliente_nombre || 'Cliente mayorista'}</strong>
-              <small>{order.fecha_label || new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })} · {money(order.total)}</small>
+              <small>{order.fecha_label || new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })} Â· {money(order.total)}</small>
             </div>
               <b className={`admin-state ${order.estado}`}>{stateLabel(order.estado)}</b>
             </div>
@@ -1798,6 +1798,7 @@ function ProductPositionInput({ product, onPosition }) {
 function AdminCatalogSection({ products, brands, categories, onNew, onProductEdit, onToggle, onPosition, onDelete, onBrands, onCategories }) {
   const [query, setQuery] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [lightbox, setLightbox] = useState(null);
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -1805,19 +1806,20 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
       const matchesVisibility = visibilityFilter === 'all'
         || (visibilityFilter === 'visible' && product.visible !== false)
         || (visibilityFilter === 'hidden' && product.visible === false);
+      const matchesCategory = categoryFilter === 'all' || String(product.categoria_id || '') === categoryFilter || String(product.categoria || '') === categoryFilter;
       const haystack = `${product.sku || ''} ${product.descripcion || ''} ${product.marca || ''} ${product.categoria || ''}`.toLowerCase();
       const matchesQuery = !normalizedQuery || haystack.includes(normalizedQuery);
-      return matchesVisibility && matchesQuery;
+      return matchesVisibility && matchesCategory && matchesQuery;
     });
-  }, [products, query, visibilityFilter]);
+  }, [products, query, visibilityFilter, categoryFilter]);
   return (
     <>
       <div className="admin-title-row">
-        <AdminSectionTitle title="Catálogo" subtitle="Productos activos e inactivos" />
+        <AdminSectionTitle title="CatÃ¡logo" subtitle="Productos activos e inactivos" />
         <div>
           <button onClick={onBrands}><Tags size={13} /> Marcas</button>
-          <button onClick={onCategories}><Folder size={13} /> Categorías</button>
-          <button className="admin-new-button" onClick={onNew}><Plus size={13} /> Nuevo</button>
+          <button onClick={onCategories}><Folder size={13} /> CategorÃ­as</button>
+          <button className="admin-new-button" onClick={onNew}><Plus size={13} /> Nuevo producto</button>
         </div>
       </div>
       <div className="admin-filter-bar">
@@ -1833,6 +1835,15 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
             </button>
           ))}
         </div>
+        <label className="admin-category-filter">
+          <Folder size={14} />
+          <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
+            <option value="all">Todas las categorias</option>
+            {categories.map((category) => (
+              <option value={String(category.id)} key={category.id}>{category.nombre}</option>
+            ))}
+          </select>
+        </label>
         <small className="admin-results-count">{filteredProducts.length} productos</small>
       </div>
       <div className="admin-product-list">
@@ -1842,7 +1853,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
               <ProductImageThumb images={product.imagenes} onClick={() => { const images = cleanProductImages(product.imagenes); if (images.length) setLightbox({ images, index: 0 }); }} />
               <div>
                 <span className="sku-code">{product.sku}</span>
-                <small>{[product.marca, product.specs?.aplicacion || product.descripcion].filter(Boolean).join(' · ')}</small>
+                <small>{[product.marca, product.specs?.aplicacion || product.descripcion].filter(Boolean).join(' Â· ')}</small>
                 <ProductStockPill product={product} className="admin-stock-badge" />
               </div>
               <div className="admin-row-actions">
@@ -1857,7 +1868,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
           </article>
         ))}
       </div>
-      <small className="admin-muted-note">{brands.length} marcas · {categories.length} categorias</small>
+      <small className="admin-muted-note">{brands.length} marcas Â· {categories.length} categorias</small>
       <ImageLightbox images={lightbox?.images || []} index={lightbox?.index ?? null} onClose={() => setLightbox(null)} onIndexChange={(index) => setLightbox((current) => current ? { ...current, index } : current)} />
     </>
   );
@@ -1926,7 +1937,7 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
             {isExpanded && (
               <div className="admin-client-detail">
                 <span><b>Lista</b>{client.lista}</span>
-                <span><b>Crédito</b>{client.credito}</span>
+                <span><b>CrÃ©dito</b>{client.credito}</span>
                 <span><b>Tipo</b>{client.tipo}</span>
                 <span><b>Acceso</b>{client.acceso}</span>
               </div>
@@ -1984,7 +1995,7 @@ function AdminPricesSection({ lists, products, clients, onEditPrices, onSyncList
               <header>
                 <span>
                   <strong>{client.nombre}</strong>
-                  <small>{client.usuario} · {list.nombre || 'Sin precios configurados'}</small>
+                  <small>{client.usuario} Â· {list.nombre || 'Sin precios configurados'}</small>
                 </span>
                 <b className={client.activo ? 'price-ok' : 'price-warning'}>{client.activo ? 'Activo' : 'Inactivo'}</b>
               </header>
@@ -2020,9 +2031,9 @@ function AdminPricesSection({ lists, products, clients, onEditPrices, onSyncList
 function CategoryFilterStrip({ categories = [], value, onChange, className = '' }) {
   if (!categories.length) return null;
   return (
-    <section className={`filter-tab-section category-section ${className}`.trim()} aria-label="Categorías">
+    <section className={`filter-tab-section category-section ${className}`.trim()} aria-label="CategorÃ­as">
       <div className="filter-tab-strip">
-        <button className={value === 'all' ? 'filter-tab active' : 'filter-tab'} onClick={() => onChange('all')} aria-label="Todas las categorías" title="Todas">
+        <button className={value === 'all' ? 'filter-tab active' : 'filter-tab'} onClick={() => onChange('all')} aria-label="Todas las categorÃ­as" title="Todas">
           <span>Todas</span>
         </button>
         {categories.map((item) => (
@@ -2091,14 +2102,14 @@ function ImageLightbox({ src, images = [], index = 0, onClose, onIndexChange }) 
       <button className="image-lightbox-close" onClick={onClose} aria-label="Cerrar">
         <X size={22} />
       </button>
-      {canSlide && <button className="image-lightbox-nav prev" type="button" onClick={showPrev} aria-label="Foto anterior">‹</button>}
+      {canSlide && <button className="image-lightbox-nav prev" type="button" onClick={showPrev} aria-label="Foto anterior">â€¹</button>}
       <img
         className="image-lightbox-img"
         src={activeSrc}
         alt=""
         onClick={(e) => e.stopPropagation()}
       />
-      {canSlide && <button className="image-lightbox-nav next" type="button" onClick={showNext} aria-label="Foto siguiente">›</button>}
+      {canSlide && <button className="image-lightbox-nav next" type="button" onClick={showNext} aria-label="Foto siguiente">â€º</button>}
       {canSlide && <span className="image-lightbox-count">{activeIndex + 1} / {gallery.length}</span>}
     </div>
   );
@@ -2191,11 +2202,11 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
         <TenantLogoMark tenant={tenant} size="small" />
         <span>
           <strong>{tenant?.nombre || 'Empresa'}</strong>
-          <small>{tenant?.subnombre || 'Catálogo privado'}</small>
+          <small>{tenant?.subnombre || 'CatÃ¡logo privado'}</small>
         </span>
       </div>
 
-      <AdminSectionTitle title="Vista cliente" subtitle="Previsualización de productos visibles" />
+      <AdminSectionTitle title="Vista cliente" subtitle="PrevisualizaciÃ³n de productos visibles" />
 
       <div className="admin-preview-client-picker">
         <label>
@@ -2207,7 +2218,7 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
         </label>
         <span>
           <strong>{selectedList?.nombre || 'Sin lista asignada'}</strong>
-          <small>{selectedClient ? `${selectedClient.usuario} · ${selectedClient.credito}` : 'Crea o asigna un cliente para validar precios'}</small>
+          <small>{selectedClient ? `${selectedClient.usuario} Â· ${selectedClient.credito}` : 'Crea o asigna un cliente para validar precios'}</small>
         </span>
       </div>
 
@@ -2227,7 +2238,7 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
       {previewProducts.length === 0 ? (
         <div className="admin-empty-state">
           <strong>No hay productos visibles</strong>
-          <span>Los productos aparecerán aquí cuando estén agregados y marcados como visibles.</span>
+          <span>Los productos aparecerÃ¡n aquÃ­ cuando estÃ©n agregados y marcados como visibles.</span>
         </div>
       ) : (
         <div className="product-grid admin-preview-grid">
@@ -2291,7 +2302,7 @@ function AdminStat({ value, label, tone, helper }) {
 function AdminBottomNav({ tab, setTab, pending, missingPrices }) {
   const items = [
     ['orders', 'Pedidos', Package, pending],
-    ['catalog', 'Catálogo', PackageSearch],
+    ['catalog', 'CatÃ¡logo', PackageSearch],
     ['clients', 'Clientes', Users],
     ['prices', 'Precios', BadgeDollarSign, missingPrices],
     ['preview', 'Vista', Search]
@@ -2316,11 +2327,11 @@ function AdminSitePreview({ tenant }) {
           <TenantLogoMark tenant={tenant} size="small" />
           <span>
             <strong>{tenant?.nombre || 'Nombre de empresa'}</strong>
-            <small>{tenant?.subnombre || 'Subnombre del catálogo'}</small>
+            <small>{tenant?.subnombre || 'Subnombre del catÃ¡logo'}</small>
           </span>
         </header>
         <div>
-          <span>Catálogo privado</span>
+          <span>CatÃ¡logo privado</span>
           <strong>Productos destacados</strong>
           <button type="button">Ver pedido</button>
         </div>
@@ -2411,28 +2422,28 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     setFormFeedback(null);
     if (editor.type === 'account-password') {
       if (!form.current_password || !form.new_password || !form.confirm_password) {
-        setFormFeedback({ type: 'error', message: 'Completa las contraseñas.' });
+        setFormFeedback({ type: 'error', message: 'Completa las contraseÃ±as.' });
         return;
       }
       if (form.new_password.length < 8) {
-        setFormFeedback({ type: 'error', message: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+        setFormFeedback({ type: 'error', message: 'La nueva contraseÃ±a debe tener al menos 8 caracteres.' });
         return;
       }
       if (form.new_password !== form.confirm_password) {
-        setFormFeedback({ type: 'error', message: 'Las contraseñas no coinciden.' });
+        setFormFeedback({ type: 'error', message: 'Las contraseÃ±as no coinciden.' });
         return;
       }
       try {
         await onSaveAccountPassword(form);
         setForm((current) => ({ ...current, current_password: '', new_password: '', confirm_password: '' }));
-        setFormFeedback({ type: 'success', message: 'Contraseña actualizada correctamente.' });
+        setFormFeedback({ type: 'success', message: 'ContraseÃ±a actualizada correctamente.' });
       } catch (error) {
-        setFormFeedback({ type: 'error', message: error.message || 'No se pudo cambiar la contraseña.' });
+        setFormFeedback({ type: 'error', message: error.message || 'No se pudo cambiar la contraseÃ±a.' });
       }
       return;
     }
     if (editor.type === 'client' && form.password && form.password.trim().length < 8) {
-      setFormFeedback({ type: 'error', message: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+      setFormFeedback({ type: 'error', message: 'La nueva contraseÃ±a debe tener al menos 8 caracteres.' });
       return;
     }
     setSaving(true);
@@ -2498,11 +2509,17 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
         {editor.type === 'product' && (
           <div className="admin-form admin-product-form">
-            <label className="admin-product-full">Código SKU<input placeholder="Ej: 47201-60290" value={form.sku || ''} onChange={(event) => update('sku', event.target.value)} /></label>
+            <div className="admin-product-code-stock-row">
+              <label className="admin-product-sku-field">Código SKU<input placeholder="Ej: 47201-60290" value={form.sku || ''} onChange={(event) => update('sku', event.target.value)} /></label>
+              <div className="admin-product-stock-grid">
+                <label>Stock actual<input type="number" min="0" step="1" value={form.stock_actual ?? ''} onChange={(event) => update('stock_actual', event.target.value)} /></label>
+                <label>Stock mínimo<input type="number" min="0" step="1" value={form.stock_minimo ?? ''} onChange={(event) => update('stock_minimo', event.target.value)} /></label>
+              </div>
+            </div>
             <label>Marca<select value={form.marca_id || brands[0]?.id || ''} onChange={(event) => update('marca_id', Number(event.target.value))}>{brands.map((brand) => <option value={brand.id} key={brand.id}>{brand.nombre}</option>)}</select></label>
-            <label>Categoría<select value={form.categoria_id || categories[0]?.id || ''} onChange={(event) => update('categoria_id', Number(event.target.value))}>{categories.map((category) => <option value={category.id} key={category.id}>{category.nombre}</option>)}</select></label>
+            <label>CategorÃ­a<select value={form.categoria_id || categories[0]?.id || ''} onChange={(event) => update('categoria_id', Number(event.target.value))}>{categories.map((category) => <option value={category.id} key={category.id}>{category.nombre}</option>)}</select></label>
             <label>
-              Aplicación (una por línea)
+              AplicaciÃ³n (una por lÃ­nea)
               <textarea
                 rows={3}
                 placeholder={'Hilux 79 - 88\nHIERRO / METAL\n1" Pulgada (15/16)'}
@@ -2512,8 +2529,6 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             </label>
             <div className="admin-product-stock-grid">
               <label>Precio<input type="number" value={form.precio || ''} onChange={(event) => update('precio', Number(event.target.value))} /></label>
-              <label>Stock actual<input type="number" min="0" step="1" value={form.stock_actual ?? ''} onChange={(event) => update('stock_actual', event.target.value)} /></label>
-              <label>Stock mínimo<input type="number" min="0" step="1" value={form.stock_minimo ?? ''} onChange={(event) => update('stock_minimo', event.target.value)} /></label>
             </div>
             <label>
               Fotos del producto
@@ -2527,7 +2542,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
           <div className="admin-form">
             <label>Nombre<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
             <label>Usuario<input value={form.username || form.usuario || ''} onChange={(event) => update('username', event.target.value)} /></label>
-            <label>{form.id ? 'Nueva contraseña' : 'Contraseña inicial'}<input type="password" placeholder={form.id ? 'Dejar igual' : 'Asignar contraseña'} value={form.password || ''} onChange={(event) => update('password', event.target.value)} autoComplete="new-password" /></label>
+            <label>{form.id ? 'Nueva contraseÃ±a' : 'ContraseÃ±a inicial'}<input type="password" placeholder={form.id ? 'Dejar igual' : 'Asignar contraseÃ±a'} value={form.password || ''} onChange={(event) => update('password', event.target.value)} autoComplete="new-password" /></label>
             <label>Lista<select value={form.lista_precio_id || ''} onChange={(event) => update('lista_precio_id', Number(event.target.value) || '')}>
               <option value="">Sin lista</option>
               {priceLists.map((list) => <option value={list.id} key={list.id}>{list.nombre}</option>)}
@@ -2552,30 +2567,30 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                     {name}
                   </button>
                 ))}
-                {clientBranches.length >= 5 && <small>Todas las letras rápidas están usadas.</small>}
+                {clientBranches.length >= 5 && <small>Todas las letras rÃ¡pidas estÃ¡n usadas.</small>}
               </div>
               <div className="client-branch-add">
                 <input
                   value={branchDraft.nombre}
                   onChange={(event) => setBranchDraft((current) => ({ ...current, nombre: event.target.value }))}
-                  placeholder="Sucursal o código"
+                  placeholder="Sucursal o cÃ³digo"
                 />
                 <input
                   value={branchDraft.direccion}
                   onChange={(event) => setBranchDraft((current) => ({ ...current, direccion: event.target.value }))}
-                  placeholder="Dirección opcional"
+                  placeholder="DirecciÃ³n opcional"
                 />
                 <button type="button" onClick={() => addClientBranch()} disabled={!branchDraft.nombre.trim()}>
                   Agregar
                 </button>
               </div>
               <div className="client-branch-list">
-                {clientBranches.length === 0 && <small className="admin-empty-inline">Sin sucursales todavía.</small>}
+                {clientBranches.length === 0 && <small className="admin-empty-inline">Sin sucursales todavÃ­a.</small>}
                 {clientBranches.map((branch, index) => (
                   <div className="client-branch-row" key={branch.id || `${branch.nombre}-${index}`}>
                     <span className="client-branch-letter">{String.fromCharCode(65 + index)}</span>
                     <input value={branch.nombre || ''} onChange={(event) => updateClientBranch(index, 'nombre', event.target.value)} aria-label="Sucursal" />
-                    <input value={branch.direccion || ''} onChange={(event) => updateClientBranch(index, 'direccion', event.target.value)} aria-label="Dirección" placeholder="Dirección opcional" />
+                    <input value={branch.direccion || ''} onChange={(event) => updateClientBranch(index, 'direccion', event.target.value)} aria-label="DirecciÃ³n" placeholder="DirecciÃ³n opcional" />
                     <button type="button" onClick={() => removeClientBranch(index)} aria-label={`Quitar ${branch.nombre}`}>
                       Quitar
                     </button>
@@ -2589,9 +2604,9 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
         {editor.type === 'account-password' && (
           <div className="admin-form">
-            <label>Contraseña actual<input type="password" value={form.current_password || ''} onChange={(event) => update('current_password', event.target.value)} /></label>
-            <label>Nueva contraseña<input type="password" value={form.new_password || ''} onChange={(event) => update('new_password', event.target.value)} /></label>
-            <label>Confirmar nueva contraseña<input type="password" value={form.confirm_password || ''} onChange={(event) => update('confirm_password', event.target.value)} /></label>
+            <label>ContraseÃ±a actual<input type="password" value={form.current_password || ''} onChange={(event) => update('current_password', event.target.value)} /></label>
+            <label>Nueva contraseÃ±a<input type="password" value={form.new_password || ''} onChange={(event) => update('new_password', event.target.value)} /></label>
+            <label>Confirmar nueva contraseÃ±a<input type="password" value={form.confirm_password || ''} onChange={(event) => update('confirm_password', event.target.value)} /></label>
             {formFeedback && <small className={formFeedback.type === 'success' ? 'form-success' : 'form-error'}>{formFeedback.message}</small>}
           </div>
         )}
@@ -2606,7 +2621,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                   <input type="checkbox" checked readOnly />
                   <span>
                     <strong>{editor.value.client.nombre}</strong>
-                    <small>{editor.value.client.usuario} · {editor.value.client.credito}</small>
+                    <small>{editor.value.client.usuario} Â· {editor.value.client.credito}</small>
                   </span>
                 </label>
               </section>
@@ -2619,7 +2634,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                   <h3>{group.category}</h3>
                   {group.items.map((product) => (
                     <div className="admin-price-editor-row" key={product.id}>
-                      <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small><ProductStockPill product={product} /></span>
+                      <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' Â· ')}</small><ProductStockPill product={product} /></span>
                       <label className="price-visible-toggle"><input type="checkbox" checked={form[`visible_${product.id}`] !== false} onChange={(event) => update(`visible_${product.id}`, event.target.checked)} /> Visible</label>
                       <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
                       <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
@@ -2639,7 +2654,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 <h3>{group.category}</h3>
                 {group.items.map((product) => (
                   <div className="admin-price-editor-row" key={product.id}>
-                    <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small><ProductStockPill product={product} /></span>
+                    <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' Â· ')}</small><ProductStockPill product={product} /></span>
                     <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
                     <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
                     <label className="price-visible-toggle"><input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} /> Promo activa</label>
@@ -2651,7 +2666,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
         )}
 
         {editor.type === 'brands' && <AdminEntityCrud items={brands} label="Marca" onSave={onSaveBrand} onDelete={onDeleteBrand} />}
-        {editor.type === 'categories' && <AdminEntityCrud items={categories} label="Categoría" onSave={onSaveCategory} onDelete={onDeleteCategory} />}
+        {editor.type === 'categories' && <AdminEntityCrud items={categories} label="CategorÃ­a" onSave={onSaveCategory} onDelete={onDeleteCategory} />}
 
         {!['brands', 'categories'].includes(editor.type) && (
           <button
@@ -2670,9 +2685,9 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 function AdminEntityCrud({ items, label, onSave, onDelete }) {
   const [name, setName] = useState('');
   const [logoFile, setLogoFile] = useState(null);
-  const supportsImage = label === 'Marca' || label === 'Categoría';
+  const supportsImage = label === 'Marca' || label === 'CategorÃ­a';
   const imageField = label === 'Marca' ? 'logo_url' : 'imagen_url';
-  const supportsOrdering = label === 'Categoría';
+  const supportsOrdering = label === 'CategorÃ­a';
   const orderedItems = supportsOrdering
     ? [...items].sort((a, b) => (Number(a.posicion || 0) - Number(b.posicion || 0)) || String(a.nombre).localeCompare(String(b.nombre)))
     : items;
@@ -2706,8 +2721,8 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
           <strong>{item.nombre}</strong>
           {supportsOrdering && (
             <div className="admin-entity-order">
-              <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} aria-label={`Subir ${item.nombre}`}>↑</button>
-              <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}>↓</button>
+              <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} aria-label={`Subir ${item.nombre}`}>â†‘</button>
+              <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}>â†“</button>
             </div>
           )}
           <button onClick={() => onSave({ ...item, nombre: window.prompt(`Editar ${label}`, item.nombre) || item.nombre })}>Editar</button>
@@ -2801,7 +2816,7 @@ function normalizeAdminClient(client) {
   const branches = uniqueBranches(Array.isArray(client.sucursales) ? client.sucursales : []);
   const accessDate = client.ultimo_acceso ? new Date(client.ultimo_acceso) : null;
   const accessLabel = accessDate && !Number.isNaN(accessDate.getTime())
-    ? `${client.ultimo_user_agent || 'Acceso'} · ${accessDate.toLocaleString('es-HN')} · ${client.ultimo_geolocalizacion || client.ultimo_ip || 'Sin ubicacion'}`
+    ? `${client.ultimo_user_agent || 'Acceso'} Â· ${accessDate.toLocaleString('es-HN')} Â· ${client.ultimo_geolocalizacion || client.ultimo_ip || 'Sin ubicacion'}`
     : 'Sin accesos registrados';
   return {
     ...client,
@@ -2921,7 +2936,7 @@ function AdminOrder({ order, token }) {
   const [state, setState] = useState(order.estado);
 
   async function advance(nextState) {
-    const ok = window.confirm(`Confirmar cambio a "${nextState}"`) && window.confirm('Segunda confirmación requerida');
+    const ok = window.confirm(`Confirmar cambio a "${nextState}"`) && window.confirm('Segunda confirmaciÃ³n requerida');
     if (!ok) return;
     await api.updateOrderStatus(token, order.id, nextState);
     setState(nextState);
@@ -3036,7 +3051,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             openAdmins(savedTenant, { skipPersist: true });
           }
         }
-        showToast('Bienvenido a CatálogoHN');
+        showToast('Bienvenido a CatÃ¡logoHN');
       })
       .catch((err) => setError(err.message));
   }, [token]);
@@ -3148,7 +3163,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
     if (!admin?.id) return;
     const nextPassword = editAdminPassword.trim();
     if (nextPassword && nextPassword.length < 8) {
-      setError('La nueva contraseña debe tener al menos 8 caracteres.');
+      setError('La nueva contraseÃ±a debe tener al menos 8 caracteres.');
       return;
     }
     const payload = {
@@ -3176,7 +3191,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       if (result.temp_password) {
         setTempPasswordsByAdmin((current) => ({ ...current, [admin.id]: result.temp_password }));
         setTempPassword(result.temp_password);
-        showToast('Contraseña de admin guardada');
+        showToast('ContraseÃ±a de admin guardada');
       } else {
         showToast('Admin actualizado');
       }
@@ -3203,11 +3218,11 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       return;
     }
     if (nextPassword.length < 8) {
-      setPasswordMessage('La nueva contraseña debe tener al menos 8 caracteres.');
+      setPasswordMessage('La nueva contraseÃ±a debe tener al menos 8 caracteres.');
       return;
     }
     if (nextPassword !== confirmPassword) {
-      setPasswordMessage('La confirmación no coincide.');
+      setPasswordMessage('La confirmaciÃ³n no coincide.');
       return;
     }
     setPasswordSaving(true);
@@ -3217,10 +3232,10 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
         new_password: nextPassword
       });
       setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
-      setPasswordMessage('Contraseña actualizada correctamente.');
-      showToast('Contraseña actualizada');
+      setPasswordMessage('ContraseÃ±a actualizada correctamente.');
+      showToast('ContraseÃ±a actualizada');
     } catch (err) {
-      setPasswordMessage(err.message || 'No se pudo cambiar la contraseña');
+      setPasswordMessage(err.message || 'No se pudo cambiar la contraseÃ±a');
     } finally {
       setPasswordSaving(false);
     }
@@ -3234,7 +3249,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       const result = await api.superadminResetAdminPassword(token, admin.id);
       setTempPasswordsByAdmin((current) => ({ ...current, [admin.id]: result.temp_password }));
       setTempPassword(result.temp_password || '');
-      showToast(`Nueva contraseña temporal generada para ${admin.username || admin.nombre}`);
+      showToast(`Nueva contraseÃ±a temporal generada para ${admin.username || admin.nombre}`);
     } catch (err) {
       setError(err.message);
     }
@@ -3480,15 +3495,15 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       {toast && <div className="superadmin-toast">{toast}</div>}
       <header className="login-header superadmin-top-header">
         <div className="superadmin-header-text">
-          <strong>CatálogoHN</strong>
-          <span>Super Admin · Gestor central de empresas</span>
+          <strong>CatÃ¡logoHN</strong>
+          <span>Super Admin Â· Gestor central de empresas</span>
         </div>
         <div className="superadmin-top-actions">
           <button className="icon-button superadmin-menu-button" type="button" onClick={() => setSidebarOpen((current) => !current)} aria-label="Abrir panel lateral">
             <Menu size={18} />
           </button>
           <ThemeToggle theme={theme} onToggle={onThemeToggle} />
-          <button className="icon-button superadmin-logout" onClick={onLogout} aria-label="Cerrar sesión">
+          <button className="icon-button superadmin-logout" onClick={onLogout} aria-label="Cerrar sesiÃ³n">
             <LogOut size={18} />
           </button>
         </div>
@@ -3500,7 +3515,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
           <div className="superadmin-sidebar-main">
             {[
               ['companies', 'Empresas'],
-              ['stats', 'Estadísticas'],
+              ['stats', 'EstadÃ­sticas'],
               ['history', 'Historiales'],
               ['subnames', 'Subnombres']
             ].map(([id, label]) => (
@@ -3511,7 +3526,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
           </div>
           <div className="superadmin-sidebar-bottom">
             <button type="button" className={superadminSection === 'password' ? 'active' : ''} onClick={() => { setSuperadminSection('password'); setSidebarOpen(false); }}>
-              Cambiar contraseña
+              Cambiar contraseÃ±a
             </button>
           </div>
         </aside>
@@ -3520,7 +3535,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
         {superadminSection === 'stats' && (
           <div className="superadmin-section-view">
             <div className="superadmin-head">
-              <h1>Estadísticas</h1>
+              <h1>EstadÃ­sticas</h1>
               <span className="status-pill">Resumen general</span>
             </div>
             <section className="superadmin-dashboard">
@@ -3532,14 +3547,14 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             </section>
             <section className="superadmin-insights superadmin-stats-panels">
               <article>
-                <div className="superadmin-panel-head"><strong>Empresas con más productos</strong></div>
+                <div className="superadmin-panel-head"><strong>Empresas con mÃ¡s productos</strong></div>
                 {tenantStats.sortedByProducts.length === 0 && <small className="admin-muted-note">Sin datos.</small>}
                 {tenantStats.sortedByProducts.map((tenant) => (
                   <p key={`products-${tenant.id}`}><span>{tenant.product_count || 0} prod.</span>{tenant.nombre}</p>
                 ))}
               </article>
               <article>
-                <div className="superadmin-panel-head"><strong>Empresas con más pedidos</strong></div>
+                <div className="superadmin-panel-head"><strong>Empresas con mÃ¡s pedidos</strong></div>
                 {tenantStats.sortedByOrders.length === 0 && <small className="admin-muted-note">Sin datos.</small>}
                 {tenantStats.sortedByOrders.map((tenant) => (
                   <p key={`orders-${tenant.id}`}><span>{tenant.order_count || 0} pedidos</span>{tenant.nombre}</p>
@@ -3560,7 +3575,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 <div className="superadmin-panel-head">
                   <strong><Activity size={16} /> Historial reciente</strong>
                 </div>
-                {activity.length === 0 && <small className="admin-muted-note">Sin acciones registradas todavía.</small>}
+                {activity.length === 0 && <small className="admin-muted-note">Sin acciones registradas todavÃ­a.</small>}
                 {activity.map((item) => (
                   <p key={item.id}><span>{formatShortDate(item.created_at)}</span>{item.descripcion}</p>
                 ))}
@@ -3582,7 +3597,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 </div>
                 {registrationRequests.length === 0 && <small className="admin-muted-note">Sin solicitudes nuevas.</small>}
                 {registrationRequests.map((item) => (
-                  <p key={item.id}><span>{formatShortDate(item.created_at)}</span>{item.empresa_nombre} · {item.contacto}</p>
+                  <p key={item.id}><span>{formatShortDate(item.created_at)}</span>{item.empresa_nombre} Â· {item.contacto}</p>
                 ))}
               </article>
             </section>
@@ -3592,12 +3607,12 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
         {superadminSection === 'password' && (
           <div className="superadmin-section-view">
             <div className="superadmin-head">
-              <h1>Contraseña</h1>
+              <h1>ContraseÃ±a</h1>
               <span className="status-pill">Seguridad</span>
             </div>
             <form className="superadmin-form superadmin-password-form" onSubmit={changeSuperadminPassword}>
               <label>
-                Contraseña actual
+                ContraseÃ±a actual
                 <input
                   type="password"
                   value={passwordForm.current_password}
@@ -3606,7 +3621,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 />
               </label>
               <label>
-                Nueva contraseña
+                Nueva contraseÃ±a
                 <input
                   type="password"
                   value={passwordForm.new_password}
@@ -3615,7 +3630,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 />
               </label>
               <label>
-                Confirmar nueva contraseña
+                Confirmar nueva contraseÃ±a
                 <input
                   type="password"
                   value={passwordForm.confirm_password}
@@ -3625,7 +3640,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               </label>
               {passwordMessage && <small className="temp-password">{passwordMessage}</small>}
               <button className="primary-button" type="submit" disabled={passwordSaving}>
-                {passwordSaving ? 'Guardando...' : 'Cambiar contraseña'}
+                {passwordSaving ? 'Guardando...' : 'Cambiar contraseÃ±a'}
               </button>
             </form>
           </div>
@@ -3708,7 +3723,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             <div className="superadmin-subname-picker-head">
               <span>
                 <strong>Subnombre</strong>
-                <small>{subnombre || 'Selecciona una opción para la empresa'}</small>
+                <small>{subnombre || 'Selecciona una opciÃ³n para la empresa'}</small>
               </span>
               {subnombre && (
                 <button type="button" onClick={() => handleSubnombreChange('')}>
@@ -3816,7 +3831,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             {filteredTenants.length === 0 && (
               <div className="admin-empty-state superadmin-empty">
                 <strong>Sin resultados</strong>
-                <span>Ajusta la búsqueda o cambia el filtro.</span>
+                <span>Ajusta la bÃºsqueda o cambia el filtro.</span>
               </div>
             )}
           </div>
@@ -3827,7 +3842,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       </section>
 
       <section className="superadmin-footer">
-        <strong>CatálogoHN</strong>
+        <strong>CatÃ¡logoHN</strong>
         <span>Control central de empresas</span>
       </section>
 
@@ -3847,18 +3862,18 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             <form className="superadmin-admins-form" onSubmit={createAdmin}>
               <label>Nombre<input value={adminNombre} onChange={(e) => setAdminNombre(e.target.value)} placeholder="Administrador" /></label>
               <label>Usuario<input value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} placeholder="admin.empresa" /></label>
-              <label>Contraseña temporal<input value="Se generará automáticamente" disabled /></label>
+              <label>ContraseÃ±a temporal<input value="Se generarÃ¡ automÃ¡ticamente" disabled /></label>
               <button className="primary-button" disabled={!adminNombre || !adminUsername}>
                 Crear admin
               </button>
-              {tempPassword && <small className="temp-password">Contraseña temporal: <b>{tempPassword}</b></small>}
+              {tempPassword && <small className="temp-password">ContraseÃ±a temporal: <b>{tempPassword}</b></small>}
             </form>
 
             {error && <small className="form-error">{error}</small>}
 
             <div className="superadmin-admins-list">
               {!adminPanel.admins && <Loading label="Cargando admins" />}
-              {adminPanel.admins && adminPanel.admins.length === 0 && <small className="admin-empty">Sin admins aún.</small>}
+              {adminPanel.admins && adminPanel.admins.length === 0 && <small className="admin-empty">Sin admins aÃºn.</small>}
               {adminPanel.admins && adminPanel.admins.map((admin) => (
                 <div className="superadmin-admin-row" key={admin.id}>
                   <span>
@@ -3895,14 +3910,14 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             }}>
               <label>Nombre<input value={editAdminNombre} onChange={(e) => setEditAdminNombre(e.target.value)} /></label>
               <label>Usuario<input value={editAdminUsername} onChange={(e) => setEditAdminUsername(e.target.value)} /></label>
-              <label>Nueva contraseña<input type="password" value={editAdminPassword} onChange={(e) => setEditAdminPassword(e.target.value)} placeholder="Opcional" /></label>
+              <label>Nueva contraseÃ±a<input type="password" value={editAdminPassword} onChange={(e) => setEditAdminPassword(e.target.value)} placeholder="Opcional" /></label>
               {tempPasswordsByAdmin[editingAdmin.id] && (
-                <small className="temp-password">Contraseña temporal: <b>{tempPasswordsByAdmin[editingAdmin.id]}</b></small>
+                <small className="temp-password">ContraseÃ±a temporal: <b>{tempPasswordsByAdmin[editingAdmin.id]}</b></small>
               )}
               {error && <small className="form-error">{error}</small>}
               <div className="superadmin-admin-edit-actions">
                 <button type="submit" disabled={!editAdminNombre || !editAdminUsername}>Guardar cambios</button>
-                <button type="button" onClick={() => generateAdminPassword(editingAdmin)}>Generar contraseña</button>
+                <button type="button" onClick={() => generateAdminPassword(editingAdmin)}>Generar contraseÃ±a</button>
                 <button type="button" onClick={cancelEditAdmin}>Cancelar</button>
               </div>
             </form>
@@ -3926,7 +3941,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             {tenantConfirm.message}
             {tenantConfirm.type === 'delete' && (
               <label className="confirm-inline-field">
-                Confirmación
+                ConfirmaciÃ³n
                 <input value={tenantDeleteInput} onChange={(event) => setTenantDeleteInput(event.target.value)} placeholder={tenantConfirm.tenant.slug} />
               </label>
             )}
@@ -4055,3 +4070,4 @@ function flattenCart(cart, data) {
 }
 
 createRoot(document.getElementById('root')).render(<App />);
+
