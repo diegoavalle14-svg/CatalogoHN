@@ -2735,6 +2735,12 @@ button {
   background: #5c141d;
 }
 
+[data-theme="dark"] .admin-client-row {
+  border-color: #303642;
+  background: #181a1f;
+  box-shadow: none;
+}
+
 [data-theme="dark"] .admin-client-detail {
   border-color: #303642;
   background: #10131a;
@@ -5320,25 +5326,25 @@ button {
 }
 
 .admin-client-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
   margin-top: 20px;
   padding: 4px 14px;
 }
 
 .admin-client-row {
-  width: 100%;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 36px 1fr;
   align-items: center;
-  gap: 12px;
-  border: 0;
-  border-bottom: 1px solid #eeeeee;
-  background: transparent;
-  padding: 13px 0;
+  gap: 10px;
+  border: 1px solid #e2e4e8;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
   text-align: left;
-}
-
-.admin-client-row:last-child {
-  border-bottom: 0;
+  box-shadow: 0 4px 12px rgba(20, 24, 31, .03);
 }
 
 .admin-client-main {
@@ -5382,7 +5388,7 @@ button {
 }
 
 .admin-client-detail {
-  grid-column: 2 / -1;
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px;
@@ -8200,5 +8206,59 @@ button {
 @media (min-width: 481px) {
   .admin-price-groups {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  .admin-client-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+}
+
+.admin-client-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.admin-client-main {
+  overflow: hidden;
+}
+
+.admin-client-main strong {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .admin-client-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 4px 0 !important;
+  }
+  
+  .admin-client-row {
+    padding: 10px;
+    gap: 6px;
+  }
+  
+  .admin-client-actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .admin-client-actions button {
+    width: 100%;
+    min-height: 28px;
+    font-size: 10px;
+    padding: 0 4px;
+  }
+  
+  .admin-client-detail {
+    grid-template-columns: 1fr !important;
+    padding: 6px !important;
   }
 }
