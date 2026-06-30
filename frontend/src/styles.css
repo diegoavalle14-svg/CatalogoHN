@@ -37,7 +37,7 @@
 
 html {
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   background: #eef1f6;
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)),
@@ -48,7 +48,7 @@ html {
 body {
   width: 100%;
   min-width: 320px;
-  overflow-x: hidden;
+  overflow-x: clip;
   margin: 0;
   background: transparent;
   color: var(--text);
