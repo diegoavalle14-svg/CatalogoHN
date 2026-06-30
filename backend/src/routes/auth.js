@@ -34,7 +34,7 @@ router.post('/login', async (req, res) => {
     await ensureUserProfileColumns();
     const tenantId = req.tenant?.id || null;
     const result = await db.query(
-      `SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo
+      `SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
        FROM usuarios u
        LEFT JOIN clientes c ON c.usuario_id = u.id
        WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
