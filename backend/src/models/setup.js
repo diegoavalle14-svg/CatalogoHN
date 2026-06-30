@@ -9,6 +9,7 @@ if (!connectionString) {
   process.exit(1);
 }
 const skipCreateDatabase = process.env.DB_SETUP_SKIP_CREATE_DATABASE === 'true';
+const resetConfirmation = String(process.env.DB_SETUP_CONFIRM_RESET || '').trim();
 
 // Parse database name and credentials from connection string
 // e.g. postgres://postgres:postgres@localhost:5432/catalogohn
@@ -16,8 +17,20 @@ const dbNameMatch = connectionString.match(/\/([^\/?]+)(?:\?.*)?$/);
 const dbName = dbNameMatch ? dbNameMatch[1] : 'catalogohn';
 const baseUrl = connectionString.replace(/\/([^\/?]+)(?:\?.*)?$/, '/postgres'); // Default system db
 
+function requireResetConfirmation() {
+  if (process.env.NODE_ENV !== 'production') return;
+
+  const expected = `RESET ${dbName}`;
+  if (resetConfirmation === expected) return;
+
+  console.error('Refusing to run db:setup in production because it drops and recreates all data.');
+  console.error(`If you really want to reset this database, run with DB_SETUP_CONFIRM_RESET="${expected}".`);
+  process.exit(1);
+}
+
 async function run() {
   console.log(`Setting up database. Targeted DB: "${dbName}"`);
+  requireResetConfirmation();
 
   // Step 1: Connect to default postgres DB and create catalogohn if it doesn't exist
   let client;
