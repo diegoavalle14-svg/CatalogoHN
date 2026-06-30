@@ -587,9 +587,9 @@ button {
 .filter-tab-strip {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   overflow-x: auto;
-  padding: 4px 10px 0;
+  padding: 0 10px;
   scrollbar-width: none;
 }
 
@@ -600,18 +600,18 @@ button {
 .filter-tab {
   min-width: 60px;
   max-width: 130px;
-  min-height: 60px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 8px;
+  gap: 6px;
   position: relative;
   border: 0;
   background: transparent;
   color: #7b7b7b;
   padding: 0 4px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -620,8 +620,8 @@ button {
 }
 
 .filter-tab img {
-  max-width: 58px;
-  max-height: 32px;
+  max-width: 44px;
+  max-height: 24px;
   object-fit: contain;
 }
 
@@ -641,13 +641,13 @@ button {
 }
 
 .brand-filter-section .filter-tab {
-  min-height: 52px;
-  font-size: 12px;
+  min-height: 40px;
+  font-size: 10px;
 }
 
 .brand-filter-section .filter-tab img {
-  max-width: 50px;
-  max-height: 26px;
+  max-width: 40px;
+  max-height: 20px;
 }
 
 .search-box {
