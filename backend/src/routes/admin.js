@@ -227,8 +227,8 @@ router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmi
     await client.query(
       `UPDATE clientes
        SET condicion_credito = COALESCE($1, condicion_credito),
-           activo = COALESCE($2, activo),
-           aplica_isv = COALESCE($3, aplica_isv),
+           activo = COALESCE($2::boolean, activo),
+           aplica_isv = COALESCE($3::boolean, aplica_isv),
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $4 AND empresa_id = $5`,
       [payload.condicion_credito, payload.activo, payload.aplica_isv, req.params.id, req.tenant.id]
