@@ -6533,23 +6533,48 @@ button {
   }
 
   .topbar {
-    grid-template-columns: minmax(112px, 1fr) auto;
-    gap: 8px;
-    min-height: 60px;
-    padding: 10px;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    min-height: 0;
+    padding: 10px 12px;
+    overflow: visible;
   }
 
   .brand-lockup {
     min-width: 0;
+    width: 100%;
     border-right: 0;
     padding-right: 0;
-    gap: 8px;
-    font-size: 18px;
+    gap: 10px;
+    font-size: 17px;
+    justify-content: flex-start;
+  }
+
+  .brand-lockup > span:last-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .brand-lockup strong {
+    display: block;
+    overflow: hidden;
+    font-size: 17px;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand-lockup > span:last-child small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .logo-mark {
-    width: 38px;
-    height: 40px;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 38px;
   }
 
   .welcome-line {
@@ -6558,18 +6583,18 @@ button {
 
   .topbar-actions {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 44px;
-    justify-content: end;
-    gap: 7px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
   }
 
   .topbar-actions .theme-toggle-button,
   .orders-button,
   .checkout-button,
   .logout-button {
-    width: 44px;
-    min-width: 44px;
+    position: relative;
+    width: 100%;
+    min-width: 0;
     height: 40px;
     min-height: 40px;
     padding: 0;
@@ -6630,6 +6655,41 @@ button {
 }
 
 @media (max-width: 520px) {
+  .topbar {
+    padding: 8px 10px 10px;
+    gap: 8px;
+  }
+
+  .brand-lockup {
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .brand-lockup strong {
+    font-size: 16px;
+  }
+
+  .brand-lockup > span:last-child small {
+    font-size: 9px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .topbar-actions .theme-toggle-button,
+  .orders-button,
+  .checkout-button,
+  .logout-button {
+    height: 38px;
+    min-height: 38px;
+  }
+
+  .checkout-button b {
+    top: -5px;
+    right: -5px;
+  }
+
   .login-screen {
     padding: 12px clamp(10px, 4vw, 16px) 14px;
     gap: 8px;
