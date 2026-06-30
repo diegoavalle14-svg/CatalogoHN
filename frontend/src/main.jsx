@@ -2543,28 +2543,27 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
 
   return (
     <section className="admin-customer-preview" style={tenantBrandStyle(tenant)}>
-      <div className="admin-preview-head">
+      <div className="admin-preview-compact-header">
         <TenantLogoMark tenant={tenant} size="small" />
-        <span>
-          <strong>{tenant?.nombre || 'Empresa'}</strong>
-          <small>{tenant?.subnombre || 'Catálogo privado'}</small>
-        </span>
-      </div>
-
-      <AdminSectionTitle title="Vista cliente" subtitle="Previsualización de productos visibles" />
-
-      <div className="admin-preview-client-picker">
-        <label>
-          Cliente
-          <select value={clientId || ''} onChange={(event) => setClientId(Number(event.target.value) || '')}>
-            {clients.length === 0 && <option value="">Sin clientes</option>}
-            {clients.map((client) => <option value={client.id} key={client.id}>{client.nombre}</option>)}
-          </select>
-        </label>
-        <span>
-          <strong>{selectedList?.nombre || 'Sin lista asignada'}</strong>
-          <small>{selectedClient ? `${selectedClient.usuario} · ${selectedClient.credito}` : 'Crea o asigna un cliente para validar precios'}</small>
-        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <strong style={{ fontSize: '12px' }}>{tenant?.nombre || 'Empresa'}</strong>
+            <small style={{ color: '#888', fontSize: '10px' }}>{tenant?.subnombre || ''}</small>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <select
+              value={clientId || ''}
+              onChange={(event) => setClientId(Number(event.target.value) || '')}
+              style={{ flex: 1, maxWidth: '200px', height: '28px', fontSize: '11px', fontWeight: '700', border: '1px solid #ccc', borderRadius: '4px', padding: '0 6px' }}
+            >
+              {clients.length === 0 && <option value="">Sin clientes</option>}
+              {clients.map((client) => <option value={client.id} key={client.id}>{client.nombre}</option>)}
+            </select>
+            <small style={{ color: '#666', fontSize: '10px', fontWeight: '700' }}>
+              {selectedList?.nombre || 'Sin lista'} · {selectedClient?.usuario || ''}
+            </small>
+          </div>
+        </div>
       </div>
 
       <div className="admin-preview-sticky-tools">
@@ -2580,7 +2579,7 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
         />
       </div>
 
-      <p className="product-count">{previewProducts.length} productos visibles</p>
+      <p className="product-count" style={{ margin: '8px 0 4px' }}>{previewProducts.length} productos visibles</p>
 
       {previewProducts.length === 0 ? (
         <div className="admin-empty-state">
@@ -2588,64 +2587,23 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
           <span>Los productos aparecerán aquí cuando estén agregados y marcados como visibles.</span>
         </div>
       ) : (
-        <div className="product-grid admin-preview-grid">
+        <div className="product-grid">
           {previewProducts.map((product) => (
-            <AdminPreviewProductCard
+            <ProductCard
               key={product.id}
               product={product}
               categoryMeta={(categories || []).find((item) => Number(item.id) === Number(product.categoria_id))}
               brandMeta={(brands || []).find((item) => Number(item.id) === Number(product.marca_id))}
               branches={withBranchLetters(previewBranches)}
+              quantities={{}}
+              onQty={() => {}}
+              onAdd={() => {}}
+              enableLightbox={true}
             />
           ))}
         </div>
       )}
     </section>
-  );
-}
-
-function AdminPreviewProductCard({ product, categoryMeta, brandMeta, branches = [] }) {
-  const productImages = cleanProductImages(product.imagenes);
-  const currentPrice = Number(product.precio_final || product.precio || 0);
-  const oldPrice = Number(product.precio || 0);
-  const previewBranches = branches.length ? branches.slice(0, 2) : [{ id: 'preview', letra: 'A', nombre: 'Principal' }];
-  const detailLines = [
-    product.descripcion,
-    product.specs?.aplicacion,
-    product.specs?.medida || product.categoria
-  ].filter(Boolean);
-  return (
-    <article className="admin-preview-product-card">
-      {product.en_promocion && <span className="promo-ribbon">PROMO</span>}
-      <div className="admin-preview-product-image">
-        <SafeImage 
-          src={productImages[0]} 
-          alt={product.descripcion} 
-          fallback={<DefaultProductArtwork product={product} categoryMeta={categoryMeta} />} 
-        />
-        <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
-        {productImages.length > 1 && <span className="admin-preview-photo-count">{productImages.length} fotos</span>}
-      </div>
-      <div className="admin-preview-product-body">
-        <span className="sku-code">{product.sku}</span>
-        <div className="admin-preview-product-lines">
-          {detailLines.map((line, index) => <small key={`${product.id}-line-${index}`}>{line}</small>)}
-        </div>
-        <div className="price-line">
-          {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
-          <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
-        </div>
-        <div className="admin-preview-cart-actions">
-          {previewBranches.map((branch) => (
-            <div key={branch.id || branch.nombre}>
-              {previewBranches.length > 1 && <span>{branch.letra || branch.nombre}</span>}
-              <input value="1" readOnly aria-label="Cantidad de vista previa" />
-              <button type="button">+ Agregar</button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </article>
   );
 }
 
