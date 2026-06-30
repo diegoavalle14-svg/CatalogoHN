@@ -147,7 +147,8 @@ async function queryCatalogUser(userId) {
             u.rol,
             c.id AS cliente_id,
             c.condicion_credito,
-            c.activo AS cliente_activo
+            c.activo AS cliente_activo,
+            c.aplica_isv
      FROM usuarios u
      LEFT JOIN clientes c ON c.usuario_id = u.id
      WHERE u.id = $1
