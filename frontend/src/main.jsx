@@ -1864,33 +1864,29 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   return (
     <>
       <AdminSectionTitle title="Pedidos" subtitle="Gestiona los pedidos recibidos" />
-      <div className="admin-priority-strips-container" style={{ display: 'grid', gap: '6px', marginTop: '12px' }}>
+      <div className="admin-priority-strips-container" style={{ marginTop: '12px' }}>
         <div className="admin-priority-strip warning">
-          <ClipboardList size={17} />
+          <ClipboardList size={13} />
           <span>
-            <strong>{pending} {pending === 1 ? 'pedido pendiente' : 'pedidos pendientes'} por revisar</strong>
-            <small>Marca como 'Preparando' al confirmar inventario y despacho.</small>
+            <strong>{pending} Pendientes</strong>
           </span>
         </div>
         <div className="admin-priority-strip active">
-          <Activity size={17} />
+          <Activity size={13} />
           <span>
-            <strong>{preparing} {preparing === 1 ? 'pedido' : 'pedidos'} en preparación</strong>
-            <small>Cierra el flujo cuando el pedido salga hacia el cliente.</small>
+            <strong>{preparing} Preparando</strong>
           </span>
         </div>
         <div className="admin-priority-strip clear">
-          <Check size={17} />
+          <Check size={13} />
           <span>
-            <strong>{sentToday} {sentToday === 1 ? 'pedido enviado' : 'pedidos enviados'} hoy</strong>
-            <small>Historial de despachos del día de hoy.</small>
+            <strong>{sentToday} Enviados hoy</strong>
           </span>
         </div>
         <div className="admin-priority-strip historic">
-          <Package size={17} />
+          <Package size={13} />
           <span>
-            <strong>{orders.filter(o => o.estado === 'enviado').length} pedidos en total (Historial)</strong>
-            <small>Pedidos enviados en el registro histórico (filtrable abajo).</small>
+            <strong>{orders.filter(o => o.estado === 'enviado').length} Historial</strong>
           </span>
         </div>
       </div>
@@ -1962,9 +1958,21 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
 
               <footer>
                 <span className="admin-ticket">{order.numero}</span>
-                {order.estado !== 'preparando' && order.estado !== 'enviado' && <button className="pill-blue" onClick={() => onState(order.id, 'preparando')}>Preparando</button>}
-                {order.estado !== 'enviado' && <button className="pill-green" onClick={() => onState(order.id, 'enviado')}>Enviado</button>}
-                <button className="pill-red" onClick={() => onDelete(order.id)}>Eliminar</button>
+                <div className="admin-order-actions">
+                  {order.estado !== 'preparando' && order.estado !== 'enviado' && (
+                    <button className="pill-action" onClick={() => onState(order.id, 'preparando')}>
+                      Preparando
+                    </button>
+                  )}
+                  {order.estado !== 'enviado' && (
+                    <button className="pill-action" onClick={() => onState(order.id, 'enviado')}>
+                      Enviado
+                    </button>
+                  )}
+                  <button className="pill-action delete" onClick={() => onDelete(order.id)}>
+                    Eliminar
+                  </button>
+                </div>
               </footer>
             </article>
           );
