@@ -1987,7 +1987,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
             setSelectedYearFilter(e.target.value);
             setSelectedMonthFilter('all');
           }}
-          style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '12px', background: '#fff', fontWeight: 'bold' }}
+          style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)', fontWeight: 'bold' }}
         >
           <option value="all">Todos los años</option>
           {uniqueYears.filter(y => y !== 'all').map(year => (
@@ -1997,7 +1997,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         <select
           value={selectedMonthFilter}
           onChange={(e) => setSelectedMonthFilter(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '12px', background: '#fff', fontWeight: 'bold' }}
+          style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)', fontWeight: 'bold' }}
         >
           {monthsList.map(({ value, label }) => (
             <option key={value} value={value}>{label}</option>

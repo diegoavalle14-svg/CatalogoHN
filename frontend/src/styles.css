@@ -2834,6 +2834,30 @@ button {
   background: #5c141d;
 }
 
+[data-theme="dark"] .history-year-title {
+  color: #f1f2f4;
+  border-bottom-color: #f1f2f4;
+}
+
+[data-theme="dark"] .history-month-title {
+  color: #a7adb7;
+}
+
+[data-theme="dark"] .history-table-card {
+  background: #171b22;
+  border-color: #3b4452;
+}
+
+[data-theme="dark"] .history-header-row,
+[data-theme="dark"] .history-item-row {
+  border-bottom-color: #2f333c;
+}
+
+[data-theme="dark"] .history-ticket {
+  background: #252b34;
+  color: #dce4ef;
+}
+
 [data-theme="dark"] .admin-preview-search,
 [data-theme="dark"] .admin-preview-client-picker,
 [data-theme="dark"] .admin-preview-brands {
