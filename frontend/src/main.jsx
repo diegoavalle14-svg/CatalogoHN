@@ -2102,14 +2102,14 @@ function ImageLightbox({ src, images = [], index = 0, onClose, onIndexChange }) 
       <button className="image-lightbox-close" onClick={onClose} aria-label="Cerrar">
         <X size={22} />
       </button>
-      {canSlide && <button className="image-lightbox-nav prev" type="button" onClick={showPrev} aria-label="Foto anterior">â€¹</button>}
+      {canSlide && <button className="image-lightbox-nav prev" type="button" onClick={showPrev} aria-label="Foto anterior">&lt;</button>}
       <img
         className="image-lightbox-img"
         src={activeSrc}
         alt=""
         onClick={(e) => e.stopPropagation()}
       />
-      {canSlide && <button className="image-lightbox-nav next" type="button" onClick={showNext} aria-label="Foto siguiente">â€º</button>}
+      {canSlide && <button className="image-lightbox-nav next" type="button" onClick={showNext} aria-label="Foto siguiente">&gt;</button>}
       {canSlide && <span className="image-lightbox-count">{activeIndex + 1} / {gallery.length}</span>}
     </div>
   );
@@ -2222,16 +2222,18 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
         </span>
       </div>
 
-      <ClearableSearchInput
-        className="search-box admin-preview-search"
-        iconSize={18}
-        placeholder="Buscar por codigo, marca o categoria..."
-        value={query}
-        onChange={setQuery}
-      />
+      <div className="admin-preview-sticky-tools">
+        <ClearableSearchInput
+          className="search-box admin-preview-search"
+          iconSize={18}
+          placeholder="Buscar por codigo, marca o categoria..."
+          value={query}
+          onChange={setQuery}
+        />
 
-      <CategoryFilterStrip categories={categories || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} className="admin-preview-brands" />
-      {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} className="admin-preview-brands" />}
+        <CategoryFilterStrip categories={categories || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} className="admin-preview-brands" />
+        {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} className="admin-preview-brands" />}
+      </div>
 
       <p className="product-count">{previewProducts.length} productos visibles</p>
 

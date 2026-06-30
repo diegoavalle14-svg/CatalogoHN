@@ -5456,6 +5456,24 @@ button {
   background: rgba(255, 255, 255, .78);
 }
 
+.admin-preview-sticky-tools,
+.admin-filter-bar {
+  position: sticky;
+  top: var(--admin-header-space, 116px);
+  z-index: 12;
+  display: grid;
+  gap: 10px;
+  background: rgba(246, 247, 249, .94);
+  padding-block: 8px;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.admin-preview-sticky-tools {
+  top: 0;
+  margin-inline: -2px;
+}
+
 .admin-preview-client-picker {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -5524,6 +5542,18 @@ button {
 
 .admin-preview-brands .filter-tab-strip {
   padding-inline: 10px;
+}
+
+.admin-preview-brands .filter-tab {
+  min-height: 50px;
+  font-size: 11px;
+  line-height: 1.05;
+}
+
+.admin-preview-brands .brand-filter-section .filter-tab,
+.admin-preview-brands.brand-filter-section .filter-tab {
+  min-height: 46px;
+  font-size: 11px;
 }
 
 .admin-preview-grid {
@@ -7385,13 +7415,33 @@ button {
 }
 
 .image-lightbox-img {
-  max-width: min(90vw, 600px);
-  max-height: 80vh;
+  width: auto;
+  height: auto;
+  max-width: min(86vw, 620px);
+  max-height: min(78vh, 680px);
   object-fit: contain;
   border-radius: 10px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   cursor: default;
   animation: lightboxZoomIn 250ms ease both;
+}
+
+@media (max-width: 560px) {
+  .image-lightbox-img {
+    max-width: calc(100vw - 76px);
+    max-height: calc(100vh - 150px);
+  }
+  .image-lightbox-nav {
+    width: 36px;
+    height: 46px;
+    font-size: 28px;
+  }
+  .image-lightbox-nav.prev {
+    left: 10px;
+  }
+  .image-lightbox-nav.next {
+    right: 10px;
+  }
 }
 
 .product-thumb-wrap {
@@ -7402,17 +7452,20 @@ button {
 
 .product-thumb-wrap > small {
   position: absolute;
-  right: -3px;
-  bottom: -3px;
+  right: -5px;
+  top: -5px;
   display: grid;
   place-items: center;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: #111111;
-  color: var(--yellow);
-  font-size: 10px;
-  font-weight: 900;
+  min-width: 16px;
+  height: 16px;
+  border: 1px solid rgba(17, 17, 17, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .92);
+  color: #5f6672;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(20, 24, 31, .10);
 }
 
 @keyframes lightboxFadeIn {
