@@ -750,6 +750,7 @@ function Catalog({ session, onSessionUpdated }) {
 
       {cartOpen && (
         <CartPanel
+          aplicaIsv={session?.user?.aplica_isv !== false}
           lines={lines}
           total={total}
           confirming={confirming}
@@ -976,8 +977,8 @@ function BrandImageBadge({ brand, label }) {
   );
 }
 
-function CartPanel({ lines, total, confirming, sending, orderError, onClose, onRemove, onQty, onConfirm, onReview, onSend }) {
-  const isv = total * 0.15;
+function CartPanel({ lines, total, confirming, sending, orderError, onClose, onRemove, onQty, onConfirm, onReview, onSend, aplicaIsv = true }) {
+  const isv = aplicaIsv ? (total * 0.15) : 0;
   const grandTotal = total + isv;
 
   return (
@@ -1038,7 +1039,7 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
 
         <footer className="cart-footer">
           <div><span>Subtotal</span><b>{money(total)}</b></div>
-          <div><span>ISV 15%</span><b>{money(isv)}</b></div>
+          {aplicaIsv && <div><span>ISV 15%</span><b>{money(isv)}</b></div>}
           <div className="cart-total"><strong>Total</strong><strong>{money(grandTotal)}</strong></div>
           {confirming && (
             <section className="cart-confirm-box">
