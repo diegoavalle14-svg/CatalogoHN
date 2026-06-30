@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
-import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
+import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
@@ -1775,6 +1775,11 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
 function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [expandedOrders, setExpandedOrders] = useState({});
+
+  const toggleOrder = (orderId) => {
+    setExpandedOrders(current => ({ ...current, [orderId]: !current[orderId] }));
+  };
   const urgentLabel = pending > 0
     ? `${pending} pedido${pending === 1 ? '' : 's'} por revisar`
     : preparing > 0
@@ -1833,24 +1838,58 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
             <span>{orders.length === 0 ? 'Los pedidos apareceran aqui cuando un cliente creado por Kolben haga una compra.' : 'Prueba con otro estado o una busqueda mas amplia.'}</span>
           </div>
         )}
-        {filteredOrders.map((order) => (
-          <article className="admin-order-card" key={order.id}>
-            <div className="admin-order-card-head">
-              <div className="admin-order-main">
-              <span>Pedido</span>
-              <strong>{order.cliente_nombre || 'Cliente mayorista'}</strong>
-              <small>{order.fecha_label || new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })} · {money(order.total)}</small>
-            </div>
-              <b className={`admin-state ${order.estado}`}>{stateLabel(order.estado)}</b>
-            </div>
-            <footer>
-              <span className="admin-ticket">{order.numero}</span>
-              {order.estado !== 'preparando' && order.estado !== 'enviado' && <button className="pill-blue" onClick={() => onState(order.id, 'preparando')}>Preparando</button>}
-              {order.estado !== 'enviado' && <button className="pill-green" onClick={() => onState(order.id, 'enviado')}>Enviado</button>}
-              <button className="pill-red" onClick={() => onDelete(order.id)}>Eliminar</button>
-            </footer>
-          </article>
-        ))}
+        {filteredOrders.map((order) => {
+          const isExpanded = expandedOrders[order.id];
+          return (
+            <article className="admin-order-card" key={order.id}>
+              <div className="admin-order-card-head" onClick={() => toggleOrder(order.id)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <div className="admin-order-main">
+                  <span>Pedido</span>
+                  <strong>{order.cliente_nombre || 'Cliente mayorista'}</strong>
+                  <small>{order.fecha_label || new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })} · {money(order.total)}</small>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <b className={`admin-state ${order.estado}`}>{stateLabel(order.estado)}</b>
+                  {isExpanded ? <ChevronUp size={16} style={{ color: '#888' }} /> : <ChevronDown size={16} style={{ color: '#888' }} />}
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="admin-order-items" style={{ padding: '0 14px 14px', borderTop: '1px solid #f0f0f0', fontSize: '11px', overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #eee', textAlign: 'left', color: '#888', fontWeight: 'bold' }}>
+                        <th style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase' }}>Código</th>
+                        <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
+                        <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase' }}>Suc.</th>
+                        <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase' }}>Cant.</th>
+                        <th style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase' }}>Precio</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(order.items || []).map((item) => (
+                        <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f9f9f9' }}>
+                          <td style={{ padding: '8px 4px 8px 0', fontWeight: '700', fontFamily: 'monospace' }}>{item.sku}</td>
+                          <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
+                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', color: '#555' }}>{item.sucursal || '-'}</td>
+                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>
+                          <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <footer>
+                <span className="admin-ticket">{order.numero}</span>
+                {order.estado !== 'preparando' && order.estado !== 'enviado' && <button className="pill-blue" onClick={() => onState(order.id, 'preparando')}>Preparando</button>}
+                {order.estado !== 'enviado' && <button className="pill-green" onClick={() => onState(order.id, 'enviado')}>Enviado</button>}
+                <button className="pill-red" onClick={() => onDelete(order.id)}>Eliminar</button>
+              </footer>
+            </article>
+          );
+        })}
       </div>
       <h2 className="admin-small-heading">Ranking de clientes</h2>
       <div className="admin-ranking-card">
