@@ -2814,6 +2814,11 @@ button {
   color: #f4f6f8;
 }
 
+[data-theme="dark"] select option {
+  background: #171b22;
+  color: #f4f6f8;
+}
+
 [data-theme="dark"] .admin-product-top button {
   background: #222226;
   border: 1px solid #3a3a40;
