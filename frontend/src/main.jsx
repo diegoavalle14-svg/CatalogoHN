@@ -763,6 +763,7 @@ function Catalog({ session, onSessionUpdated }) {
 function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, onQty, onAdd }) {
   const availableBranches = Array.isArray(branches) ? branches : [];
   const [drafts, setDrafts] = useState({});
+  const [lightboxIndex, setLightboxIndex] = useState(null);
   const currentPrice = Number(product.precio_final || product.precio || 0);
   const oldPrice = Number(product.precio || 0);
   const productImages = cleanProductImages(product.imagenes);
@@ -804,14 +805,15 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
   return (
     <article className="product-card">
       {product.en_promocion && <span className="promo-ribbon">PROMO</span>}
-      <div className="product-image">
+      <button className="product-image" type="button" onClick={() => productImages.length && setLightboxIndex(0)} aria-label={`Ver fotos de ${product.descripcion}`}>
         <SafeImage 
           src={productImages[0]} 
           alt={product.descripcion} 
           fallback={<DefaultProductArtwork product={product} categoryMeta={categoryMeta} />} 
         />
+        {productImages.length > 1 && <span className="photo-count">{productImages.length} fotos</span>}
         <BrandImageBadge brand={brandMeta || product} label={product.marca || brandMeta?.nombre || 'Marca'} />
-      </div>
+      </button>
       <div className="product-body">
         <div className="sku-stock-line">
           <span className="sku-code">{product.sku}</span>
@@ -864,6 +866,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           );
         })}
       </div>
+      <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />
     </article>
   );
 }
@@ -1183,21 +1186,29 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function saveProduct(payload) {
-    let uploadedImageUrl = null;
-    if (payload.imageFile) {
+    let uploadedImageUrls = [];
+    const imageFiles = [
+      ...(Array.isArray(payload.imageFiles) ? payload.imageFiles : []),
+      ...(payload.imageFile ? [payload.imageFile] : [])
+    ].slice(0, 2);
+    if (imageFiles.length) {
       try {
-        const upload = await api.adminUploadImage(session.token, payload.imageFile, 'product');
-        uploadedImageUrl = upload.url;
+        for (const file of imageFiles) {
+          const upload = await api.adminUploadImage(session.token, file, 'product');
+          uploadedImageUrls.push(upload.url);
+        }
       } catch (error) {
-        window.alert(error.message || 'No se pudo subir la imagen');
+        window.alert(error.message || 'No se pudieron subir las imagenes');
         return;
       }
     }
+    const existingImages = cleanProductImages(payload.imagenes).slice(0, Math.max(0, 2 - uploadedImageUrls.length));
     const nextPayload = prepareProductPayload(
       {
         ...payload,
         imageFile: undefined,
-        imagenes: uploadedImageUrl ? [uploadedImageUrl] : payload.imagenes
+        imageFiles: undefined,
+        imagenes: uploadedImageUrls.length ? [...existingImages, ...uploadedImageUrls].slice(0, 2) : existingImages
       },
       products,
       brands,
@@ -1787,7 +1798,7 @@ function ProductPositionInput({ product, onPosition }) {
 function AdminCatalogSection({ products, brands, categories, onNew, onProductEdit, onToggle, onPosition, onDelete, onBrands, onCategories }) {
   const [query, setQuery] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('all');
-  const [lightboxSrc, setLightboxSrc] = useState(null);
+  const [lightbox, setLightbox] = useState(null);
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return (products || []).filter((product) => {
@@ -1828,7 +1839,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
         {filteredProducts.map((product) => (
           <article className={product.visible ? 'admin-product-row' : 'admin-product-row muted'} key={product.id}>
             <div className="admin-product-top">
-              <ProductImageThumb images={product.imagenes} onClick={() => { const src = cleanProductImages(product.imagenes)[0]; if (src) setLightboxSrc(src); }} />
+              <ProductImageThumb images={product.imagenes} onClick={() => { const images = cleanProductImages(product.imagenes); if (images.length) setLightbox({ images, index: 0 }); }} />
               <div>
                 <span className="sku-code">{product.sku}</span>
                 <small>{[product.marca, product.specs?.aplicacion || product.descripcion].filter(Boolean).join(' · ')}</small>
@@ -1847,7 +1858,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
         ))}
       </div>
       <small className="admin-muted-note">{brands.length} marcas · {categories.length} categorias</small>
-      <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+      <ImageLightbox images={lightbox?.images || []} index={lightbox?.index ?? null} onClose={() => setLightbox(null)} onIndexChange={(index) => setLightbox((current) => current ? { ...current, index } : current)} />
     </>
   );
 }
@@ -2045,29 +2056,50 @@ function BrandFilterStrip({ brands = [], value, onChange, className = '' }) {
 }
 
 function ProductImageThumb({ images, onClick }) {
-  const image = cleanProductImages(images)[0];
+  const cleanImages = cleanProductImages(images);
+  const image = cleanImages[0];
   const fallback = (
     <span className="product-thumb-fallback" aria-hidden="true">
       <PackageSearch size={20} strokeWidth={1.8} />
     </span>
   );
   if (!image) return fallback;
-  return <SafeImage src={image} fallback={fallback} alt="" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined} />;
+  return (
+    <span className="product-thumb-wrap">
+      <SafeImage src={image} fallback={fallback} alt="" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined} />
+      {cleanImages.length > 1 && <small>{cleanImages.length}</small>}
+    </span>
+  );
 }
 
-function ImageLightbox({ src, onClose }) {
-  if (!src) return null;
+function ImageLightbox({ src, images = [], index = 0, onClose, onIndexChange }) {
+  const gallery = cleanProductImages(images.length ? images : (src ? [src] : []));
+  const activeIndex = Math.min(Math.max(Number(index) || 0, 0), Math.max(gallery.length - 1, 0));
+  const activeSrc = gallery[activeIndex];
+  const canSlide = gallery.length > 1;
+  const showPrev = (event) => {
+    event.stopPropagation();
+    onIndexChange?.((activeIndex - 1 + gallery.length) % gallery.length);
+  };
+  const showNext = (event) => {
+    event.stopPropagation();
+    onIndexChange?.((activeIndex + 1) % gallery.length);
+  };
+  if (!activeSrc) return null;
   return (
     <div className="image-lightbox-backdrop" onClick={onClose}>
       <button className="image-lightbox-close" onClick={onClose} aria-label="Cerrar">
         <X size={22} />
       </button>
+      {canSlide && <button className="image-lightbox-nav prev" type="button" onClick={showPrev} aria-label="Foto anterior">‹</button>}
       <img
         className="image-lightbox-img"
-        src={src}
+        src={activeSrc}
         alt=""
         onClick={(e) => e.stopPropagation()}
       />
+      {canSlide && <button className="image-lightbox-nav next" type="button" onClick={showNext} aria-label="Foto siguiente">›</button>}
+      {canSlide && <span className="image-lightbox-count">{activeIndex + 1} / {gallery.length}</span>}
     </div>
   );
 }
@@ -2483,7 +2515,11 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <label>Stock actual<input type="number" min="0" step="1" value={form.stock_actual ?? ''} onChange={(event) => update('stock_actual', event.target.value)} /></label>
               <label>Stock mínimo<input type="number" min="0" step="1" value={form.stock_minimo ?? ''} onChange={(event) => update('stock_minimo', event.target.value)} /></label>
             </div>
-            <label>Foto del producto<input type="file" accept="image/*" onChange={(event) => update('imageFile', event.target.files?.[0])} /></label>
+            <label>
+              Fotos del producto
+              <input type="file" accept="image/*" multiple onChange={(event) => update('imageFiles', Array.from(event.target.files || []).slice(0, 2))} />
+              <small>{cleanProductImages(form.imagenes).length ? `${cleanProductImages(form.imagenes).length} foto(s) guardada(s). Al subir nuevas, se conservaran hasta 2.` : 'Puedes subir hasta 2 fotos.'}</small>
+            </label>
           </div>
         )}
 

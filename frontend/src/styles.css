@@ -815,7 +815,11 @@ button {
   display: grid;
   place-items: center;
   overflow: hidden;
+  width: 100%;
+  border: 0;
   background: #f0f0f0;
+  cursor: zoom-in;
+  padding: 0;
 }
 
 .product-image img {
@@ -833,7 +837,19 @@ button {
 }
 
 .photo-count {
-  display: none;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  border-radius: 4px;
+  background: rgba(17, 17, 17, .72);
+  color: #fff;
+  padding: 0 7px;
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .photo-count.empty {
@@ -926,6 +942,7 @@ button {
 .cart-sku {
   display: inline-flex;
   align-items: center;
+  min-height: 26px;
   max-width: 100%;
   border-radius: 3px;
   background: #050505;
@@ -940,7 +957,7 @@ button {
 .sku-stock-line {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 7px;
   min-width: 0;
 }
@@ -1002,6 +1019,7 @@ button {
 
 .product-card h3 {
   color: #262626;
+  font-size: 16.5px;
   font-weight: 900;
   display: -webkit-box;
   overflow: hidden;
@@ -1147,7 +1165,7 @@ button {
 .catalog-toast {
   position: fixed;
   left: 50%;
-  bottom: 18px;
+  top: 24px;
   z-index: 95;
   width: min(340px, calc(100% - 28px));
   transform: translateX(-50%);
@@ -1159,7 +1177,7 @@ button {
   text-align: center;
   font-size: 13px;
   font-weight: 900;
-  animation: toastSlideUp 2200ms ease forwards;
+  animation: toastSlideDown 2200ms ease forwards;
 }
 
 .cart-overlay {
@@ -4371,6 +4389,7 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 }
 
 .admin-title-row > div:last-child {
@@ -4378,7 +4397,8 @@ button {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .admin-title-row button,
@@ -4388,6 +4408,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: 4px;
+  flex: 0 0 auto;
   border: 0;
   border-radius: 7px;
   padding: 0 10px;
@@ -6248,10 +6269,10 @@ button {
   }
 }
 
-@keyframes toastSlideUp {
+@keyframes toastSlideDown {
   0% {
     opacity: 0;
-    transform: translate(-50%, 28px);
+    transform: translate(-50%, -28px);
   }
   12%,
   82% {
@@ -6260,7 +6281,7 @@ button {
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, 18px);
+    transform: translate(-50%, -28px);
   }
 }
 
@@ -6740,10 +6761,14 @@ button {
     font-size: 10px;
   }
 
-  .product-card h3,
   .product-card p {
     font-size: 10px;
     line-height: 1.28;
+  }
+
+  .product-card h3 {
+    font-size: 16.5px;
+    line-height: 1.08;
   }
 
   .stock-pill {
@@ -7280,6 +7305,45 @@ button {
   transform: scale(1.08);
 }
 
+.image-lightbox-nav {
+  position: fixed;
+  top: 50%;
+  z-index: 10000;
+  width: 44px;
+  height: 54px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .16);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.image-lightbox-nav.prev {
+  left: 18px;
+}
+
+.image-lightbox-nav.next {
+  right: 18px;
+}
+
+.image-lightbox-count {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 10000;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .16);
+  color: #ffffff;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .image-lightbox-img {
   max-width: min(90vw, 600px);
   max-height: 80vh;
@@ -7288,6 +7352,27 @@ button {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   cursor: default;
   animation: lightboxZoomIn 250ms ease both;
+}
+
+.product-thumb-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.product-thumb-wrap > small {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #111111;
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 900;
 }
 
 @keyframes lightboxFadeIn {
@@ -7301,6 +7386,27 @@ button {
 }
 
 @media (max-width: 560px) {
+  .admin-title-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .admin-title-row > div:last-child {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .admin-title-row button,
+  .admin-new-button {
+    flex: 1 1 0;
+    width: 100%;
+    min-width: 0;
+    min-height: 28px;
+    padding: 0 6px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
   .admin-product-list {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 6px !important;
@@ -7380,4 +7486,3 @@ button {
     font-size: 9px !important;
   }
 }
-
