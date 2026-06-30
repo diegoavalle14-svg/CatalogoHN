@@ -58,7 +58,6 @@ CREATE TABLE clientes (
     empresa_id INT NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
     condicion_credito VARCHAR(50) DEFAULT 'Contado',
     activo BOOLEAN DEFAULT TRUE,
-    aplica_isv BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_usuario_cliente UNIQUE (usuario_id)

@@ -164,10 +164,10 @@ router.post('/admin/clients', authenticate, requireRole('admin', 'superadmin'), 
       [req.tenant.id, payload.nombre, payload.username, payload.email, passwordHash]
     );
     const customerResult = await client.query(
-      `INSERT INTO clientes (usuario_id, empresa_id, condicion_credito, activo, aplica_isv)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO clientes (usuario_id, empresa_id, condicion_credito, activo)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [userResult.rows[0].id, req.tenant.id, payload.condicion_credito, payload.activo, payload.aplica_isv]
+      [userResult.rows[0].id, req.tenant.id, payload.condicion_credito, payload.activo]
     );
     await assignClientPriceList(client, req.tenant.id, customerResult.rows[0].id, payload.lista_precio_id);
     await replaceClientBranches(client, customerResult.rows[0].id, payload.sucursales);
@@ -228,10 +228,9 @@ router.patch('/admin/clients/:id', authenticate, requireRole('admin', 'superadmi
       `UPDATE clientes
        SET condicion_credito = COALESCE($1, condicion_credito),
            activo = COALESCE($2, activo),
-           aplica_isv = COALESCE($3, aplica_isv),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4 AND empresa_id = $5`,
-      [payload.condicion_credito, payload.activo, payload.aplica_isv, req.params.id, req.tenant.id]
+       WHERE id = $3 AND empresa_id = $4`,
+      [payload.condicion_credito, payload.activo, req.params.id, req.tenant.id]
     );
     if (payload.lista_precio_id !== undefined) {
       await assignClientPriceList(client, req.tenant.id, req.params.id, payload.lista_precio_id);
@@ -939,7 +938,6 @@ async function queryAdminClients(tenantId) {
             c.usuario_id,
             c.condicion_credito,
             c.activo,
-            c.aplica_isv,
             c.created_at,
             c.updated_at,
             u.nombre,
@@ -997,7 +995,6 @@ function normalizeClientPayload(input, partial = false) {
     password: normalizePassword(input.password),
     condicion_credito: input.condicion_credito === undefined && partial ? null : String(input.condicion_credito || input.credito || 'Contado').trim(),
     activo: input.activo === undefined ? (partial ? null : true) : Boolean(input.activo),
-    aplica_isv: input.aplica_isv === undefined ? (partial ? null : true) : Boolean(input.aplica_isv),
     lista_precio_id: input.lista_precio_id === undefined ? undefined : normalizeId(input.lista_precio_id, true),
     sucursales: input.sucursales
   };
