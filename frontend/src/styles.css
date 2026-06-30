@@ -2715,15 +2715,24 @@ button {
   color: #c3c9d2;
 }
 
-[data-theme="dark"] .client-state.on {
-  background: #102a1f;
-  color: #7ee0b2;
-}
-
 [data-theme="dark"] .client-row-button {
   border-color: #303642;
   background: #20242d;
   color: #f3f5f8;
+}
+
+[data-theme="dark"] .client-row-button:hover {
+  background: #2b313d;
+}
+
+[data-theme="dark"] .client-row-button.danger {
+  color: #ff9eab;
+  border-color: #5c141d;
+  background: #3f181d;
+}
+
+[data-theme="dark"] .client-row-button.danger:hover {
+  background: #5c141d;
 }
 
 [data-theme="dark"] .admin-client-detail {
@@ -5355,6 +5364,21 @@ button {
   padding: 0 9px;
   font-size: 11px;
   font-weight: 900;
+  cursor: pointer;
+}
+
+.client-row-button:hover {
+  background: #eaecf0;
+}
+
+.client-row-button.danger {
+  color: var(--danger);
+  border-color: #fee8ea;
+  background: #fdf2f2;
+}
+
+.client-row-button.danger:hover {
+  background: #fde8e8;
 }
 
 .admin-client-detail {
@@ -5400,20 +5424,7 @@ button {
   color: #888;
 }
 
-.client-state {
-  border: 0;
-  border-radius: 99px;
-  background: #eeeeee;
-  color: #888;
-  padding: 5px 9px;
-  font-size: 11px;
-  font-weight: 900;
-}
 
-.client-state.on {
-  background: #dbf5ea;
-  color: #008355;
-}
 
 .admin-price-card {
   margin-top: 16px;

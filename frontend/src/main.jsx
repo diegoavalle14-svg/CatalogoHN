@@ -2274,15 +2274,15 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
               <button type="button" className="client-row-button" onClick={() => setExpandedClientIds((current) => ({ ...current, [client.id]: !current[client.id] }))}>
                 {isExpanded ? 'Ocultar' : 'Ver detalle'}
               </button>
-              <button type="button" onClick={() => onToggle(client)} className={client.activo ? 'client-state on' : 'client-state'}>{client.activo ? 'Activo' : 'Inactivo'}</button>
-              <button type="button" className="danger-icon-button" onClick={() => onDelete(client)}>Eliminar</button>
+              <button type="button" className="client-row-button" onClick={() => onToggle(client)}>
+                {client.activo ? 'Desactivar' : 'Activar'}
+              </button>
+              <button type="button" className="client-row-button danger" onClick={() => onDelete(client)}>Eliminar</button>
             </span>
             {isExpanded && (
               <div className="admin-client-detail">
-                <span><b>Lista</b>{client.lista}</span>
-                <span><b>Crédito</b>{client.credito}</span>
-                <span><b>Tipo</b>{client.tipo}</span>
-                <span><b>Acceso</b>{client.acceso}</span>
+                <span><b>Lista de Precios</b>{client.lista || 'General'}</span>
+                <span><b>Términos de Crédito</b>{client.credito || 'Contado'}</span>
               </div>
             )}
           </article>
