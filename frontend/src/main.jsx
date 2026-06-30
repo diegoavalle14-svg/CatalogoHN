@@ -3048,18 +3048,20 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
               <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}><ChevronDown size={14} /></button>
             </div>
           )}
-          <button onClick={() => onSave({ ...item, nombre: window.prompt(`Editar ${label}`, item.nombre) || item.nombre })}>Editar</button>
-          {supportsImage && <button onClick={() => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = () => {
-              const file = input.files?.[0];
-              if (file) onSave({ ...item, [label === 'Marca' ? 'logoFile' : 'imageFile']: file });
-            };
-            input.click();
-          }}>Imagen</button>}
-          <button onClick={() => onDelete(item.id)}>Eliminar</button>
+          <div className="admin-entity-actions">
+            <button onClick={() => onSave({ ...item, nombre: window.prompt(`Editar ${label}`, item.nombre) || item.nombre })}>Editar</button>
+            {supportsImage && <button onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = () => {
+                const file = input.files?.[0];
+                if (file) onSave({ ...item, [label === 'Marca' ? 'logoFile' : 'imageFile']: file });
+              };
+              input.click();
+            }}>Imagen</button>}
+            <button onClick={() => onDelete(item.id)}>Eliminar</button>
+          </div>
         </div>
       ))}
     </div>

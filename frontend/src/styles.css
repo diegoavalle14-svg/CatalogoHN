@@ -6009,6 +6009,7 @@ button {
   width: min(560px, 100%);
   max-height: 86vh;
   overflow-y: auto;
+  overflow-x: hidden;
   border-radius: 16px 16px 0 0;
   background: #fff;
   padding: 0 16px 16px;
@@ -6571,12 +6572,18 @@ button {
 
 .admin-entity-row {
   display: grid;
-  grid-template-columns: auto 1fr repeat(4, auto);
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 8px;
   border: 1px solid #eeeeee;
   border-radius: 8px;
   padding: 10px;
+}
+
+.admin-entity-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .admin-entity-row > strong:first-child {
@@ -8077,4 +8084,27 @@ button {
   border-radius: 16px !important;
   width: min(560px, 100%);
   max-height: 80vh;
+}
+
+@media (max-width: 480px) {
+  .admin-entity-row {
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+  }
+  .admin-entity-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    width: 100%;
+    margin-top: 4px;
+    border-top: 1px dashed var(--line);
+    padding-top: 8px;
+  }
+  .admin-entity-actions button {
+    flex: 1;
+    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+  }
 }
