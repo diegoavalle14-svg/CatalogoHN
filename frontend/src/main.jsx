@@ -636,8 +636,8 @@ function Catalog({ session, onSessionUpdated }) {
   }, [data]);
 
   const lines = useMemo(() => flattenCart(cart, data), [cart, data]);
-  const total = lines.reduce((sum, line) => sum + line.cantidad * line.precio_unitario, 0);
-  const cartCount = lines.reduce((sum, line) => sum + line.cantidad, 0);
+  const total = lines.reduce((sum, line) => sum + (Number(line.cantidad) || 0) * line.precio_unitario, 0);
+  const cartCount = lines.reduce((sum, line) => sum + (Number(line.cantidad) || 0), 0);
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('catalog:cart-count', { detail: { count: cartCount } }));
@@ -653,8 +653,8 @@ function Catalog({ session, onSessionUpdated }) {
     setCart((current) => {
       const key = String(product.id);
       const nextProduct = { ...(current[key] || {}) };
-      const value = Math.max(0, Number(qty) || 0);
-      if (value === 0) delete nextProduct[branchId];
+      const value = qty === '' ? '' : Math.max(0, Number(qty) || 0);
+      if (value === 0 && qty !== '') delete nextProduct[branchId];
       else nextProduct[branchId] = value;
 
       const next = { ...current };
@@ -673,7 +673,9 @@ function Catalog({ session, onSessionUpdated }) {
     setSending(true);
     setOrderError('');
     try {
-      const payload = await api.createOrder(session.token, lines);
+      const validLines = lines.filter((line) => Number(line.cantidad) > 0);
+      if (!validLines.length) throw new Error('El pedido no tiene productos con cantidades válidas.');
+      const payload = await api.createOrder(session.token, validLines);
       clearCart();
       setCart({});
       setConfirming(false);
@@ -4080,7 +4082,7 @@ function flattenCart(cart, data) {
         descripcion: product.descripcion,
         imagen: cleanProductImages(product.imagenes)[0],
         sucursal: branch?.nombre || 'Sucursal',
-        cantidad: Number(cantidad),
+        cantidad: cantidad === '' ? '' : Number(cantidad),
         precio_unitario: Number(product.precio_final || product.precio || 0)
       };
     });
