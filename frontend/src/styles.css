@@ -1370,6 +1370,16 @@ button {
   font-weight: 700;
 }
 
+.cart-stock-label {
+  margin-right: auto;
+  color: #888;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: #f4f4f4;
+}
+
 .cart-line-main input {
   width: 42px;
   height: 29px;

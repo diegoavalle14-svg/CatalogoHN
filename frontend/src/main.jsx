@@ -645,8 +645,13 @@ function Catalog({ session, onSessionUpdated }) {
 
   useEffect(() => {
     const openCart = () => setCartOpen(true);
+    const handleToast = (e) => showToast(e.detail);
     window.addEventListener('catalog:open-cart', openCart);
-    return () => window.removeEventListener('catalog:open-cart', openCart);
+    window.addEventListener('catalog:toast', handleToast);
+    return () => {
+      window.removeEventListener('catalog:open-cart', openCart);
+      window.removeEventListener('catalog:toast', handleToast);
+    };
   }, []);
 
   function updateQty(product, branchId, qty) {
@@ -786,9 +791,25 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
       return;
     }
     const next = Math.max(0, Number(value) || 0);
+    
+    let otherTotal = 0;
+    availableBranches.forEach(b => {
+      if (b.id !== branchId) {
+        otherTotal += (Number(drafts[b.id]) || 0) + (Number(quantities[b.id]) || 0);
+      }
+    });
+    const inCart = Number(quantities[branchId]) || 0;
+    const maxAllowed = stock.stock > 0 ? Math.max(0, stock.stock - otherTotal - inCart) : undefined;
+    
+    let finalVal = next;
+    if (maxAllowed !== undefined && next > maxAllowed) {
+      finalVal = maxAllowed;
+      window.dispatchEvent(new CustomEvent('catalog:toast', { detail: `Límite: Solo hay ${stock.stock} disponibles en total` }));
+    }
+
     setDrafts((current) => ({
       ...current,
-      [branchId]: stock.stock > 0 ? Math.min(next, stock.stock) : next
+      [branchId]: finalVal
     }));
   }
 
@@ -947,7 +968,10 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
               <button type="button" onClick={onClose}>Volver al catálogo</button>
             </div>
           )}
-          {lines.map((line) => (
+          {lines.map((line) => {
+            const otherTotal = lines.filter(l => l.producto_id === line.producto_id && l.sucursal_id !== line.sucursal_id).reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
+            const maxAllowed = line.stock_actual > 0 ? Math.max(0, line.stock_actual - otherTotal) : undefined;
+            return (
             <div className="cart-line" key={`${line.producto_id}-${line.sucursal_id}`}>
               <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
               <div className="cart-line-main">
@@ -955,12 +979,21 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                 <strong className="cart-line-title">{line.descripcion}</strong>
                 <small className="cart-branch-label">Sucursal: {line.sucursal}</small>
                 <label>
+                  {line.stock_actual > 0 && <span className="cart-stock-label">Stock {line.stock_actual}</span>}
                   Cant.
                   <input
                     type="number"
                     min="1"
+                    max={maxAllowed}
                     value={line.cantidad}
-                    onChange={(event) => onQty({ id: line.producto_id }, line.sucursal_id, event.target.value)}
+                    onChange={(event) => {
+                       let val = event.target.value;
+                       if (val !== '' && maxAllowed !== undefined && Number(val) > maxAllowed) {
+                           val = maxAllowed;
+                           window.dispatchEvent(new CustomEvent('catalog:toast', { detail: `Límite: Solo hay ${line.stock_actual} disponibles en total` }));
+                       }
+                       onQty({ id: line.producto_id }, line.sucursal_id, val);
+                    }}
                   />
                 </label>
                 <strong className="cart-line-total">{money(line.precio_unitario * line.cantidad)}</strong>
@@ -969,7 +1002,8 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                 <X size={18} />
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <footer className="cart-footer">
