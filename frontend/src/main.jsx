@@ -2677,6 +2677,12 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const [saving, setSaving] = useState(false);
   const [branchDraft, setBranchDraft] = useState({ nombre: '', direccion: '' });
   const [customSubnameMode, setCustomSubnameMode] = useState(() => Boolean(editor.value?.subnombre && !SITE_SUBNAME_OPTIONS.includes(editor.value.subnombre)));
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
   const update = (key, value) => {
     setFormFeedback(null);
     setForm((current) => ({ ...current, [key]: value }));
@@ -2773,8 +2779,9 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     }
   }
 
+  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories';
   return (
-    <div className="admin-modal-backdrop">
+    <div className={`admin-modal-backdrop ${isCenteredModal ? 'modal-centered' : ''}`}>
       <section className="admin-modal">
         <header><h2>{editor.title}</h2><button onClick={onClose}><X size={18} /></button></header>
 
@@ -3037,8 +3044,8 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
           <strong>{item.nombre}</strong>
           {supportsOrdering && (
             <div className="admin-entity-order">
-              <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} aria-label={`Subir ${item.nombre}`}>â†‘</button>
-              <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}>â†“</button>
+              <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} aria-label={`Subir ${item.nombre}`}><ChevronUp size={14} /></button>
+              <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}><ChevronDown size={14} /></button>
             </div>
           )}
           <button onClick={() => onSave({ ...item, nombre: window.prompt(`Editar ${label}`, item.nombre) || item.nombre })}>Editar</button>

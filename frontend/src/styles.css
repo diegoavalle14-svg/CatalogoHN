@@ -8067,3 +8067,14 @@ button {
     font-size: 9px !important;
   }
 }
+
+.admin-modal-backdrop.modal-centered {
+  place-items: center !important;
+  padding: 16px;
+}
+
+.admin-modal-backdrop.modal-centered .admin-modal {
+  border-radius: 16px !important;
+  width: min(560px, 100%);
+  max-height: 80vh;
+}
