@@ -2223,6 +2223,9 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
       </div>
 
       <div className="admin-preview-sticky-tools">
+        <CategoryFilterStrip categories={categories || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} className="admin-preview-brands" />
+        {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} className="admin-preview-brands" />}
+
         <ClearableSearchInput
           className="search-box admin-preview-search"
           iconSize={18}
@@ -2230,9 +2233,6 @@ function AdminCustomerPreview({ tenant, products, clients = [], priceLists = [],
           value={query}
           onChange={setQuery}
         />
-
-        <CategoryFilterStrip categories={categories || []} value={category} onChange={(value) => { setCategory(value); setBrand('all'); }} className="admin-preview-brands" />
-        {category !== 'all' && <BrandFilterStrip brands={categoryBrands} value={brand} onChange={setBrand} className="admin-preview-brands" />}
       </div>
 
       <p className="product-count">{previewProducts.length} productos visibles</p>
