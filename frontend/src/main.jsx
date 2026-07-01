@@ -774,7 +774,6 @@ function Catalog({ session, onSessionUpdated }) {
 function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, onQty, onAdd, enableLightbox = true }) {
   const availableBranches = Array.isArray(branches) ? branches : [];
   const [drafts, setDrafts] = useState({});
-  const [globalDraft, setGlobalDraft] = useState('');
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const currentPrice = Number(product.precio_final || product.precio || 0);
   const oldPrice = Number(product.precio || 0);
@@ -821,59 +820,16 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
     setDraft(branchId, currentVal + delta);
   }
 
-  function addBranch(branchId) {
+  function addMultipleBranches() {
     if (!canOrder) return;
-    const draftNum = Number(draftFor(branchId)) || 0;
-    if (draftNum <= 0) return;
-    const nextQty = Number(quantities[branchId] || 0) + draftNum;
-    onAdd(product, branchId, nextQty);
-    setDraft(branchId, '');
-  }
-
-  const hasAnyDrafts = availableBranches.some((b) => (Number(draftFor(b.id)) || 0) > 0);
-
-  function setGlobalDraftValue(value) {
-    if (value === '') {
-      setGlobalDraft('');
-      return;
-    }
-    const next = Math.max(0, Number(value) || 0);
-    const branchCount = availableBranches.length;
-    if (branchCount === 0) return;
-
-    let currentTotalInCart = 0;
-    availableBranches.forEach(branch => {
-       currentTotalInCart += (Number(quantities[branch.id]) || 0);
-    });
-
-    let finalVal = next;
-    const newTotal = currentTotalInCart + (next * branchCount);
-    
-    if (stock.stock > 0 && newTotal > stock.stock) {
-      const remaining = Math.max(0, stock.stock - currentTotalInCart);
-      const maxPerBranch = Math.floor(remaining / branchCount);
-      finalVal = maxPerBranch;
-      window.dispatchEvent(new CustomEvent('catalog:toast', { detail: `Límite: Quedan ${stock.stock} unidades (máx. ${maxPerBranch} en cada una)` }));
-    }
-
-    setGlobalDraft(finalVal);
-  }
-
-  function stepGlobalDraft(delta) {
-    if (!canOrder) return;
-    const currentVal = Number(globalDraft) || 0;
-    setGlobalDraftValue(currentVal + delta);
-  }
-
-  function addGlobalDraft() {
-    if (!canOrder) return;
-    const qty = Number(globalDraft) || 0;
-    if (qty <= 0) return;
+    const branchesToAdd = availableBranches.filter((b) => (Number(draftFor(b.id)) || 0) > 0);
+    if (branchesToAdd.length === 0) return;
 
     let first = true;
-    availableBranches.forEach((branch) => {
+    branchesToAdd.forEach((branch) => {
       const branchId = branch.id;
-      const nextQty = (Number(quantities[branchId]) || 0) + qty;
+      const draftNum = Number(draftFor(branchId)) || 0;
+      const nextQty = (Number(quantities[branchId]) || 0) + draftNum;
       if (first) {
         onAdd(product, branchId, nextQty);
         first = false;
@@ -881,8 +837,13 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
         onQty(product, branchId, nextQty);
       }
     });
-    setGlobalDraft('');
+
+    availableBranches.forEach((branch) => {
+      setDraft(branch.id, '');
+    });
   }
+
+  const hasAnyDrafts = availableBranches.some((b) => (Number(draftFor(b.id)) || 0) > 0);
 
   return (
     <article className="product-card">
@@ -941,31 +902,13 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
                 />
                 <button type="button" onClick={() => stepDraft(branchId, 1)} disabled={!canOrder || (stock.stock > 0 && (Number(draftFor(branchId)) || 0) >= stock.stock)} aria-label={`Sumar cantidad para ${branchLabel}`}>+</button>
               </div>
-              <button className="add-to-cart-button" type="button" onClick={() => addBranch(branchId)} disabled={!canOrder || (Number(draftFor(branchId)) || 0) <= 0}>
-                {isOutOfStock ? 'Agotado' : '+ Agregar'}
-              </button>
             </div>
           );
         })}
-        {availableBranches.length > 1 && (
-          <div className="product-cart-control global-control" style={{ borderTop: '2px dashed #cfcfcf', marginTop: '4px', paddingTop: '10px' }}>
-            <span className="branch-code" title="Todas las sucursales">*</span>
-            <div className="quantity-stepper" aria-label={`Cantidad para todas las sucursales`}>
-              <button type="button" onClick={() => stepGlobalDraft(-1)} disabled={!canOrder || (Number(globalDraft) || 0) <= 0}>-</button>
-              <input
-                type="number"
-                min="0"
-                placeholder="0"
-                inputMode="numeric"
-                value={globalDraft}
-                disabled={!canOrder}
-                onChange={(event) => setGlobalDraftValue(event.target.value)}
-                aria-label={`Cantidad para todas las sucursales`}
-              />
-              <button type="button" onClick={() => stepGlobalDraft(1)} disabled={!canOrder || (stock.stock > 0 && stock.stock <= availableBranches.reduce((sum, b) => sum + (Number(quantities[b.id])||0), 0) + ((Number(globalDraft)||0) * availableBranches.length))}>+</button>
-            </div>
-            <button className="add-to-cart-button" type="button" onClick={addGlobalDraft} disabled={!canOrder || (Number(globalDraft) || 0) <= 0}>
-              {isOutOfStock ? 'Agotado' : '+ Todas'}
+        {availableBranches.length > 0 && (
+          <div className="product-cart-control-actions" style={{ borderTop: '2px dashed #cfcfcf', marginTop: '4px', paddingTop: '10px' }}>
+            <button className="add-to-cart-button global-add" type="button" onClick={addMultipleBranches} disabled={!canOrder || !hasAnyDrafts}>
+              {isOutOfStock ? 'Agotado' : '+ Agregar'}
             </button>
           </div>
         )}
