@@ -88,7 +88,7 @@ router.post('/v1/orders', requireApiKey('orders:write'), async (req, res) => {
     await client.query('BEGIN');
 
     const customer = await client.query(
-      `SELECT c.id, c.empresa_id, c.activo, u.nombre AS cliente_nombre
+      `SELECT c.id, c.empresa_id, c.activo, c.aplica_isv, u.nombre AS cliente_nombre
        FROM clientes c
        JOIN usuarios u ON u.id = c.usuario_id
        WHERE c.id = $1
@@ -168,8 +168,9 @@ router.post('/v1/orders', requireApiKey('orders:write'), async (req, res) => {
       }
     }
 
+    const aplicaIsv = customer.rows[0].aplica_isv === true;
     const subtotal = validatedItems.reduce((sum, item) => sum + item.precio_unitario * item.cantidad, 0);
-    const isv = subtotal * 0.15;
+    const isv = aplicaIsv ? subtotal * 0.15 : 0;
     const total = subtotal + isv;
     const numero = `PED-${Date.now().toString().slice(-6)}`;
     const order = await client.query(

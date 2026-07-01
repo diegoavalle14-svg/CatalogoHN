@@ -202,8 +202,14 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
         }
       }
 
+      const clientRes = await created.query(
+        `SELECT aplica_isv FROM clientes WHERE id = $1 AND empresa_id = $2`,
+        [req.user.cliente_id, req.tenant.id]
+      );
+      const aplicaIsv = clientRes.rows[0]?.aplica_isv === true;
+
       const subtotal = validatedItems.reduce((sum, item) => sum + item.precio_unitario * item.cantidad, 0);
-      const isv = subtotal * 0.15;
+      const isv = aplicaIsv ? subtotal * 0.15 : 0;
       const total = subtotal + isv;
       const numero = `PED-${Date.now().toString().slice(-6)}`;
       const order = await created.query(
