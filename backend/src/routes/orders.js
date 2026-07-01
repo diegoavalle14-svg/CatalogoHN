@@ -102,13 +102,10 @@ router.get('/orders', authenticate, async (req, res) => {
 
     const payload = orders.rows.map((order) => {
       const orderItems = items.rows.filter((item) => item.pedido_id === order.id);
-      const subtotal = orderItems.reduce((sum, item) => sum + Number(item.precio_unitario) * Number(item.cantidad), 0);
-      const isv = order.aplica_isv === true ? subtotal * 0.15 : 0;
-      const total = subtotal + isv;
       return {
         ...order,
-        isv,
-        total,
+        isv: Number(order.isv) || 0,
+        total: Number(order.total) || 0,
         items: orderItems
       };
     });
