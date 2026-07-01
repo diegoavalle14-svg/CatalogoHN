@@ -81,7 +81,7 @@ router.get('/orders', authenticate, async (req, res) => {
     }
 
     const orders = await db.query(
-      `SELECT p.*, u.nombre AS cliente_nombre
+      `SELECT p.*, u.nombre AS cliente_nombre, c.aplica_isv
        FROM pedidos p
        JOIN clientes c ON c.id = p.cliente_id
        JOIN usuarios u ON u.id = c.usuario_id
@@ -100,10 +100,18 @@ router.get('/orders', authenticate, async (req, res) => {
       [req.tenant.id]
     );
 
-    const payload = orders.rows.map((order) => ({
-      ...order,
-      items: items.rows.filter((item) => item.pedido_id === order.id)
-    }));
+    const payload = orders.rows.map((order) => {
+      const orderItems = items.rows.filter((item) => item.pedido_id === order.id);
+      const subtotal = orderItems.reduce((sum, item) => sum + Number(item.precio_unitario) * Number(item.cantidad), 0);
+      const isv = order.aplica_isv === true ? subtotal * 0.15 : 0;
+      const total = subtotal + isv;
+      return {
+        ...order,
+        isv,
+        total,
+        items: orderItems
+      };
+    });
 
     res.json({ pedidos: payload });
   } catch (error) {
