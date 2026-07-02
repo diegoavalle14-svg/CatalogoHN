@@ -880,8 +880,8 @@ button {
 }
 
 .product-image img {
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 90%;
   object-fit: contain;
 }
 
@@ -7303,8 +7303,9 @@ button {
   }
 
   .product-image img {
-    width: min(84%, 118px);
-    height: min(84%, 102px);
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
   }
 
   .sku-code,
