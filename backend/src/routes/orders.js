@@ -281,10 +281,16 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
 
 router.put('/orders/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const { items } = req.body;
+  console.log('[DEBUG] PUT /orders/:id - items received:', items);
+  
   if (!Array.isArray(items) || items.length === 0) {
+    console.log('[DEBUG] Validation failed: items is not an array or empty');
     return res.status(400).json({ message: 'El pedido debe tener al menos un producto' });
   }
-  if (items.some((item) => !Number.isInteger(Number(item.cantidad)) || Number(item.cantidad) <= 0 || !item.id)) {
+  
+  const invalidItem = items.find((item) => !Number.isInteger(Number(item.cantidad)) || Number(item.cantidad) <= 0 || !item.id);
+  if (invalidItem) {
+    console.log('[DEBUG] Validation failed: invalid item:', invalidItem);
     return res.status(400).json({ message: 'Líneas del pedido inválidas' });
   }
 
@@ -298,18 +304,22 @@ router.put('/orders/:id', authenticate, requireRole('admin', 'superadmin'), asyn
       );
       const order = orderRes.rows[0];
       if (!order) {
+        console.log('[DEBUG] Order not found:', req.params.id, req.tenant.id);
         return res.status(404).json({ message: 'Pedido no encontrado' });
       }
       if (order.estado !== 'pendiente') {
+        console.log('[DEBUG] Order state is not pendiente:', order.estado);
         return res.status(400).json({ message: 'Solo se pueden editar pedidos en estado pendiente' });
       }
 
       // Update the items in the order
       for (const item of items) {
-        await client.query(
-          'UPDATE pedido_items SET cantidad = $1 WHERE id = $2 AND pedido_id = $3',
+        console.log('[DEBUG] Updating item:', item.id, 'to qty:', item.cantidad);
+        const updateRes = await client.query(
+          'UPDATE pedido_items SET cantidad = $1 WHERE id = $2 AND pedido_id = $3 RETURNING *',
           [Number(item.cantidad), item.id, order.id]
         );
+        console.log('[DEBUG] Update result rows:', updateRes.rows);
       }
 
       // Recalculate totals
@@ -332,11 +342,13 @@ router.put('/orders/:id', authenticate, requireRole('admin', 'superadmin'), asyn
       res.json({ pedido: result.rows[0] });
     } catch (err) {
       await client.query('ROLLBACK');
+      console.error('[DEBUG] DB transaction error:', err);
       throw err;
     } finally {
       client.release();
     }
   } catch (error) {
+    console.error('[DEBUG] Catch-all error:', error);
     res.status(500).json({ message: error.message || 'No se pudo actualizar el pedido' });
   }
 });
