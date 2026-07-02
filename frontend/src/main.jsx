@@ -1449,7 +1449,12 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   function handleOrderQtyChange(orderId, itemId, nextQty) {
-    const qty = Math.max(1, Number(nextQty) || 1);
+    let qty;
+    if (nextQty === '') {
+      qty = '';
+    } else {
+      qty = Math.max(1, Number(nextQty) || 1);
+    }
     setOrders((current) =>
       current.map((order) => {
         if (order.id !== orderId) return order;
@@ -1476,6 +1481,11 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function saveOrderItems(order) {
+    const invalid = (order.items || []).some(item => !Number.isInteger(Number(item.cantidad)) || Number(item.cantidad) <= 0);
+    if (invalid) {
+      window.alert('Por favor ingrese cantidades válidas mayores a cero.');
+      return;
+    }
     try {
       await api.updateOrderItems(session.token, order.id, order.items);
       showToast('Pedido actualizado correctamente');
