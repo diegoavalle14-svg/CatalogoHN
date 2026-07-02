@@ -937,7 +937,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           );
         })}
         {availableBranches.length > 0 && (
-          <div className="product-cart-control-actions" style={{ borderTop: '2px dashed #cfcfcf', marginTop: '4px', paddingTop: '10px' }}>
+          <div className="product-cart-control-actions" style={{ marginTop: '4px', paddingTop: '6px' }}>
             <button className="add-to-cart-button global-add" type="button" onClick={addMultipleBranches} disabled={!canOrder || !hasAnyDrafts}>
               {isOutOfStock ? 'Agotado' : '+ Agregar'}
             </button>
