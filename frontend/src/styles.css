@@ -1022,10 +1022,13 @@ button {
   border-color: rgba(245, 157, 28, .28);
   background: #fff7e8;
   color: #8a5611;
+  font-size: 10.5px;
+  padding: 0 6px;
 }
 
 .stock-pill.low::before {
   background: #f59d1c;
+  margin-right: 4px;
 }
 
 .stock-pill.out {
