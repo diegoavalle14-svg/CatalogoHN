@@ -244,6 +244,7 @@ function App() {
 
 function Shell({ session, view, setView, onLogout, theme, onThemeToggle, children }) {
   const [cartCount, setCartCount] = useState(0);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const tenant = session.tenant || {};
 
   useEffect(() => {
@@ -252,19 +253,34 @@ function Shell({ session, view, setView, onLogout, theme, onThemeToggle, childre
     return () => window.removeEventListener('catalog:cart-count', updateCartCount);
   }, []);
 
+  useEffect(() => {
+    const handleCartOpenState = (event) => setIsCartOpen(event.detail?.open || false);
+    window.addEventListener('catalog:cart-open-state', handleCartOpenState);
+    return () => window.removeEventListener('catalog:cart-open-state', handleCartOpenState);
+  }, []);
+
+  function goToCatalog() {
+    setView('catalog');
+    window.dispatchEvent(new Event('catalog:close-cart'));
+  }
+
   function openCart() {
     if (view !== 'catalog') {
       setView('catalog');
       window.setTimeout(() => window.dispatchEvent(new Event('catalog:open-cart')), 0);
       return;
     }
-    window.dispatchEvent(new Event('catalog:open-cart'));
+    if (isCartOpen) {
+      window.dispatchEvent(new Event('catalog:close-cart'));
+    } else {
+      window.dispatchEvent(new Event('catalog:open-cart'));
+    }
   }
 
   return (
     <div className="app-shell" style={tenantBrandStyle(tenant)}>
       <header className="topbar">
-        <button className="brand-lockup" onClick={() => setView('catalog')} aria-label="Abrir catálogo">
+        <button className="brand-lockup" onClick={goToCatalog} aria-label="Abrir catálogo">
           <TenantLogoMark tenant={tenant} />
           <span>
             <strong>{tenant.nombre || 'Empresa'}</strong>
@@ -278,16 +294,20 @@ function Shell({ session, view, setView, onLogout, theme, onThemeToggle, childre
         </div>
 
         <div className="topbar-actions">
-          <ThemeToggle theme={theme} onToggle={onThemeToggle} />
-          <button className="orders-button" onClick={() => setView('history')}>
-            <ClipboardList size={14} />
-            <span>Mis Pedidos</span>
+          <button className={`catalog-button ${view === 'catalog' && !isCartOpen ? 'active' : ''}`} onClick={goToCatalog}>
+            <Package size={15} />
+            <span>Catálogo</span>
           </button>
-          <button className="checkout-button" onClick={openCart}>
+          <button className={`checkout-button ${view === 'catalog' && isCartOpen ? 'active' : ''}`} onClick={openCart}>
             <ShoppingCart size={18} />
             <span>Ver Pedido</span>
             {cartCount > 0 && <b>{cartCount}</b>}
           </button>
+          <button className={`orders-button ${view === 'history' ? 'active' : ''}`} onClick={() => setView('history')}>
+            <ClipboardList size={14} />
+            <span>Mis Pedidos</span>
+          </button>
+          <ThemeToggle theme={theme} onToggle={onThemeToggle} />
           <button className="logout-button" onClick={onLogout}>
             <LogOut size={15} />
             <span>Salir</span>
@@ -644,12 +664,22 @@ function Catalog({ session, onSessionUpdated }) {
   }, [cartCount]);
 
   useEffect(() => {
+    window.dispatchEvent(new CustomEvent('catalog:cart-open-state', { detail: { open: cartOpen } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('catalog:cart-open-state', { detail: { open: false } }));
+    };
+  }, [cartOpen]);
+
+  useEffect(() => {
     const openCart = () => setCartOpen(true);
+    const closeCart = () => setCartOpen(false);
     const handleToast = (e) => showToast(e.detail);
     window.addEventListener('catalog:open-cart', openCart);
+    window.addEventListener('catalog:close-cart', closeCart);
     window.addEventListener('catalog:toast', handleToast);
     return () => {
       window.removeEventListener('catalog:open-cart', openCart);
+      window.removeEventListener('catalog:close-cart', closeCart);
       window.removeEventListener('catalog:toast', handleToast);
     };
   }, []);

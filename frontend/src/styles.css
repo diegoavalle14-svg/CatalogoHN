@@ -244,13 +244,26 @@ button {
 
 .topbar-actions .theme-toggle-button {
   width: 40px;
-  height: 34px;
+  height: 32px;
   min-width: 40px;
-  border-color: rgba(255, 255, 255, .20);
-  background: rgba(255, 255, 255, .12);
-  color: #fff;
+  border: 1px solid rgba(245, 194, 0, 0.35);
+  background: rgba(245, 194, 0, 0.08);
+  color: var(--yellow);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
 
+.topbar-actions .theme-toggle-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--yellow);
+  background: rgba(245, 194, 0, 0.15);
+}
+
+.catalog-button,
 .orders-button,
 .checkout-button,
 .logout-button {
@@ -263,23 +276,46 @@ button {
   font-size: 12px;
   font-weight: 800;
   transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  border: 1px solid rgba(245, 194, 0, 0.35);
+  background: rgba(245, 194, 0, 0.08);
+  color: var(--yellow);
+  padding: 0 13px;
+  cursor: pointer;
 }
 
-.orders-button,
-.logout-button {
-  border: 1px solid #3e3e3e;
-  background: rgba(17, 17, 17, 0.55);
-  color: #fff;
-  padding: 0 13px;
+.catalog-button:hover,
+.orders-button:hover,
+.checkout-button:hover,
+.logout-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--yellow);
+  background: rgba(245, 194, 0, 0.15);
+}
+
+.catalog-button:active,
+.orders-button:active,
+.checkout-button:active,
+.logout-button:active {
+  transform: translateY(0);
+}
+
+.catalog-button.active,
+.orders-button.active,
+.checkout-button.active {
+  border: 1px solid var(--yellow);
+  background: var(--yellow) !important;
+  color: #111 !important;
+  box-shadow: 0 10px 24px rgba(250, 196, 0, 0.22);
+}
+
+.catalog-button.active:hover,
+.orders-button.active:hover,
+.checkout-button.active:hover {
+  color: #111 !important;
 }
 
 .checkout-button {
   position: relative;
-  border: 0;
-  background: var(--yellow);
-  color: #111;
-  padding: 0 14px;
-  box-shadow: 0 10px 24px rgba(250, 196, 0, 0.22);
 }
 
 .checkout-button b {
@@ -296,22 +332,6 @@ button {
 
 .logout-button {
   color: #a8a8a8;
-}
-
-.orders-button:hover,
-.logout-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.28);
-}
-
-.checkout-button:hover {
-  transform: translateY(-1px);
-}
-
-.orders-button:active,
-.checkout-button:active,
-.logout-button:active {
-  transform: translateY(0);
 }
 
 .catalog-page {
@@ -6869,12 +6889,13 @@ button {
 
   .topbar-actions {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     width: 100%;
     gap: 8px;
   }
 
   .topbar-actions .theme-toggle-button,
+  .catalog-button,
   .orders-button,
   .checkout-button,
   .logout-button {
@@ -6888,6 +6909,7 @@ button {
     gap: 0;
   }
 
+  .catalog-button span,
   .orders-button span,
   .checkout-button span,
   .logout-button span {
@@ -6961,6 +6983,7 @@ button {
   }
 
   .topbar-actions .theme-toggle-button,
+  .catalog-button,
   .orders-button,
   .checkout-button,
   .logout-button {
