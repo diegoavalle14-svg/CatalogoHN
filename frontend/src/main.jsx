@@ -778,7 +778,7 @@ function Catalog({ session, onSessionUpdated }) {
 
       {toast && createPortal(<div className="catalog-toast">{toast}</div>, document.body)}
 
-      {cartOpen && (
+      {cartOpen && createPortal(
         <CartPanel
           aplicaIsv={session?.user?.aplica_isv === true}
           lines={lines}
@@ -795,7 +795,8 @@ function Catalog({ session, onSessionUpdated }) {
           onReview={() => setConfirming(false)}
           onConfirm={() => setConfirming(true)}
           onSend={sendOrder}
-        />
+        />,
+        document.body
       )}
     </section>
   );
@@ -2117,7 +2118,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         ))
       )}
 
-      {selectedHistoryOrder && (
+      {selectedHistoryOrder && createPortal(
         <div className="cart-overlay" style={{ zIndex: 2000 }}>
           <button className="cart-scrim" onClick={() => setSelectedHistoryOrder(null)} aria-label="Cerrar detalle" />
           <aside className="cart-panel" style={{ maxHeight: '85vh', overflow: 'hidden' }}>
@@ -2157,7 +2158,8 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
               </div>
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
