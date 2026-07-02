@@ -1506,6 +1506,16 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     }
   }
 
+  async function undoOrderChanges(orderId) {
+    try {
+      const payload = await api.orders(session.token);
+      setOrders(payload.pedidos);
+      showToast('Cambios revertidos');
+    } catch (error) {
+      window.alert('No se pudieron revertir los cambios');
+    }
+  }
+
   async function deleteProduct(product) {
     const ok = window.confirm(`Eliminar producto ${product.sku || product.descripcion}?`) && window.confirm('Segunda confirmación requerida');
     if (!ok) return;
@@ -1717,6 +1727,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             onDelete={deleteOrder}
             onQtyChange={handleOrderQtyChange}
             onSaveItems={saveOrderItems}
+            onUndoItems={undoOrderChanges}
           />
         )}
 
@@ -1808,7 +1819,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
 }
 
 
-function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete, onQtyChange, onSaveItems }) {
+function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete, onQtyChange, onSaveItems, onUndoItems }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrders, setExpandedOrders] = useState({});
@@ -2008,9 +2019,14 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                 <span className="admin-ticket">{order.numero}</span>
                 <div className="admin-order-actions">
                   {order.isModified && (
-                    <button className="pill-action save" onClick={() => onSaveItems(order)} style={{ background: '#20935f', color: '#fff', borderColor: '#20935f' }}>
-                      Guardar
-                    </button>
+                    <>
+                      <button className="pill-action save" onClick={() => onSaveItems(order)} style={{ background: '#20935f', color: '#fff', borderColor: '#20935f' }}>
+                        Guardar
+                      </button>
+                      <button className="pill-action undo" onClick={() => onUndoItems(order.id)} style={{ background: '#7b8491', color: '#fff', borderColor: '#7b8491' }}>
+                        Deshacer
+                      </button>
+                    </>
                   )}
                   {order.estado !== 'preparando' && order.estado !== 'enviado' && (
                     <button className="pill-action" onClick={() => onState(order.id, 'preparando')}>
