@@ -1448,6 +1448,45 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     }
   }
 
+  function handleOrderQtyChange(orderId, itemId, nextQty) {
+    const qty = Math.max(1, Number(nextQty) || 1);
+    setOrders((current) =>
+      current.map((order) => {
+        if (order.id !== orderId) return order;
+
+        const updatedItems = (order.items || []).map((item) => {
+          if (item.id !== itemId) return item;
+          return { ...item, cantidad: qty };
+        });
+
+        const subtotal = updatedItems.reduce((sum, item) => sum + Number(item.precio_unitario || 0) * Number(item.cantidad || 0), 0);
+        const aplicaIsv = order.aplica_isv === true;
+        const isv = aplicaIsv ? subtotal * 0.15 : 0;
+        const total = subtotal + isv;
+
+        return {
+          ...order,
+          items: updatedItems,
+          total,
+          isv,
+          isModified: true
+        };
+      })
+    );
+  }
+
+  async function saveOrderItems(order) {
+    try {
+      await api.updateOrderItems(session.token, order.id, order.items);
+      showToast('Pedido actualizado correctamente');
+      setOrders((current) =>
+        current.map((o) => (o.id === order.id ? { ...o, isModified: false } : o))
+      );
+    } catch (error) {
+      window.alert(error.message || 'No se pudo actualizar el pedido');
+    }
+  }
+
   async function deleteProduct(product) {
     const ok = window.confirm(`Eliminar producto ${product.sku || product.descripcion}?`) && window.confirm('Segunda confirmación requerida');
     if (!ok) return;
@@ -1923,7 +1962,19 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                           <td style={{ padding: '8px 4px 8px 0', fontWeight: '700', fontFamily: 'monospace' }}>{item.sku}</td>
                           <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
                           <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', color: '#555' }}>{item.sucursal || '-'}</td>
-                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>
+                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>
+                            {order.estado === 'pendiente' ? (
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.cantidad}
+                                onChange={(e) => handleOrderQtyChange(order.id, item.id, e.target.value)}
+                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid #ccc', borderRadius: '3px', fontWeight: 'bold' }}
+                              />
+                            ) : (
+                              item.cantidad
+                            )}
+                          </td>
                           <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
                         </tr>
                       ))}
@@ -1935,6 +1986,11 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
               <footer>
                 <span className="admin-ticket">{order.numero}</span>
                 <div className="admin-order-actions">
+                  {order.isModified && (
+                    <button className="pill-action save" onClick={() => saveOrderItems(order)} style={{ background: '#20935f', color: '#fff', borderColor: '#20935f' }}>
+                      Guardar
+                    </button>
+                  )}
                   {order.estado !== 'preparando' && order.estado !== 'enviado' && (
                     <button className="pill-action" onClick={() => onState(order.id, 'preparando')}>
                       Preparando

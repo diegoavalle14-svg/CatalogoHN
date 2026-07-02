@@ -187,6 +187,9 @@ export const api = {
   updateOrderStatus: async (token, id, estado) => {
     return request(`/orders/${id}/status`, { method: 'PATCH', token, body: JSON.stringify({ estado, confirmacion: 'CONFIRMAR' }) });
   },
+  updateOrderItems: async (token, id, items) => {
+    return request(`/orders/${id}`, { method: 'PUT', token, body: JSON.stringify({ items }) });
+  },
   deleteOrder: async (token, id) => {
     return request(`/orders/${id}`, { method: 'DELETE', token, body: JSON.stringify({ confirmacion: 'ELIMINAR' }) });
   },

@@ -279,6 +279,68 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
   }
 });
 
+router.put('/orders/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  const { items } = req.body;
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: 'El pedido debe tener al menos un producto' });
+  }
+  if (items.some((item) => !Number.isInteger(Number(item.cantidad)) || Number(item.cantidad) <= 0 || !item.id)) {
+    return res.status(400).json({ message: 'Líneas del pedido inválidas' });
+  }
+
+  try {
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const orderRes = await client.query(
+        'SELECT * FROM pedidos WHERE id = $1 AND empresa_id = $2 FOR UPDATE',
+        [req.params.id, req.tenant.id]
+      );
+      const order = orderRes.rows[0];
+      if (!order) {
+        return res.status(404).json({ message: 'Pedido no encontrado' });
+      }
+      if (order.estado !== 'pendiente') {
+        return res.status(400).json({ message: 'Solo se pueden editar pedidos en estado pendiente' });
+      }
+
+      // Update the items in the order
+      for (const item of items) {
+        await client.query(
+          'UPDATE pedido_items SET cantidad = $1 WHERE id = $2 AND pedido_id = $3',
+          [Number(item.cantidad), item.id, order.id]
+        );
+      }
+
+      // Recalculate totals
+      const currentItems = await client.query(
+        'SELECT pi.*, c.aplica_isv FROM pedido_items pi JOIN pedidos p ON p.id = pi.pedido_id JOIN clientes c ON c.id = p.cliente_id WHERE pi.pedido_id = $1',
+        [order.id]
+      );
+
+      const aplicaIsv = currentItems.rows[0]?.aplica_isv === true;
+      const subtotal = currentItems.rows.reduce((sum, row) => sum + Number(row.precio_unitario) * Number(row.cantidad), 0);
+      const isv = aplicaIsv ? subtotal * 0.15 : 0;
+      const total = subtotal + isv;
+
+      const result = await client.query(
+        'UPDATE pedidos SET total = $1, isv = $2 WHERE id = $3 RETURNING *',
+        [total, isv, order.id]
+      );
+
+      await client.query('COMMIT');
+      res.json({ pedido: result.rows[0] });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'No se pudo actualizar el pedido' });
+  }
+});
+
 router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const { estado, confirmacion } = req.body;
   if (confirmacion !== 'CONFIRMAR') {
