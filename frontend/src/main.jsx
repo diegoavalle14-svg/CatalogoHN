@@ -1715,6 +1715,8 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             clients={clients}
             onState={updateOrderState}
             onDelete={deleteOrder}
+            onQtyChange={handleOrderQtyChange}
+            onSaveItems={saveOrderItems}
           />
         )}
 
@@ -1806,7 +1808,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
 }
 
 
-function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete }) {
+function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete, onQtyChange, onSaveItems }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrders, setExpandedOrders] = useState({});
@@ -1987,7 +1989,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                                 type="number"
                                 min="1"
                                 value={item.cantidad}
-                                onChange={(e) => handleOrderQtyChange(order.id, item.id, e.target.value)}
+                                onChange={(e) => onQtyChange(order.id, item.id, e.target.value)}
                                 style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid #ccc', borderRadius: '3px', fontWeight: 'bold' }}
                               />
                             ) : (
@@ -2006,7 +2008,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                 <span className="admin-ticket">{order.numero}</span>
                 <div className="admin-order-actions">
                   {order.isModified && (
-                    <button className="pill-action save" onClick={() => saveOrderItems(order)} style={{ background: '#20935f', color: '#fff', borderColor: '#20935f' }}>
+                    <button className="pill-action save" onClick={() => onSaveItems(order)} style={{ background: '#20935f', color: '#fff', borderColor: '#20935f' }}>
                       Guardar
                     </button>
                   )}
