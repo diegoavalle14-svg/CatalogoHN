@@ -937,8 +937,8 @@ button {
 
 .product-body {
   min-height: 132px;
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
   padding: 10px 11px 5px;
 }
@@ -1096,7 +1096,7 @@ button {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-top: 2px;
+  margin-top: auto;
   color: #222;
 }
 
@@ -7360,7 +7360,7 @@ button {
 
   .price-line {
     gap: 5px;
-    margin-top: 7px;
+    margin-top: auto;
   }
 
   .price-line span,
