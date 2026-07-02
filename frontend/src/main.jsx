@@ -1132,7 +1132,16 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     };
     const loadOrders = () => {
       api.orders(session.token).then((payload) => {
-        if (!cancelled) setOrders(payload.pedidos);
+        if (cancelled) return;
+        setOrders((current) => {
+          return (payload.pedidos || []).map((newOrder) => {
+            const existing = (current || []).find((o) => o.id === newOrder.id);
+            if (existing && existing.isModified) {
+              return existing;
+            }
+            return newOrder;
+          });
+        });
       }).catch(console.error);
     };
     const loadCatalog = () => {
