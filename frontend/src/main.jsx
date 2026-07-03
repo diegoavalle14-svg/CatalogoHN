@@ -4453,7 +4453,7 @@ function flattenCart(cart, data) {
   return Object.entries(cart).flatMap(([productId, branches]) => {
     const product = data.productos.find((item) => Number(item.id) === Number(productId));
     if (!product) return [];
-    return Object.entries(branches).map(([branchId, cantidad]) => {
+    const lines = Object.entries(branches).map(([branchId, cantidad]) => {
       const branch = data.sucursales.find((item) => Number(item.id) === Number(branchId));
       return {
         producto_id: product.id,
@@ -4466,6 +4466,7 @@ function flattenCart(cart, data) {
         precio_unitario: Number(product.precio_final || product.precio || 0)
       };
     });
+    return lines.sort((a, b) => (a.sucursal || '').localeCompare(b.sucursal || '', 'es', { sensitivity: 'base' }));
   });
 }
 

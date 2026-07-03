@@ -29,7 +29,7 @@ async function queryOrderEmailContext(tenantId, orderId) {
      JOIN productos pr ON pr.id = pi.producto_id
      JOIN sucursales s ON s.id = pi.sucursal_id
      WHERE pi.pedido_id = $1
-     ORDER BY pi.id`,
+     ORDER BY pr.sku, s.nombre`,
     [orderId]
   );
 
@@ -96,7 +96,8 @@ router.get('/orders', authenticate, async (req, res) => {
        JOIN productos pr ON pr.id = pi.producto_id
        JOIN sucursales s ON s.id = pi.sucursal_id
        JOIN pedidos p ON p.id = pi.pedido_id
-       WHERE p.empresa_id = $1`,
+       WHERE p.empresa_id = $1
+       ORDER BY pr.sku, s.nombre`,
       [req.tenant.id]
     );
 
