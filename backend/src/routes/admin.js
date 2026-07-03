@@ -981,7 +981,7 @@ async function queryAdminClients(tenantId) {
 
   for (const row of result.rows) {
     if (Array.isArray(row.sucursales)) {
-      row.sucursales.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+      row.sucursales.sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
     }
   }
 

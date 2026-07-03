@@ -159,7 +159,7 @@ async function queryCatalogUser(userId) {
 }
 
 async function queryClientBranches(clientId) {
-  const branches = await db.query('SELECT * FROM sucursales WHERE cliente_id = $1 AND COALESCE(activo, true) = true ORDER BY nombre', [clientId]);
+  const branches = await db.query('SELECT * FROM sucursales WHERE cliente_id = $1 AND COALESCE(activo, true) = true ORDER BY id', [clientId]);
   if (branches.rows.length > 0) return branches;
   const created = await db.query(
     `INSERT INTO sucursales (cliente_id, nombre, direccion)

@@ -2882,7 +2882,11 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
         direccion: String(branch.direccion || '').trim()
       }))
       .filter((branch) => branch.nombre));
-    const sorted = [...clean].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+    const sorted = [...clean].sort((a, b) => {
+      const idA = a.id ? Number(a.id) : 999999;
+      const idB = b.id ? Number(b.id) : 999999;
+      return idA - idB;
+    });
     setFormFeedback(null);
     setForm((current) => ({
       ...current,
@@ -3422,7 +3426,11 @@ function buildAdminEditorForm(editor) {
   }
   if (editor.type === 'client') {
     const clean = Array.isArray(form.sucursales) ? form.sucursales : [];
-    const sorted = [...clean].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+    const sorted = [...clean].sort((a, b) => {
+      const idA = a.id ? Number(a.id) : 999999;
+      const idB = b.id ? Number(b.id) : 999999;
+      return idA - idB;
+    });
     form.sucursales = sorted;
     form.sucursales_text = sorted.map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n');
   }
@@ -3491,7 +3499,11 @@ function uniqueBranches(branches = []) {
 
 function withBranchLetters(branches = []) {
   const unique = uniqueBranches(Array.isArray(branches) ? branches : []);
-  const sorted = [...unique].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+  const sorted = [...unique].sort((a, b) => {
+    const idA = a.id ? Number(a.id) : 999999;
+    const idB = b.id ? Number(b.id) : 999999;
+    return idA - idB;
+  });
   return sorted.map((branch, index) => ({
     ...branch,
     letra: String.fromCharCode(65 + index)
@@ -4632,7 +4644,7 @@ function flattenCart(cart, data) {
         precio_unitario: Number(product.precio_final || product.precio || 0)
       };
     });
-    return lines.sort((a, b) => (a.sucursal || '').localeCompare(b.sucursal || '', 'es', { sensitivity: 'base' }));
+    return lines.sort((a, b) => Number(a.sucursal_id || 0) - Number(b.sucursal_id || 0));
   });
 }
 
