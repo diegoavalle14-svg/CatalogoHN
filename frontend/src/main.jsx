@@ -2882,11 +2882,12 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
         direccion: String(branch.direccion || '').trim()
       }))
       .filter((branch) => branch.nombre));
+    const sorted = [...clean].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
     setFormFeedback(null);
     setForm((current) => ({
       ...current,
-      sucursales: clean,
-      sucursales_text: clean.map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n')
+      sucursales: sorted,
+      sucursales_text: sorted.map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n')
     }));
   };
   const addClientBranch = (branch = branchDraft) => {
@@ -3420,7 +3421,10 @@ function buildAdminEditorForm(editor) {
     }
   }
   if (editor.type === 'client') {
-    form.sucursales_text = form.sucursales_text || (form.sucursales || []).map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n');
+    const clean = Array.isArray(form.sucursales) ? form.sucursales : [];
+    const sorted = [...clean].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+    form.sucursales = sorted;
+    form.sucursales_text = sorted.map((branch) => `${branch.nombre}${branch.direccion ? ` | ${branch.direccion}` : ''}`).join('\n');
   }
   return form;
 }
