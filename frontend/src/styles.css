@@ -8182,6 +8182,39 @@ button {
   border: 1px solid #334155 !important;
 }
 
+.admin-password-modal .primary-button {
+  margin-top: 24px !important;
+}
+
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 40px !important;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  transition: color 0.15s;
+}
+
+.password-toggle-btn:hover {
+  color: var(--text);
+}
+
 @media (max-width: 480px) {
   .admin-entity-row {
     grid-template-columns: auto 1fr auto;

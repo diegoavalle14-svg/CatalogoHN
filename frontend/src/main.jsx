@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
-import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, ExternalLink, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
+import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
@@ -2747,6 +2747,9 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const [formFeedback, setFormFeedback] = useState(null);
   const [saving, setSaving] = useState(false);
   const [branchDraft, setBranchDraft] = useState({ nombre: '', direccion: '' });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [customSubnameMode, setCustomSubnameMode] = useState(() => Boolean(editor.value?.subnombre && !SITE_SUBNAME_OPTIONS.includes(editor.value.subnombre)));
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -3000,9 +3003,33 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
         {editor.type === 'account-password' && (
           <div className="admin-form">
-            <label>Contraseña actual<input type="password" value={form.current_password || ''} onChange={(event) => update('current_password', event.target.value)} /></label>
-            <label>Nueva contraseña<input type="password" value={form.new_password || ''} onChange={(event) => update('new_password', event.target.value)} /></label>
-            <label>Confirmar nueva contraseña<input type="password" value={form.confirm_password || ''} onChange={(event) => update('confirm_password', event.target.value)} /></label>
+            <label>
+              Contraseña actual
+              <div className="password-input-wrapper">
+                <input type={showCurrentPassword ? "text" : "password"} value={form.current_password || ''} onChange={(event) => update('current_password', event.target.value)} />
+                <button type="button" className="password-toggle-btn" onClick={() => setShowCurrentPassword(!showCurrentPassword)} tabIndex="-1" aria-label={showCurrentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </label>
+            <label>
+              Nueva contraseña
+              <div className="password-input-wrapper">
+                <input type={showNewPassword ? "text" : "password"} value={form.new_password || ''} onChange={(event) => update('new_password', event.target.value)} />
+                <button type="button" className="password-toggle-btn" onClick={() => setShowNewPassword(!showNewPassword)} tabIndex="-1" aria-label={showNewPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </label>
+            <label>
+              Confirmar nueva contraseña
+              <div className="password-input-wrapper">
+                <input type={showConfirmPassword ? "text" : "password"} value={form.confirm_password || ''} onChange={(event) => update('confirm_password', event.target.value)} />
+                <button type="button" className="password-toggle-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)} tabIndex="-1" aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </label>
             {formFeedback && <small className={formFeedback.type === 'success' ? 'form-success' : 'form-error'}>{formFeedback.message}</small>}
           </div>
         )}
