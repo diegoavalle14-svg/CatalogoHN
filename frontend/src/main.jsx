@@ -2236,10 +2236,12 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                         <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                      ))}
+                    </tbody>
+                  </table>
+                );
+              })()}
+            </div>
             </div>
           </aside>
         </div>,
