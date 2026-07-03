@@ -1992,7 +1992,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                     <tbody>
                       {(order.items || []).map((item) => (
                         <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f9f9f9' }}>
-                          <td style={{ padding: '8px 4px 8px 0', fontWeight: '700', fontFamily: 'monospace' }}>{item.sku}</td>
+                          <td style={{ padding: '8px 4px 8px 0', fontWeight: '700' }}>{item.sku}</td>
                           <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
                           <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', color: '#555' }}>{item.sucursal || '-'}</td>
                           <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>
@@ -2146,7 +2146,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                   <tbody>
                     {(selectedHistoryOrder.items || []).map((item) => (
                       <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                        <td style={{ padding: '8px 4px 8px 0', fontWeight: '700', fontFamily: 'monospace' }}>{item.sku}</td>
+                        <td style={{ padding: '8px 4px 8px 0', fontWeight: '700' }}>{item.sku}</td>
                         <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
                         <td style={{ padding: '8px 4px', textAlign: 'center' }}>{item.sucursal}</td>
                         <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>

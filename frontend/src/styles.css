@@ -1002,7 +1002,6 @@ button {
   background: #050505;
   color: var(--yellow);
   padding: 5px 10px;
-  font-family: "IBM Plex Mono", "Courier New", monospace;
   font-size: 13.5px;
   font-weight: 900;
   line-height: 1;
