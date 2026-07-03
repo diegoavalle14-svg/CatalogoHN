@@ -8154,6 +8154,34 @@ button {
   max-height: 80vh;
 }
 
+.admin-password-modal {
+  max-width: 380px !important;
+  border-radius: 12px !important;
+  padding: 0 20px 20px !important;
+}
+
+.admin-password-modal header {
+  margin-bottom: 20px !important;
+  box-shadow: none !important;
+  padding-bottom: 8px !important;
+}
+
+.admin-password-modal .admin-form {
+  gap: 16px !important;
+}
+
+.admin-password-modal input {
+  background: #fafafa !important;
+  border: 1px solid #e2e8f0 !important;
+  font-size: 14px !important;
+  height: 40px !important;
+}
+
+[data-theme="dark"] .admin-password-modal input {
+  background: #1a1e26 !important;
+  border: 1px solid #334155 !important;
+}
+
 @media (max-width: 480px) {
   .admin-entity-row {
     grid-template-columns: auto 1fr auto;

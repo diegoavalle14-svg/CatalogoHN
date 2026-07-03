@@ -2850,10 +2850,11 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     }
   }
 
-  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories';
+  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password';
+  const isPasswordModal = editor.type === 'account-password';
   return (
     <div className={`admin-modal-backdrop ${isCenteredModal ? 'modal-centered' : ''}`}>
-      <section className="admin-modal">
+      <section className={`admin-modal ${isPasswordModal ? 'admin-password-modal' : ''}`}>
         <header><h2>{editor.title}</h2><button onClick={onClose}><X size={18} /></button></header>
 
         {editor.type === 'site' && (
