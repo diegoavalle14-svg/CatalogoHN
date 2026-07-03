@@ -2421,11 +2421,13 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
           const isExpanded = Boolean(expandedClientIds[client.id]);
           return (
           <article className="admin-client-row" key={client.id}>
-            <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
-            <span className="admin-client-main">
-              <strong>{client.nombre}</strong>
-              <small>{client.usuario}</small>
-            </span>
+            <div className="admin-client-row-header">
+              <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
+              <span className="admin-client-main">
+                <strong>{client.nombre}</strong>
+                <small>{client.usuario}</small>
+              </span>
+            </div>
             <span className="admin-client-actions">
               <button type="button" className="client-row-button" onClick={() => onEdit(client)}>Editar</button>
               <button type="button" className="client-row-button" onClick={() => setExpandedClientIds((current) => ({ ...current, [client.id]: !current[client.id] }))}>
@@ -2438,8 +2440,30 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
             </span>
             {isExpanded && (
               <div className="admin-client-detail">
-                <span><b>Lista de Precios</b>{client.lista || 'General'}</span>
-                <span><b>Términos de Crédito</b>{client.credito || 'Contado'}</span>
+                <div className="admin-client-detail-grid">
+                  <span><b>Lista de Precios</b>{client.lista || 'General'}</span>
+                  <span><b>Términos de Crédito</b>{client.credito || 'Contado'}</span>
+                  <span><b>Aplica ISV</b>{client.aplica_isv ? 'Sí' : 'No'}</span>
+                  <span><b>Último Acceso</b>{client.ultimo_acceso ? new Date(client.ultimo_acceso).toLocaleString('es-HN') : 'Nunca'}</span>
+                  {client.ultimo_ip && <span><b>Último IP</b>{client.ultimo_ip}</span>}
+                </div>
+                {client.sucursales && client.sucursales.length > 0 ? (
+                  <div className="client-detail-branches">
+                    <b>Sucursales Configuradas:</b>
+                    <ul>
+                      {client.sucursales.map((sub, idx) => (
+                        <li key={idx}>
+                          <strong>{String.fromCharCode(65 + idx)}</strong> · {sub.nombre} {sub.direccion ? `(${sub.direccion})` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="client-detail-branches">
+                    <b>Sucursales Configuradas:</b>
+                    <small style={{ color: 'var(--muted)', fontSize: '10.5px' }}>Sin sucursales registradas</small>
+                  </div>
+                )}
               </div>
             )}
           </article>
@@ -2836,6 +2860,8 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showClientEditorPassword, setShowClientEditorPassword] = useState(false);
+  const [editingBranchIndex, setEditingBranchIndex] = useState(null);
   const [customSubnameMode, setCustomSubnameMode] = useState(() => Boolean(editor.value?.subnombre && !SITE_SUBNAME_OPTIONS.includes(editor.value.subnombre)));
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -2939,7 +2965,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     }
   }
 
-  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password';
+  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password' || editor.type === 'client';
   const isPasswordModal = editor.type === 'account-password';
   return (
     <div className={`admin-modal-backdrop ${isCenteredModal ? 'modal-centered' : ''}`}>
@@ -3026,7 +3052,15 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
           <div className="admin-form">
             <label>Nombre<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
             <label>Usuario<input value={form.username || form.usuario || ''} onChange={(event) => update('username', event.target.value)} /></label>
-            <label>{form.id ? 'Nueva contraseña' : 'Contraseña inicial'}<input type="password" placeholder={form.id ? 'Dejar igual' : 'Asignar contraseña'} value={form.password || ''} onChange={(event) => update('password', event.target.value)} autoComplete="new-password" /></label>
+            <label>
+              {form.id ? 'Nueva contraseña' : 'Contraseña inicial'}
+              <div className="password-input-wrapper">
+                <input type={showClientEditorPassword ? "text" : "password"} placeholder={form.id ? 'Dejar igual' : 'Asignar contraseña'} value={form.password || ''} onChange={(event) => update('password', event.target.value)} autoComplete="new-password" />
+                <button type="button" className="password-toggle-btn" onClick={() => setShowClientEditorPassword(!showClientEditorPassword)} tabIndex="-1" aria-label={showClientEditorPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                  {showClientEditorPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </label>
             <label>Lista<select value={form.lista_precio_id || ''} onChange={(event) => update('lista_precio_id', Number(event.target.value) || '')}>
               <option value="">Sin lista</option>
               {priceLists.map((list) => <option value={list.id} key={list.id}>{list.nombre}</option>)}
@@ -3071,16 +3105,29 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               </div>
               <div className="client-branch-list">
                 {clientBranches.length === 0 && <small className="admin-empty-inline">Sin sucursales todavía.</small>}
-                {clientBranches.map((branch, index) => (
-                  <div className="client-branch-row" key={branch.id || `${branch.nombre}-${index}`}>
-                    <span className="client-branch-letter">{String.fromCharCode(65 + index)}</span>
-                    <input value={branch.nombre || ''} onChange={(event) => updateClientBranch(index, 'nombre', event.target.value)} aria-label="Sucursal" />
-                    <input value={branch.direccion || ''} onChange={(event) => updateClientBranch(index, 'direccion', event.target.value)} aria-label="Dirección" placeholder="Dirección opcional" />
-                    <button type="button" onClick={() => removeClientBranch(index)} aria-label={`Quitar ${branch.nombre}`}>
-                      Quitar
-                    </button>
-                  </div>
-                ))}
+                {clientBranches.map((branch, index) => {
+                  const isEditing = editingBranchIndex === index;
+                  return isEditing ? (
+                    <div className="client-branch-row editing" key={branch.id || `${branch.nombre}-${index}`} style={{ display: 'grid', gridTemplateColumns: '24px 1fr 1.5fr auto', gap: '6px', alignItems: 'center' }}>
+                      <span className="client-branch-letter">{String.fromCharCode(65 + index)}</span>
+                      <input value={branch.nombre || ''} onChange={(event) => updateClientBranch(index, 'nombre', event.target.value)} aria-label="Sucursal" style={{ height: '30px', fontSize: '12px' }} />
+                      <input value={branch.direccion || ''} onChange={(event) => updateClientBranch(index, 'direccion', event.target.value)} aria-label="Dirección" placeholder="Dirección opcional" style={{ height: '30px', fontSize: '12px' }} />
+                      <button type="button" onClick={() => setEditingBranchIndex(null)} className="branch-row-save-btn">Hecho</button>
+                    </div>
+                  ) : (
+                    <div className="client-branch-row view" key={branch.id || `${branch.nombre}-${index}`}>
+                      <span className="client-branch-letter">{String.fromCharCode(65 + index)}</span>
+                      <div className="branch-info-text">
+                        <strong>{branch.nombre}</strong>
+                        {branch.direccion && <small style={{ color: 'var(--muted)', display: 'block', fontSize: '10px', marginTop: '2px' }}>{branch.direccion}</small>}
+                      </div>
+                      <div className="branch-row-actions">
+                        <button type="button" className="branch-row-btn edit" onClick={() => setEditingBranchIndex(index)}>Editar</button>
+                        <button type="button" className="branch-row-btn remove" onClick={() => removeClientBranch(index)}>Quitar</button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
             {formFeedback && <small className={formFeedback.type === 'success' ? 'form-success' : 'form-error'}>{formFeedback.message}</small>}

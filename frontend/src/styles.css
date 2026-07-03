@@ -8372,3 +8372,210 @@ button {
     padding: 6px !important;
   }
 }
+
+/* ==========================================================================
+   ADMIN CLIENTS REDESIGN (MINIMALIST & CENTERED)
+   ========================================================================== */
+
+/* Center and clean up admin-client-card list */
+.admin-client-card {
+  display: flex !important;
+  flex-direction: column !important;
+  max-width: 580px !important;
+  margin: 20px auto !important;
+  gap: 16px !important;
+  padding: 4px 14px !important;
+}
+
+.admin-client-row {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  background: var(--paper) !important;
+  padding: 16px !important;
+  box-shadow: 0 4px 12px rgba(20, 24, 31, .03) !important;
+  gap: 12px !important;
+}
+
+/* Header layout within a client row */
+.admin-client-row-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-client-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  justify-content: flex-end !important;
+  border-top: 1px dashed var(--line) !important;
+  padding-top: 12px !important;
+  margin-top: 4px !important;
+}
+
+.client-row-button {
+  min-height: 32px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  background: var(--mist) !important;
+  color: var(--text) !important;
+  padding: 0 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.client-row-button:hover {
+  background: var(--line) !important;
+  transform: translateY(-1px);
+}
+
+.client-row-button.danger {
+  color: #ef4444 !important;
+  border-color: #fca5a5 !important;
+  background: #fef2f2 !important;
+}
+
+.client-row-button.danger:hover {
+  background: #fee2e2 !important;
+}
+
+/* Detailed view of a client */
+.admin-client-detail {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--mist) !important;
+  padding: 12px 14px !important;
+}
+
+.admin-client-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.admin-client-detail span {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  color: var(--text) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+}
+
+.admin-client-detail b {
+  color: var(--muted) !important;
+  font-size: 9px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+
+.client-detail-branches {
+  border-top: 1px dashed var(--line);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.client-detail-branches b {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.client-detail-branches ul {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.client-detail-branches li {
+  color: var(--text);
+  font-size: 11px;
+}
+
+/* Branch row in view mode and editing mode */
+.client-branch-row.view {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: var(--mist) !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--line) !important;
+}
+
+.branch-info-text {
+  flex: 1 !important;
+  min-width: 0 !important;
+  margin-left: 10px !important;
+  text-align: left !important;
+}
+
+.branch-row-actions {
+  display: flex !important;
+  gap: 6px !important;
+}
+
+.branch-row-btn {
+  height: 26px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease;
+}
+
+.branch-row-btn.edit {
+  background: var(--paper) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line) !important;
+}
+
+.branch-row-btn.remove {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+[data-theme="dark"] .branch-row-btn.remove {
+  background: #450a0a !important;
+  color: #f87171 !important;
+}
+
+.branch-row-save-btn {
+  height: 28px !important;
+  padding: 0 12px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  background: var(--yellow) !important;
+  color: #111 !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.client-avatar {
+  width: 40px !important;
+  height: 40px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 50% !important;
+  background: #1e293b !important;
+  color: var(--yellow) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  border: 2px solid var(--line) !important;
+}
+[data-theme="dark"] .client-avatar {
+  background: #334155 !important;
+}
+
