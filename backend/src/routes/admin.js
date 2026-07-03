@@ -934,7 +934,7 @@ async function queryAdminPriceData(tenantId) {
 }
 
 async function queryAdminClients(tenantId) {
-  return db.query(
+  const result = await db.query(
     `SELECT c.id,
             c.usuario_id,
             c.condicion_credito,
@@ -978,6 +978,14 @@ async function queryAdminClients(tenantId) {
      ORDER BY c.activo DESC, u.nombre`,
     [tenantId]
   );
+
+  for (const row of result.rows) {
+    if (Array.isArray(row.sucursales)) {
+      row.sucursales.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+    }
+  }
+
+  return result;
 }
 
 async function getAdminClient(tenantId, clientId) {

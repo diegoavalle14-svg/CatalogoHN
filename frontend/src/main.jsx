@@ -3324,7 +3324,9 @@ function uniqueBranches(branches = []) {
 }
 
 function withBranchLetters(branches = []) {
-  return uniqueBranches(Array.isArray(branches) ? branches : []).map((branch, index) => ({
+  const unique = uniqueBranches(Array.isArray(branches) ? branches : []);
+  const sorted = [...unique].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+  return sorted.map((branch, index) => ({
     ...branch,
     letra: String.fromCharCode(65 + index)
   }));
