@@ -8385,6 +8385,10 @@ button {
   margin: 20px auto !important;
   gap: 16px !important;
   padding: 4px 14px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
 }
 
 .admin-client-row {
@@ -8457,8 +8461,8 @@ button {
 }
 
 .admin-client-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
   gap: 10px !important;
 }
 
@@ -8579,3 +8583,14 @@ button {
   background: #334155 !important;
 }
 
+.admin-client-modal {
+  max-width: 480px !important;
+  border-radius: 12px !important;
+  padding: 0 20px 20px !important;
+}
+
+.admin-client-modal header {
+  margin-bottom: 20px !important;
+  box-shadow: none !important;
+  padding-bottom: 8px !important;
+}
