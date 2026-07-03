@@ -1825,16 +1825,17 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrders, setExpandedOrders] = useState({});
   const [selectedHistoryOrder, setSelectedHistoryOrder] = useState(null);
-  const [itemsSortKey, setItemsSortKey] = useState('sku');
-  const [itemsSortAsc, setItemsSortAsc] = useState(true);
+  const [itemsSortKeys, setItemsSortKeys] = useState({});
 
-  const handleSort = (key) => {
-    if (itemsSortKey === key) {
-      setItemsSortAsc(!itemsSortAsc);
-    } else {
-      setItemsSortKey(key);
-      setItemsSortAsc(true);
-    }
+  const handleSort = (orderId, key) => {
+    setItemsSortKeys((current) => {
+      const existing = current[orderId] || { key: 'sku', asc: true };
+      if (existing.key === key) {
+        return { ...current, [orderId]: { key, asc: !existing.asc } };
+      } else {
+        return { ...current, [orderId]: { key, asc: true } };
+      }
+    });
   };
 
   const toggleOrder = (orderId) => {
@@ -1974,6 +1975,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         )}
         {filteredOrders.map((order) => {
           const isExpanded = expandedOrders[order.id];
+          const sortInfo = itemsSortKeys[order.id] || { key: 'sku', asc: true };
           return (
             <article className="admin-order-card" key={order.id}>
               <div className="admin-order-card-head" onClick={() => toggleOrder(order.id)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
@@ -1993,25 +1995,25 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid #eee', textAlign: 'left', color: '#888', fontWeight: 'bold' }}>
-                        <th onClick={() => handleSort('sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'sku' ? '#111' : '#888' }}>
+                        <th onClick={() => handleSort(order.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sku' ? '#111' : '#888' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            Código <span style={{ fontSize: '8px', opacity: itemsSortKey === 'sku' ? 1 : 0.25 }}>{itemsSortKey === 'sku' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
+                            Código <span style={{ fontSize: '8px', opacity: sortInfo.key === 'sku' ? 1 : 0.25 }}>{sortInfo.key === 'sku' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
                         <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
-                        <th onClick={() => handleSort('sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'sucursal' ? '#111' : '#888' }}>
+                        <th onClick={() => handleSort(order.id, 'sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sucursal' ? '#111' : '#888' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
-                            Suc. <span style={{ fontSize: '8px', opacity: itemsSortKey === 'sucursal' ? 1 : 0.25 }}>{itemsSortKey === 'sucursal' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
+                            Suc. <span style={{ fontSize: '8px', opacity: sortInfo.key === 'sucursal' ? 1 : 0.25 }}>{sortInfo.key === 'sucursal' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
-                        <th onClick={() => handleSort('cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'cantidad' ? '#111' : '#888' }}>
+                        <th onClick={() => handleSort(order.id, 'cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'cantidad' ? '#111' : '#888' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
-                            Cant. <span style={{ fontSize: '8px', opacity: itemsSortKey === 'cantidad' ? 1 : 0.25 }}>{itemsSortKey === 'cantidad' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
+                            Cant. <span style={{ fontSize: '8px', opacity: sortInfo.key === 'cantidad' ? 1 : 0.25 }}>{sortInfo.key === 'cantidad' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
-                        <th onClick={() => handleSort('precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'precio_unitario' ? '#111' : '#888' }}>
+                        <th onClick={() => handleSort(order.id, 'precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'precio_unitario' ? '#111' : '#888' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end', width: '100%' }}>
-                            Precio <span style={{ fontSize: '8px', opacity: itemsSortKey === 'precio_unitario' ? 1 : 0.25 }}>{itemsSortKey === 'precio_unitario' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
+                            Precio <span style={{ fontSize: '8px', opacity: sortInfo.key === 'precio_unitario' ? 1 : 0.25 }}>{sortInfo.key === 'precio_unitario' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
                       </tr>
@@ -2019,21 +2021,21 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                     <tbody>
                       {[...(order.items || [])].sort((a, b) => {
                         let valA, valB;
-                        if (itemsSortKey === 'sku') {
+                        if (sortInfo.key === 'sku') {
                           valA = String(a.sku || '').toLowerCase();
                           valB = String(b.sku || '').toLowerCase();
-                        } else if (itemsSortKey === 'sucursal') {
+                        } else if (sortInfo.key === 'sucursal') {
                           valA = String(a.sucursal || '').toLowerCase();
                           valB = String(b.sucursal || '').toLowerCase();
-                        } else if (itemsSortKey === 'cantidad') {
+                        } else if (sortInfo.key === 'cantidad') {
                           valA = Number(a.cantidad || 0);
                           valB = Number(b.cantidad || 0);
-                        } else if (itemsSortKey === 'precio_unitario') {
+                        } else if (sortInfo.key === 'precio_unitario') {
                           valA = Number(a.precio_unitario || 0);
                           valB = Number(b.precio_unitario || 0);
                         }
-                        if (valA < valB) return itemsSortAsc ? -1 : 1;
-                        if (valA > valB) return itemsSortAsc ? 1 : -1;
+                        if (valA < valB) return sortInfo.asc ? -1 : 1;
+                        if (valA > valB) return sortInfo.asc ? 1 : -1;
                         return 0;
                       }).map((item) => (
                         <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f9f9f9' }}>
@@ -2178,52 +2180,55 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                 <p style={{ margin: 0 }}><strong>Monto Total:</strong> {money(selectedHistoryOrder.total)}</p>
               </div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left', color: '#666', fontWeight: 'bold' }}>
-                      <th onClick={() => handleSort('sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'sku' ? '#111' : '#666' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                          Código <span style={{ fontSize: '8px', opacity: itemsSortKey === 'sku' ? 1 : 0.25 }}>{itemsSortKey === 'sku' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
-                        </span>
-                      </th>
-                      <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
-                      <th onClick={() => handleSort('sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'sucursal' ? '#111' : '#666' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
-                          Sucursal <span style={{ fontSize: '8px', opacity: itemsSortKey === 'sucursal' ? 1 : 0.25 }}>{itemsSortKey === 'sucursal' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
-                        </span>
-                      </th>
-                      <th onClick={() => handleSort('cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'cantidad' ? '#111' : '#666' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
-                          Cantidad <span style={{ fontSize: '8px', opacity: itemsSortKey === 'cantidad' ? 1 : 0.25 }}>{itemsSortKey === 'cantidad' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
-                        </span>
-                      </th>
-                      <th onClick={() => handleSort('precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: itemsSortKey === 'precio_unitario' ? '#111' : '#666' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end', width: '100%' }}>
-                          Precio <span style={{ fontSize: '8px', opacity: itemsSortKey === 'precio_unitario' ? 1 : 0.25 }}>{itemsSortKey === 'precio_unitario' ? (itemsSortAsc ? '▲' : '▼') : '▲'}</span>
-                        </span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...(selectedHistoryOrder.items || [])].sort((a, b) => {
-                      let valA, valB;
-                      if (itemsSortKey === 'sku') {
-                        valA = String(a.sku || '').toLowerCase();
-                        valB = String(b.sku || '').toLowerCase();
-                      } else if (itemsSortKey === 'sucursal') {
-                        valA = String(a.sucursal || '').toLowerCase();
-                        valB = String(b.sucursal || '').toLowerCase();
-                      } else if (itemsSortKey === 'cantidad') {
-                        valA = Number(a.cantidad || 0);
-                        valB = Number(b.cantidad || 0);
-                      } else if (itemsSortKey === 'precio_unitario') {
-                        valA = Number(a.precio_unitario || 0);
-                        valB = Number(b.precio_unitario || 0);
-                      }
-                      if (valA < valB) return itemsSortAsc ? -1 : 1;
-                      if (valA > valB) return itemsSortAsc ? 1 : -1;
-                      return 0;
-                    }).map((item) => (
+                {(() => {
+                  const historySortInfo = itemsSortKeys[selectedHistoryOrder.id] || { key: 'sku', asc: true };
+                  return (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left', color: '#666', fontWeight: 'bold' }}>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'sku' ? '#111' : '#666' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              Código <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'sku' ? 1 : 0.25 }}>{historySortInfo.key === 'sku' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
+                            </span>
+                          </th>
+                          <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'sucursal' ? '#111' : '#666' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
+                              Sucursal <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'sucursal' ? 1 : 0.25 }}>{historySortInfo.key === 'sucursal' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
+                            </span>
+                          </th>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'cantidad' ? '#111' : '#666' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
+                              Cantidad <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'cantidad' ? 1 : 0.25 }}>{historySortInfo.key === 'cantidad' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
+                            </span>
+                          </th>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'precio_unitario' ? '#111' : '#666' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end', width: '100%' }}>
+                              Precio <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'precio_unitario' ? 1 : 0.25 }}>{historySortInfo.key === 'precio_unitario' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
+                            </span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...(selectedHistoryOrder.items || [])].sort((a, b) => {
+                          let valA, valB;
+                          if (historySortInfo.key === 'sku') {
+                            valA = String(a.sku || '').toLowerCase();
+                            valB = String(b.sku || '').toLowerCase();
+                          } else if (historySortInfo.key === 'sucursal') {
+                            valA = String(a.sucursal || '').toLowerCase();
+                            valB = String(b.sucursal || '').toLowerCase();
+                          } else if (historySortInfo.key === 'cantidad') {
+                            valA = Number(a.cantidad || 0);
+                            valB = Number(b.cantidad || 0);
+                          } else if (historySortInfo.key === 'precio_unitario') {
+                            valA = Number(a.precio_unitario || 0);
+                            valB = Number(b.precio_unitario || 0);
+                          }
+                          if (valA < valB) return historySortInfo.asc ? -1 : 1;
+                          if (valA > valB) return historySortInfo.asc ? 1 : -1;
+                          return 0;
+                        }).map((item) => (
                       <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f0f0f0' }}>
                         <td style={{ padding: '8px 4px 8px 0', fontWeight: '700' }}>{item.sku}</td>
                         <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
