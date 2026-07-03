@@ -7342,7 +7342,10 @@ button {
   }
 
   .product-category-badge {
-    display: none;
+    display: inline-flex;
+    font-size: 8px;
+    padding: 0 5px;
+    min-height: 18px;
   }
 
   .sku-stock-line {
