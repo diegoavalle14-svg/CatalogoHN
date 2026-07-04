@@ -1290,8 +1290,8 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   async function saveProduct(payload) {
     let uploadedImageUrls = [];
     const imageFiles = [
-      ...(Array.isArray(payload.imageFiles) ? payload.imageFiles : []),
-      ...(payload.imageFile ? [payload.imageFile] : [])
+      ...(payload.imageFile1 ? [payload.imageFile1] : []),
+      ...(payload.imageFile2 ? [payload.imageFile2] : [])
     ].slice(0, 2);
     if (imageFiles.length) {
       try {
@@ -1305,12 +1305,15 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       }
     }
     const existingImages = cleanProductImages(payload.imagenes);
+    const finalImages = uploadedImageUrls.length ? uploadedImageUrls.slice(0, 2) : existingImages;
     const nextPayload = prepareProductPayload(
       {
         ...payload,
         imageFile: undefined,
         imageFiles: undefined,
-        imagenes: uploadedImageUrls.length ? uploadedImageUrls.slice(0, 2) : existingImages
+        imageFile1: undefined,
+        imageFile2: undefined,
+        imagenes: finalImages
       },
       products,
       brands,
@@ -3093,6 +3096,8 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const [filterCategory, setFilterCategory] = useState('');
   const [filterBrand, setFilterBrand] = useState('');
   const [filterSearch, setFilterSearch] = useState('');
+  const [productImage1, setProductImage1] = useState(null);
+  const [productImage2, setProductImage2] = useState(null);
   const filteredSelectorProducts = useMemo(() => {
     return (priceProducts || []).filter((p) => {
       if (filterCategory && Number(p.categoria_id) !== Number(filterCategory)) return false;
@@ -3171,6 +3176,14 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     setPreviewLogoUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [form.logoFile]);
+
+  useEffect(() => {
+    if (editor.type === 'product') {
+      const images = cleanProductImages(form.imagenes);
+      setProductImage1(images[0] || null);
+      setProductImage2(images[1] || null);
+    }
+  }, [editor.type, form.imagenes]);
 
   async function save() {
     if (saving) return;
@@ -3293,11 +3306,54 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             <div className="admin-product-stock-grid">
               <label>Precio<input type="number" value={form.precio || ''} onChange={(event) => update('precio', Number(event.target.value))} /></label>
             </div>
-            <label>
-              Fotos del producto
-              <input type="file" accept="image/*" multiple onChange={(event) => update('imageFiles', Array.from(event.target.files || []).slice(0, 2))} />
-              <small>{cleanProductImages(form.imagenes).length ? `${cleanProductImages(form.imagenes).length} foto(s) guardada(s). Al subir nuevas, se conservaran hasta 2.` : 'Puedes subir hasta 2 fotos.'}</small>
-            </label>
+            <div className="admin-product-photos-section">
+              <div className="admin-product-photo-slot">
+                <label>Foto 1</label>
+                {productImage1 ? (
+                  <div className="admin-photo-preview">
+                    <img src={productImage1} alt="Foto 1" />
+                    <button type="button" className="admin-photo-delete-btn" onClick={() => setProductImage1(null)}>
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="admin-photo-upload">
+                    <input type="file" accept="image/*" onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        const url = URL.createObjectURL(file);
+                        setProductImage1(url);
+                        update('imageFile1', file);
+                      }
+                    }} />
+                    <span>Subir foto</span>
+                  </div>
+                )}
+              </div>
+              <div className="admin-product-photo-slot">
+                <label>Foto 2</label>
+                {productImage2 ? (
+                  <div className="admin-photo-preview">
+                    <img src={productImage2} alt="Foto 2" />
+                    <button type="button" className="admin-photo-delete-btn" onClick={() => setProductImage2(null)}>
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="admin-photo-upload">
+                    <input type="file" accept="image/*" onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        const url = URL.createObjectURL(file);
+                        setProductImage2(url);
+                        update('imageFile2', file);
+                      }
+                    }} />
+                    <span>Subir foto</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

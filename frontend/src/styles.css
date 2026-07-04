@@ -6332,6 +6332,89 @@ button {
   gap: 10px;
 }
 
+.admin-product-photos-section {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-product-photo-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-product-photo-slot label {
+  font-size: 10px;
+  color: #686b73;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.admin-photo-preview {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #cfd2d8;
+}
+
+.admin-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-photo-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-photo-delete-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.admin-photo-upload {
+  aspect-ratio: 1;
+  border: 2px dashed #cfd2d8;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.admin-photo-upload:hover {
+  border-color: var(--yellow);
+  background: rgba(245, 194, 0, 0.05);
+}
+
+.admin-photo-upload input {
+  display: none;
+}
+
+.admin-photo-upload span {
+  font-size: 12px;
+  color: #686b73;
+  font-weight: 600;
+}
+
 .admin-product-code-stock-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(168px, .95fr);
