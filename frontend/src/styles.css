@@ -940,7 +940,8 @@ button {
 }
 
 .product-body {
-  height: 154px;
+  min-height: 154px;
+  height: auto;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -7315,7 +7316,8 @@ button {
   }
 
   .product-body {
-    height: 136px !important;
+    min-height: 136px !important;
+    height: auto !important;
     overflow: hidden;
     padding: 9px 9px 4px;
     gap: 5px;
