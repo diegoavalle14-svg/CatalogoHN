@@ -1752,6 +1752,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             clients={clients}
             onNew={() => setEditor({ type: 'client', title: 'Nuevo cliente', value: {} })}
             onEdit={(client) => setEditor({ type: 'client', title: 'Editar cliente', value: client })}
+            onViewDetail={(client) => setEditor({ type: 'client-detail', title: 'Detalle de Cliente', value: client })}
             onToggle={toggleClient}
             onDelete={deleteClient}
           />
@@ -2374,10 +2375,9 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
   );
 }
 
-function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
+function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, onDelete }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [expandedClientIds, setExpandedClientIds] = useState({});
   const filteredClients = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return (clients || []).filter((client) => {
@@ -2417,9 +2417,7 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
             <span>{clients.length === 0 ? 'Usa Nuevo para crear el primer acceso mayorista de Kolben.' : 'Prueba con otro estado o una busqueda mas amplia.'}</span>
           </div>
         )}
-        {filteredClients.map((client) => {
-          const isExpanded = Boolean(expandedClientIds[client.id]);
-          return (
+        {filteredClients.map((client) => (
           <article className="admin-client-row" key={client.id}>
             <div className="admin-client-row-header">
               <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
@@ -2430,44 +2428,14 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
             </div>
             <span className="admin-client-actions">
               <button type="button" className="client-row-button" onClick={() => onEdit(client)}>Editar</button>
-              <button type="button" className="client-row-button" onClick={() => setExpandedClientIds((current) => ({ ...current, [client.id]: !current[client.id] }))}>
-                {isExpanded ? 'Ocultar' : 'Ver detalle'}
-              </button>
+              <button type="button" className="client-row-button" onClick={() => onViewDetail(client)}>Ver detalle</button>
               <button type="button" className="client-row-button" onClick={() => onToggle(client)}>
                 {client.activo ? 'Desactivar' : 'Activar'}
               </button>
               <button type="button" className="client-row-button danger" onClick={() => onDelete(client)}>Eliminar</button>
             </span>
-            {isExpanded && (
-              <div className="admin-client-detail">
-                <div className="admin-client-detail-grid">
-                  <span className="full-width"><b>Nombre Completo</b>{client.nombre}</span>
-                  <span><b>Lista de Precios</b>{client.lista || 'General'}</span>
-                  <span><b>Términos de Crédito</b>{client.credito || 'Contado'}</span>
-                  <span><b>Aplica ISV</b>{client.aplica_isv ? 'Sí' : 'No'}</span>
-                  <span><b>Último Acceso</b>{client.ultimo_acceso ? new Date(client.ultimo_acceso).toLocaleString('es-HN') : 'Nunca'}</span>
-                </div>
-                {client.sucursales && client.sucursales.length > 0 ? (
-                  <div className="client-detail-branches">
-                    <b>Sucursales Configuradas:</b>
-                    <ul>
-                      {client.sucursales.map((sub, idx) => (
-                        <li key={idx}>
-                          <strong>{String.fromCharCode(65 + idx)}</strong> · {sub.nombre} {sub.direccion ? `(${sub.direccion})` : ''}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="client-detail-branches">
-                    <b>Sucursales Configuradas:</b>
-                    <small style={{ color: 'var(--muted)', fontSize: '10.5px' }}>Sin sucursales registradas</small>
-                  </div>
-                )}
-              </div>
-            )}
           </article>
-        );})}
+        ))}
       </div>
     </>
   );
@@ -3273,7 +3241,45 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
         {editor.type === 'brands' && <AdminEntityCrud items={brands} label="Marca" onSave={onSaveBrand} onDelete={onDeleteBrand} />}
         {editor.type === 'categories' && <AdminEntityCrud items={categories} label="Categoría" onSave={onSaveCategory} onDelete={onDeleteCategory} />}
 
-        {!['brands', 'categories'].includes(editor.type) && (
+        {editor.type === 'client-detail' && (
+          <div className="admin-form">
+            <div className="admin-client-row-header" style={{ marginBottom: '14px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
+              <span className={editor.value.activo ? 'client-avatar' : 'client-avatar off'}>{editor.value.iniciales}</span>
+              <span className="admin-client-main">
+                <strong style={{ fontSize: '15px' }}>{editor.value.nombre}</strong>
+                <small>{editor.value.usuario}</small>
+              </span>
+            </div>
+            <div className="admin-client-detail-grid" style={{ gap: '12px' }}>
+              <span><b>Lista de Precios</b>{editor.value.lista || 'General'}</span>
+              <span><b>Términos de Crédito</b>{editor.value.credito || 'Contado'}</span>
+              <span><b>Aplica ISV</b>{editor.value.aplica_isv ? 'Sí' : 'No'}</span>
+              <span><b>Último Acceso</b>{editor.value.ultimo_acceso ? new Date(editor.value.ultimo_acceso).toLocaleString('es-HN') : 'Nunca'}</span>
+            </div>
+            {editor.value.sucursales && editor.value.sucursales.length > 0 ? (
+              <div className="client-detail-branches" style={{ marginTop: '14px' }}>
+                <b>Sucursales Configuradas:</b>
+                <ul style={{ margin: '8px 0 0', paddingLeft: '16px', display: 'grid', gap: '6px' }}>
+                  {editor.value.sucursales.map((sub, idx) => (
+                    <li key={idx} style={{ fontSize: '12.5px', color: 'var(--text)' }}>
+                      <strong>{String.fromCharCode(65 + idx)}</strong> · {sub.nombre} {sub.direccion ? `(${sub.direccion})` : ''}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="client-detail-branches" style={{ marginTop: '14px' }}>
+                <b>Sucursales Configuradas:</b>
+                <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '4px' }}>Sin sucursales registradas</small>
+              </div>
+            )}
+            <button type="button" className="primary-button" onClick={onClose} style={{ marginTop: '20px' }}>
+              Cerrar
+            </button>
+          </div>
+        )}
+
+        {!['brands', 'categories', 'client-detail'].includes(editor.type) && (
           <button
             className={editor.type === 'site' ? 'primary-button admin-site-save-button' : 'primary-button'}
             onClick={save}
