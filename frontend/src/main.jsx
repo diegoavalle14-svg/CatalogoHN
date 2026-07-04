@@ -2831,6 +2831,16 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const [showClientEditorPassword, setShowClientEditorPassword] = useState(false);
   const [editingBranchIndex, setEditingBranchIndex] = useState(null);
   const [customSubnameMode, setCustomSubnameMode] = useState(() => Boolean(editor.value?.subnombre && !SITE_SUBNAME_OPTIONS.includes(editor.value.subnombre)));
+  const [productQuery, setProductQuery] = useState('');
+  const [priceEditor, setPriceEditor] = useState(null);
+  const filteredPriceProducts = useMemo(() => {
+    const q = productQuery.trim().toLowerCase();
+    if (!q) return priceProducts || [];
+    return (priceProducts || []).filter((product) => {
+      const haystack = `${product.sku} ${product.marca || ''} ${product.descripcion || ''} ${product.categoria || ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [priceProducts, productQuery]);
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -3163,40 +3173,57 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             )}
             <section className="admin-price-list-products">
               <h3>Productos disponibles</h3>
-              <small className="admin-price-list-note">Activa la visibilidad para este cliente y configura precio normal u oferta por producto.</small>
-              <div className="admin-price-editor-header">
-                <span>Producto</span>
-                <span>Visible</span>
-                <span>Precio</span>
-                <span>Oferta</span>
-                <span>Promo</span>
+              <small className="admin-price-list-note">Filtra y selecciona un producto para editar su precio individual de manera organizada.</small>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                <ClearableSearchInput
+                  placeholder="Buscar producto por SKU, marca o nombre..."
+                  value={productQuery}
+                  onChange={setProductQuery}
+                />
               </div>
-              {groupPriceProductsByCategory(priceProducts).map((group) => (
+              {groupPriceProductsByCategory(filteredPriceProducts).map((group) => (
                 <section className="admin-price-category-group" key={group.category}>
                   <h3>{group.category}</h3>
-                  {group.items.map((product) => (
-                    <div className="admin-price-editor-row" key={product.id}>
-                      <span className="price-product-info">
-                        <strong>{product.sku}</strong>
-                        <small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small>
-                        <ProductStockPill product={product} />
-                      </span>
-                      <label className="price-visible-checkbox" title="Visible para el cliente">
-                        <input type="checkbox" checked={form[`visible_${product.id}`] !== false} onChange={(event) => update(`visible_${product.id}`, event.target.checked)} />
-                        <span>Visible</span>
-                      </label>
-                      <div className="price-input-group">
-                        <input type="number" placeholder="Precio" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} />
-                      </div>
-                      <div className="price-input-group">
-                        <input type="number" placeholder="Oferta" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} />
-                      </div>
-                      <label className="price-promo-checkbox" title="Activar promoción">
-                        <input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} />
-                        <span>Promo</span>
-                      </label>
-                    </div>
-                  ))}
+                  <div className="price-list-readonly-rows" style={{ display: 'grid', gap: '8px' }}>
+                    {group.items.map((product) => {
+                      const isVisible = form[`visible_${product.id}`] !== false;
+                      const precio = form[`precio_${product.id}`] || '0.00';
+                      const promo = form[`promo_${product.id}`];
+                      const promoActiva = form[`promo_activa_${product.id}`] === true;
+                      return (
+                        <div className="price-readonly-row" key={product.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '8px', gap: '10px' }}>
+                          <div className="price-readonly-info" style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <strong style={{ fontSize: '13px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.sku}</strong>
+                            <small style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                              <ProductStockPill product={product} />
+                              <span style={{ display: 'inline-block', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', padding: '2px 6px', borderRadius: '4px', background: isVisible ? '#e6f4ea' : '#fce8e6', color: isVisible ? '#137333' : '#c5221f' }}>
+                                {isVisible ? 'Visible' : 'Oculto'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="price-readonly-values" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '100px', gap: '2px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text)' }}>
+                              L. {Number(precio).toFixed(2)}
+                            </span>
+                            {promo && promoActiva && (
+                              <span style={{ fontSize: '10px', fontWeight: '700', color: '#d93025' }}>
+                                Oferta: L. {Number(promo).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="client-row-button"
+                            style={{ minHeight: '30px', padding: '0 12px', fontSize: '11px' }}
+                            onClick={() => setPriceEditor({ product })}
+                          >
+                            Editar
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </section>
               ))}
             </section>
@@ -3205,34 +3232,52 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
         {editor.type === 'price' && (
           <div className="admin-form admin-price-editor">
-            <div className="admin-price-editor-header base-price-header">
-              <span>Producto</span>
-              <span>Precio</span>
-              <span>Oferta</span>
-              <span>Promo</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+              <ClearableSearchInput
+                placeholder="Buscar producto por SKU, marca o nombre..."
+                value={productQuery}
+                onChange={setProductQuery}
+              />
             </div>
-            {groupPriceProductsByCategory(priceProducts).map((group) => (
+            {groupPriceProductsByCategory(filteredPriceProducts).map((group) => (
               <section className="admin-price-category-group" key={group.category}>
                 <h3>{group.category}</h3>
-                {group.items.map((product) => (
-                  <div className="admin-price-editor-row base-price-row" key={product.id}>
-                    <span className="price-product-info">
-                      <strong>{product.sku}</strong>
-                      <small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small>
-                      <ProductStockPill product={product} />
-                    </span>
-                    <div className="price-input-group">
-                      <input type="number" placeholder="Precio" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} />
-                    </div>
-                    <div className="price-input-group">
-                      <input type="number" placeholder="Oferta" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} />
-                    </div>
-                    <label className="price-promo-checkbox" title="Activar promoción">
-                      <input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} />
-                      <span>Promo</span>
-                    </label>
-                  </div>
-                ))}
+                <div className="price-list-readonly-rows" style={{ display: 'grid', gap: '8px' }}>
+                  {group.items.map((product) => {
+                    const precio = form[`precio_${product.id}`] || '0.00';
+                    const promo = form[`promo_${product.id}`];
+                    const promoActiva = form[`promo_activa_${product.id}`] === true;
+                    return (
+                      <div className="price-readonly-row" key={product.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '8px', gap: '10px' }}>
+                        <div className="price-readonly-info" style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <strong style={{ fontSize: '13px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.sku}</strong>
+                          <small style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                            <ProductStockPill product={product} />
+                          </div>
+                        </div>
+                        <div className="price-readonly-values" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '100px', gap: '2px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text)' }}>
+                            L. {Number(precio).toFixed(2)}
+                          </span>
+                          {promo && promoActiva && (
+                            <span style={{ fontSize: '10px', fontWeight: '700', color: '#d93025' }}>
+                              Oferta: L. {Number(promo).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="client-row-button"
+                          style={{ minHeight: '30px', padding: '0 12px', fontSize: '11px' }}
+                          onClick={() => setPriceEditor({ product, isBasePrice: true })}
+                        >
+                          Editar
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
             ))}
           </div>
@@ -3283,6 +3328,84 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
           >
             {saving ? 'Guardando...' : 'Guardar'}
           </button>
+        )}
+
+        {priceEditor && (
+          <div className="admin-modal-backdrop modal-centered" style={{ zIndex: 1200 }}>
+            <section className="admin-modal admin-client-price-single-modal" style={{ maxWidth: '400px', borderRadius: '12px', padding: '0 20px 20px', width: '90%', margin: '0 auto' }}>
+              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--line)', paddingBottom: '10px' }}>
+                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800' }}>Configurar Precio</h2>
+                <button type="button" onClick={() => setPriceEditor(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><X size={18} /></button>
+              </header>
+              
+              <div className="admin-form" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="price-single-product-summary" style={{ padding: '10px', background: 'var(--mist)', borderRadius: '8px' }}>
+                  <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)' }}>{priceEditor.product.sku}</strong>
+                  <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '2px', whiteSpace: 'normal' }}>
+                    {[priceEditor.product.marca, priceEditor.product.descripcion].filter(Boolean).join(' · ')}
+                  </small>
+                </div>
+
+                {!priceEditor.isBasePrice && (
+                  <label className="admin-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: '4px 0', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      style={{ width: '18px', height: '18px', margin: 0, cursor: 'pointer' }}
+                      checked={form[`visible_${priceEditor.product.id}`] !== false}
+                      onChange={(event) => update(`visible_${priceEditor.product.id}`, event.target.checked)}
+                    />
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text)' }}>Producto visible para este cliente</span>
+                  </label>
+                )}
+
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Precio normal (L.)</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    style={{ width: '100%', height: '38px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 10px', fontSize: '13px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
+                    value={form[`precio_${priceEditor.product.id}`] ?? ''}
+                    onChange={(event) => update(`precio_${priceEditor.product.id}`, event.target.value)}
+                  />
+                </label>
+
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Precio de oferta (L.)</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    style={{ width: '100%', height: '38px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 10px', fontSize: '13px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
+                    value={form[`promo_${priceEditor.product.id}`] ?? ''}
+                    onChange={(event) => update(`promo_${priceEditor.product.id}`, event.target.value)}
+                  />
+                </label>
+
+                <label className="admin-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: '4px 0', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    style={{ width: '18px', height: '18px', margin: 0, cursor: 'pointer' }}
+                    checked={form[`promo_activa_${priceEditor.product.id}`] === true}
+                    onChange={(event) => update(`promo_activa_${priceEditor.product.id}`, event.target.checked)}
+                    disabled={!form[`promo_${priceEditor.product.id}`]}
+                  />
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text)' }}>Activar oferta / promoción</span>
+                </label>
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => setPriceEditor(null)}
+                  style={{ marginTop: '10px' }}
+                >
+                  Aceptar
+                </button>
+              </div>
+            </section>
+          </div>
         )}
       </section>
     </div>
