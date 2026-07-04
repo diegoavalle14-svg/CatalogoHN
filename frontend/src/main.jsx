@@ -1127,7 +1127,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     const applyCatalogPayload = (payload) => {
       if (cancelled) return;
       setCatalog(payload);
-      setProducts(payload.productos.map((product, index) => ({ ...product, posicion: product.posicion || index + 1, visible: product.visible !== false })));
+      setProducts(payload.productos.map((product, index) => ({ ...product, posicion: product.posicion !== undefined ? product.posicion : index, visible: product.visible !== false })));
       setBrands(payload.marcas || []);
       setCategories(payload.categorias || []);
     };
@@ -1256,16 +1256,11 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             pos = newPos;
             positionUpdates.push({ id: product.id, posicion: newPos });
           } else {
-            if (newPos > oldPos) {
-              if (pos > oldPos && pos <= newPos) {
-                pos = pos - 1;
-                positionUpdates.push({ id: product.id, posicion: pos });
-              }
-            } else {
-              if (pos >= newPos && pos < oldPos) {
-                pos = pos + 1;
-                positionUpdates.push({ id: product.id, posicion: pos });
-              }
+            // Check if this product has the target position and needs to be shifted
+            if (product.posicion === newPos && product.id !== id) {
+              // Shift this product to old position
+              pos = oldPos;
+              positionUpdates.push({ id: product.id, posicion: oldPos });
             }
           }
           return { ...product, posicion: pos };
@@ -1288,7 +1283,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
         setProducts(sorted.map((product, index) => ({ 
           ...product, 
-          posicion: product.posicion || index + 1, 
+          posicion: product.posicion !== undefined ? product.posicion : index, 
           visible: product.visible !== false 
         })));
       } else {
@@ -1297,7 +1292,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
         setProducts(sorted.map((product, index) => ({ 
           ...product, 
-          posicion: product.posicion || index + 1, 
+          posicion: product.posicion !== undefined ? product.posicion : index, 
           visible: product.visible !== false 
         })));
       }
@@ -1349,7 +1344,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       const freshCatalog = await api.adminCatalog(session.token);
       setProducts(freshCatalog.productos.map((product, index) => ({ 
         ...product, 
-        posicion: product.posicion || index + 1, 
+        posicion: product.posicion !== undefined ? product.posicion : index, 
         visible: product.visible !== false 
       })));
       setEditor(null);
@@ -1477,7 +1472,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       ]);
       setOrders(ordersPayload.pedidos);
       setCatalog(catalogPayload);
-      setProducts(catalogPayload.productos.map((product, index) => ({ ...product, posicion: product.posicion || index + 1, visible: product.visible !== false })));
+      setProducts(catalogPayload.productos.map((product, index) => ({ ...product, posicion: product.posicion !== undefined ? product.posicion : index, visible: product.visible !== false })));
       setBrands(catalogPayload.marcas || []);
       setCategories(catalogPayload.categorias || []);
     } catch (error) {
@@ -1557,7 +1552,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       const freshCatalog = await api.adminCatalog(session.token);
       setProducts(freshCatalog.productos.map((product, index) => ({ 
         ...product, 
-        posicion: product.posicion || index + 1, 
+        posicion: product.posicion !== undefined ? product.posicion : index, 
         visible: product.visible !== false 
       })));
       showToast('Producto eliminado');
@@ -2282,18 +2277,18 @@ function ProductPositionInput({ product, onPosition }) {
 
   const handleBlurOrEnter = async () => {
     const num = parseInt(localVal, 10);
-    if (!isNaN(num) && num > 0 && num !== product.posicion) {
+    if (!isNaN(num) && num >= 0 && num !== product.posicion) {
       await onPosition(product, num);
       setLocalVal(String(num));
     } else {
-      setLocalVal(String(product.posicion || ''));
+      setLocalVal(String(product.posicion !== undefined ? product.posicion : ''));
     }
   };
 
   return (
     <input
       type="number"
-      min="1"
+      min="0"
       value={localVal}
       onChange={(e) => setLocalVal(e.target.value)}
       onBlur={handleBlurOrEnter}
