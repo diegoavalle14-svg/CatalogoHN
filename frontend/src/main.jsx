@@ -2830,7 +2830,22 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
   const [showClientEditorPassword, setShowClientEditorPassword] = useState(false);
   const [editingBranchIndex, setEditingBranchIndex] = useState(null);
   const [customSubnameMode, setCustomSubnameMode] = useState(() => Boolean(editor.value?.subnombre && !SITE_SUBNAME_OPTIONS.includes(editor.value.subnombre)));
-  const [selectedProductId, setSelectedProductId] = useState(() => (priceProducts || [])[0]?.id || '');
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterBrand, setFilterBrand] = useState('');
+  const [filterSearch, setFilterSearch] = useState('');
+  const filteredSelectorProducts = useMemo(() => {
+    return (priceProducts || []).filter((p) => {
+      if (filterCategory && Number(p.categoria_id) !== Number(filterCategory)) return false;
+      if (filterBrand && String(p.marca || '').toLowerCase() !== String(filterBrand).toLowerCase()) return false;
+      if (filterSearch) {
+        const q = filterSearch.trim().toLowerCase();
+        const haystack = `${p.sku} ${p.marca || ''} ${p.descripcion || ''}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [priceProducts, filterCategory, filterBrand, filterSearch]);
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -3150,15 +3165,65 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
           <div className="admin-form admin-price-list-crud">
             <input type="hidden" value={form.nombre || ''} readOnly />
             
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px', marginBottom: '14px', background: 'var(--mist)', padding: '10px', borderRadius: '8px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Categoría</span>
+                <select
+                  style={{ width: '100%', height: '34px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 8px', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)' }}
+                  value={filterCategory}
+                  onChange={(e) => {
+                    setFilterCategory(e.target.value);
+                    setSelectedProductId('');
+                  }}
+                >
+                  <option value="">Todas</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Marca</span>
+                <select
+                  style={{ width: '100%', height: '34px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 8px', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)' }}
+                  value={filterBrand}
+                  onChange={(e) => {
+                    setFilterBrand(e.target.value);
+                    setSelectedProductId('');
+                  }}
+                >
+                  <option value="">Todas</option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.nombre}>{b.nombre}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Buscar SKU</span>
+                <input
+                  type="text"
+                  placeholder="SKU o desc..."
+                  style={{ width: '100%', height: '34px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 8px', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)' }}
+                  value={filterSearch}
+                  onChange={(e) => {
+                    setFilterSearch(e.target.value);
+                    setSelectedProductId('');
+                  }}
+                />
+              </label>
+            </div>
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Seleccionar Producto</span>
+              <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Seleccionar Producto ({filteredSelectorProducts.length})</span>
               <select
                 style={{ width: '100%', height: '38px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 10px', fontSize: '13px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
                 value={selectedProductId}
                 onChange={(event) => setSelectedProductId(Number(event.target.value))}
               >
                 <option value="">Selecciona un producto...</option>
-                {priceProducts.map((product) => (
+                {filteredSelectorProducts.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.sku} - {[product.marca, product.descripcion].filter(Boolean).join(' · ')}
                   </option>
@@ -3169,12 +3234,14 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             {selectedProductId && (() => {
               const product = priceProducts.find((p) => Number(p.id) === Number(selectedProductId));
               if (!product) return null;
+              const imgs = cleanProductImages(product.imagenes);
+              const mainImage = imgs[0];
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
                   <div className="price-single-product-summary" style={{ padding: '10px', background: 'var(--mist)', borderRadius: '8px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    {product.imagen_url && (
+                    {mainImage && (
                       <div className="price-single-product-image" style={{ width: '56px', height: '56px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--line)', background: '#fff', flexShrink: 0 }}>
-                        <img src={resolveMediaUrl(product.imagen_url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <img src={mainImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                       </div>
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -3242,15 +3309,65 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
         {editor.type === 'price' && (
           <div className="admin-form admin-price-editor">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px', marginBottom: '14px', background: 'var(--mist)', padding: '10px', borderRadius: '8px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Categoría</span>
+                <select
+                  style={{ width: '100%', height: '34px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 8px', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)' }}
+                  value={filterCategory}
+                  onChange={(e) => {
+                    setFilterCategory(e.target.value);
+                    setSelectedProductId('');
+                  }}
+                >
+                  <option value="">Todas</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Marca</span>
+                <select
+                  style={{ width: '100%', height: '34px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 8px', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)' }}
+                  value={filterBrand}
+                  onChange={(e) => {
+                    setFilterBrand(e.target.value);
+                    setSelectedProductId('');
+                  }}
+                >
+                  <option value="">Todas</option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.nombre}>{b.nombre}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Buscar SKU</span>
+                <input
+                  type="text"
+                  placeholder="SKU o desc..."
+                  style={{ width: '100%', height: '34px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 8px', fontSize: '12px', background: 'var(--paper)', color: 'var(--text)' }}
+                  value={filterSearch}
+                  onChange={(e) => {
+                    setFilterSearch(e.target.value);
+                    setSelectedProductId('');
+                  }}
+                />
+              </label>
+            </div>
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Seleccionar Producto</span>
+              <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Seleccionar Producto ({filteredSelectorProducts.length})</span>
               <select
                 style={{ width: '100%', height: '38px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 10px', fontSize: '13px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
                 value={selectedProductId}
                 onChange={(event) => setSelectedProductId(Number(event.target.value))}
               >
                 <option value="">Selecciona un producto...</option>
-                {priceProducts.map((product) => (
+                {filteredSelectorProducts.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.sku} - {[product.marca, product.descripcion].filter(Boolean).join(' · ')}
                   </option>
@@ -3261,12 +3378,14 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             {selectedProductId && (() => {
               const product = priceProducts.find((p) => Number(p.id) === Number(selectedProductId));
               if (!product) return null;
+              const imgs = cleanProductImages(product.imagenes);
+              const mainImage = imgs[0];
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
                   <div className="price-single-product-summary" style={{ padding: '10px', background: 'var(--mist)', borderRadius: '8px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    {product.imagen_url && (
+                    {mainImage && (
                       <div className="price-single-product-image" style={{ width: '56px', height: '56px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--line)', background: '#fff', flexShrink: 0 }}>
-                        <img src={resolveMediaUrl(product.imagen_url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <img src={mainImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                       </div>
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
