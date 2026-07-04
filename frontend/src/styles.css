@@ -1113,22 +1113,25 @@ button {
 .price-line {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: #222;
   margin: 0;
   padding: 0;
   justify-self: end;
+  white-space: nowrap;
 }
 
 .price-line span {
   color: #6b6b6b;
-  font-size: 13px;
+  font-size: 12px;
   text-decoration: line-through;
+  white-space: nowrap;
 }
 
 .price-line b {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .price-line .promo-price {
@@ -1145,9 +1148,9 @@ button {
 .product-cart-control {
   min-height: 38px;
   display: grid;
-  grid-template-columns: 26px 42px max-content auto;
+  grid-template-columns: 26px 42px 1fr;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .product-cart-control:not(:has(> .branch-code)) {
