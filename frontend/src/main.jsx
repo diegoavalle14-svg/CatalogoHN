@@ -2599,15 +2599,15 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
       const matchesCategory = categoryFilter === 'all' || String(product.categoria_id || '') === String(categoryFilter);
       const matchesBrand = brandFilter === 'all' || String(product.marca || '').toLowerCase() === String(brandFilter).toLowerCase();
       
-      const currentPrice = priceMap[product.id] || {};
-      const isVisible = currentPrice.visible_cliente ?? true;
+      const localVal = localPrices[product.id] || {};
+      const isVisible = localVal.visible_cliente ?? true;
       const matchesVisibility = visibilityFilter === 'all'
         || (visibilityFilter === 'visible' && isVisible !== false)
         || (visibilityFilter === 'hidden' && isVisible === false);
         
       return matchesSearch && matchesCategory && matchesBrand && matchesVisibility;
     });
-  }, [products, query, categoryFilter, brandFilter, visibilityFilter, priceMap]);
+  }, [products, query, categoryFilter, brandFilter, visibilityFilter, localPrices]);
 
   const [lightbox, setLightbox] = useState(null);
 
