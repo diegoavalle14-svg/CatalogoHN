@@ -914,7 +914,15 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           const isFirstBranch = index === 0;
           return (
             <div className="product-cart-control" key={branchId}>
-              <span className="branch-code" title={branchTitle}>{branchLabel}</span>
+              <div className="branch-price-row">
+                <span className="branch-code" title={branchTitle}>{branchLabel}</span>
+                {isFirstBranch && (
+                  <div className="price-line">
+                    {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
+                    <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
+                  </div>
+                )}
+              </div>
               <div className="quantity-stepper" aria-label={`Cantidad para ${product.sku} en ${branchLabel}`}>
                 <button type="button" onClick={() => stepDraft(branchId, -1)} disabled={!canOrder || (Number(draftFor(branchId)) || 0) <= 0} aria-label={`Restar cantidad para ${branchLabel}`}>-</button>
                 <input
@@ -930,12 +938,6 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
                 />
                 <button type="button" onClick={() => stepDraft(branchId, 1)} disabled={!canOrder || (stock.stock > 0 && (Number(draftFor(branchId)) || 0) >= stock.stock)} aria-label={`Sumar cantidad para ${branchLabel}`}>+</button>
               </div>
-              {isFirstBranch && (
-                <div className="price-line">
-                  {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
-                  <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
-                </div>
-              )}
             </div>
           );
         })}
