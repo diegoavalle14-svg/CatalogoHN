@@ -8879,3 +8879,13 @@ button {
     width: 100% !important;
   }
 }
+
+.admin-product-top .sku-code {
+  width: max-content !important;
+}
+
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
