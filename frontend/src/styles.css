@@ -8863,4 +8863,19 @@ button {
     padding-left: 12px !important;
     gap: 2px !important;
   }
+
+  .price-readonly-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .price-readonly-values {
+    align-items: flex-start !important;
+    min-width: unset !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+  }
+  .price-readonly-row .client-row-button {
+    width: 100% !important;
+  }
 }

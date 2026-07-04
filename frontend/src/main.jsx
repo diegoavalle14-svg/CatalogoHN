@@ -2503,8 +2503,7 @@ function AdminPricesSection({ lists, products, clients, onEditPrices, onSyncList
               </div>
 
               <footer>
-                <button className="primary-price-action" type="button" onClick={() => onEditPrices(client)}>Editar productos</button>
-                {list.id && missing > 0 && <button type="button" onClick={() => onSyncList(list)}>Sincronizar</button>}
+                <button className="primary-price-action" type="button" onClick={() => onEditPrices(client)}>Editar precio</button>
               </footer>
             </article>
           );
@@ -3159,18 +3158,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
         {editor.type === 'price-list' && (
           <div className="admin-form admin-price-list-crud">
             <input type="hidden" value={form.nombre || ''} readOnly />
-            {editor.value?.client && (
-              <section className="admin-price-client-picker fixed-client">
-                <h3>Cliente</h3>
-                <label>
-                  <input type="checkbox" checked readOnly />
-                  <span>
-                    <strong>{editor.value.client.nombre}</strong>
-                    <small>{editor.value.client.usuario} · {editor.value.client.credito}</small>
-                  </span>
-                </label>
-              </section>
-            )}
+
             <section className="admin-price-list-products">
               <h3>Productos disponibles</h3>
               <small className="admin-price-list-note">Filtra y selecciona un producto para editar su precio individual de manera organizada.</small>
