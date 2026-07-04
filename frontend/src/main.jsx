@@ -2607,6 +2607,7 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
     <>
       <div className="admin-title-row">
         <AdminSectionTitle title="Precios por cliente" subtitle="Configura precios personalizados por cliente" />
+        <div />
       </div>
 
       <div className="admin-filter-bar">
@@ -2660,8 +2661,8 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                       <ProductStockPill product={product} className="admin-stock-badge" />
                     </div>
                     
-                    {/* Inputs de Precios */}
-                    <div className="admin-price-card-inputs" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                    {/* Controles de Precio */}
+                    <div className="admin-price-controls" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', minWidth: '180px' }}>
                       <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
                           <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase' }}>Precio (L.)</span>
@@ -2688,31 +2689,35 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                           />
                         </div>
                       </div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}>
-                        <input
-                          type="checkbox"
-                          checked={vals.promo_activa}
-                          disabled={!vals.precio_promocion}
-                          onChange={(e) => updateLocalValue(product.id, 'promo_activa', e.target.checked)}
-                        />
-                        <span>Oferta Activa</span>
-                      </label>
-                    </div>
-
-                    <div className="admin-row-actions" style={{ width: '100%', marginTop: '10px' }}>
-                      <button
-                        style={{
-                          width: '100%',
-                          background: vals.saved ? 'var(--green-strong, #10b981)' : 'var(--yellow)',
-                          color: vals.saved ? '#fff' : '#111',
-                          fontWeight: '700',
-                          transition: 'all 0.2s ease'
-                        }}
-                        disabled={vals.saving}
-                        onClick={() => handleSaveProductPrice(product.id)}
-                      >
-                        {vals.saving ? 'Guardando...' : vals.saved ? '¡Guardado!' : 'Guardar'}
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}>
+                          <input
+                            type="checkbox"
+                            checked={vals.promo_activa}
+                            disabled={!vals.precio_promocion}
+                            onChange={(e) => updateLocalValue(product.id, 'promo_activa', e.target.checked)}
+                          />
+                          <span>Oferta Activa</span>
+                        </label>
+                        <button
+                          style={{
+                            background: vals.saved ? 'var(--green-strong, #10b981)' : 'var(--yellow)',
+                            color: vals.saved ? '#fff' : '#111',
+                            fontWeight: '700',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '6px 12px',
+                            fontSize: '11px',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                            flex: 1
+                          }}
+                          disabled={vals.saving}
+                          onClick={() => handleSaveProductPrice(product.id)}
+                        >
+                          {vals.saving ? 'Guardando...' : vals.saved ? '¡Guardado!' : 'Guardar'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                   
