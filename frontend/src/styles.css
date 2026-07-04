@@ -1112,21 +1112,22 @@ button {
 
 .price-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   color: #222;
   margin: 0;
   padding: 0;
+  justify-self: end;
 }
 
 .price-line span {
   color: #6b6b6b;
-  font-size: 12px;
+  font-size: 13px;
   text-decoration: line-through;
 }
 
 .price-line b {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
 }
 
@@ -1135,7 +1136,7 @@ button {
 }
 
 .branch-qty {
-  align-self: end;
+  align-self: center;
   display: grid;
   gap: 6px;
   padding: 0 11px 11px;
@@ -1144,7 +1145,7 @@ button {
 .product-cart-control {
   min-height: 38px;
   display: grid;
-  grid-template-columns: 26px 42px max-content;
+  grid-template-columns: 26px 42px max-content auto;
   align-items: center;
   gap: 8px;
 }
