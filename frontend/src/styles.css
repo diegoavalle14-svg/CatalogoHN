@@ -8382,7 +8382,7 @@ button {
   color: var(--text);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .admin-entity-row {
     grid-template-columns: auto 1fr auto;
     gap: 8px;
@@ -8405,7 +8405,7 @@ button {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .admin-price-health article {
     min-height: 36px;
     padding: 4px 8px;
@@ -8507,7 +8507,7 @@ button {
   text-overflow: ellipsis;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .admin-client-card {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
