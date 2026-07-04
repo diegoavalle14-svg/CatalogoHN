@@ -2294,10 +2294,11 @@ function ProductPositionInput({ product, onPosition }) {
     setLocalVal(String(product.posicion || ''));
   }, [product.posicion]);
 
-  const handleBlurOrEnter = () => {
+  const handleBlurOrEnter = async () => {
     const num = parseInt(localVal, 10);
     if (!isNaN(num) && num > 0 && num !== product.posicion) {
-      onPosition(product, num);
+      await onPosition(product, num);
+      setLocalVal(String(num));
     } else {
       setLocalVal(String(product.posicion || ''));
     }
@@ -2310,9 +2311,10 @@ function ProductPositionInput({ product, onPosition }) {
       value={localVal}
       onChange={(e) => setLocalVal(e.target.value)}
       onBlur={handleBlurOrEnter}
-      onKeyDown={(e) => {
+      onKeyDown={async (e) => {
         if (e.key === 'Enter') {
-          handleBlurOrEnter();
+          e.preventDefault();
+          await handleBlurOrEnter();
           e.target.blur();
         }
       }}
