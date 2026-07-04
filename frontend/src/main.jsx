@@ -2292,10 +2292,10 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
 }
 
 function ProductPositionInput({ product, onPosition }) {
-  const [localVal, setLocalVal] = useState(() => String(product.posicion || ''));
+  const [localVal, setLocalVal] = useState(() => String(product.posicion !== undefined ? product.posicion : 0));
 
   useEffect(() => {
-    setLocalVal(String(product.posicion || ''));
+    setLocalVal(String(product.posicion !== undefined ? product.posicion : 0));
   }, [product.posicion]);
 
   const handleBlurOrEnter = async () => {
@@ -2304,7 +2304,7 @@ function ProductPositionInput({ product, onPosition }) {
       await onPosition(product, num);
       setLocalVal(String(num));
     } else {
-      setLocalVal(String(product.posicion !== undefined ? product.posicion : ''));
+      setLocalVal(String(product.posicion !== undefined ? product.posicion : 0));
     }
   };
 
@@ -2324,14 +2324,15 @@ function ProductPositionInput({ product, onPosition }) {
       }}
       className="admin-posicion-input"
       style={{
-        width: '60px',
-        padding: '3px 6px',
+        width: '70px',
+        padding: '4px 8px',
         border: '1px solid var(--line)',
         borderRadius: '4px',
-        fontSize: '0.85rem',
+        fontSize: '0.9rem',
         textAlign: 'center',
         background: 'var(--paper)',
-        color: 'var(--text)'
+        color: 'var(--text)',
+        fontWeight: '600'
       }}
     />
   );
