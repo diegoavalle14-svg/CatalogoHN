@@ -2811,7 +2811,7 @@ function AdminSitePreview({ tenant }) {
 
 function AdminEditor({ editor, brands, categories, priceLists, priceProducts, clients, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onSaveSite, onSiteDraftChange, onSaveAccountPassword, onDeleteBrand, onDeleteCategory }) {
   const [form, setForm] = useState(() => {
-    const f = buildAdminEditorForm(editor);
+    const f = buildAdminEditorForm(editor, priceProducts);
     if (editor.type === 'product') {
       const d = f.descripcion || '';
       const a = f.specs?.aplicacion || '';
@@ -3171,13 +3171,20 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               if (!product) return null;
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
-                  <div className="price-single-product-summary" style={{ padding: '10px', background: 'var(--mist)', borderRadius: '8px' }}>
-                    <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)' }}>{product.sku}</strong>
-                    <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '2px', whiteSpace: 'normal' }}>
-                      {[product.marca, product.descripcion].filter(Boolean).join(' · ')}
-                    </small>
-                    <div style={{ marginTop: '6px' }}>
-                      <ProductStockPill product={product} />
+                  <div className="price-single-product-summary" style={{ padding: '10px', background: 'var(--mist)', borderRadius: '8px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {product.imagen_url && (
+                      <div className="price-single-product-image" style={{ width: '56px', height: '56px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--line)', background: '#fff', flexShrink: 0 }}>
+                        <img src={resolveMediaUrl(product.imagen_url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)' }}>{product.sku}</strong>
+                      <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '2px', whiteSpace: 'normal' }}>
+                        {[product.marca, product.descripcion].filter(Boolean).join(' · ')}
+                      </small>
+                      <div style={{ marginTop: '6px' }}>
+                        <ProductStockPill product={product} />
+                      </div>
                     </div>
                   </div>
 
@@ -3256,13 +3263,20 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               if (!product) return null;
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
-                  <div className="price-single-product-summary" style={{ padding: '10px', background: 'var(--mist)', borderRadius: '8px' }}>
-                    <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)' }}>{product.sku}</strong>
-                    <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '2px', whiteSpace: 'normal' }}>
-                      {[product.marca, product.descripcion].filter(Boolean).join(' · ')}
-                    </small>
-                    <div style={{ marginTop: '6px' }}>
-                      <ProductStockPill product={product} />
+                  <div className="price-single-product-summary" style={{ padding: '10px', background: 'var(--mist)', borderRadius: '8px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {product.imagen_url && (
+                      <div className="price-single-product-image" style={{ width: '56px', height: '56px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--line)', background: '#fff', flexShrink: 0 }}>
+                        <img src={resolveMediaUrl(product.imagen_url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ display: 'block', fontSize: '13px', color: 'var(--text)' }}>{product.sku}</strong>
+                      <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '2px', whiteSpace: 'normal' }}>
+                        {[product.marca, product.descripcion].filter(Boolean).join(' · ')}
+                      </small>
+                      <div style={{ marginTop: '6px' }}>
+                        <ProductStockPill product={product} />
+                      </div>
                     </div>
                   </div>
 
@@ -3523,9 +3537,17 @@ function normalizeAdminPriceData(payload) {
   };
 }
 
-function buildAdminEditorForm(editor) {
+function buildAdminEditorForm(editor, priceProducts = []) {
   const form = { ...editor.value };
   if (editor.type === 'price' || editor.type === 'price-list') {
+    if (Array.isArray(priceProducts)) {
+      for (const p of priceProducts) {
+        form[`precio_${p.id}`] = p.precio ?? '';
+        form[`promo_${p.id}`] = p.precio_oferta ?? p.precio_promocion ?? '';
+        form[`promo_activa_${p.id}`] = p.promo_activa === true;
+        form[`visible_${p.id}`] = true;
+      }
+    }
     for (const price of editor.value.precios || []) {
       form[`precio_${price.producto_id}`] = price.precio ?? '';
       form[`promo_${price.producto_id}`] = price.precio_promocion ?? '';
