@@ -1763,21 +1763,14 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             lists={priceLists}
             products={priceProducts}
             clients={clients}
-            onEditPrices={(client) => {
-              const list = priceLists.find((item) => Number(item.id) === Number(client.lista_precio_id));
-              setEditor({
-                type: 'price-list',
-                title: `Precios: ${client.nombre}`,
-                value: {
-                  ...(list || {}),
-                  nombre: list?.nombre || `Precios - ${client.nombre}`,
-                  client,
-                  client_id: client.id
-                }
-              });
-            }}
+            categories={categories}
+            brands={brands}
+            session={session}
+            setPriceData={setPriceData}
+            setClients={setClients}
             onSyncList={syncPriceList}
             onSyncAll={syncAllPriceLists}
+            onPosition={(product, posicion) => updateProduct(product.id, { posicion })}
           />
         )}
 
@@ -2441,80 +2434,320 @@ function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, o
   );
 }
 
-function AdminPricesSection({ lists, products, clients, onEditPrices, onSyncList, onSyncAll }) {
+function AdminPricesSection({ lists, products, clients, categories, brands, session, setPriceData, setClients, onSyncList, onSyncAll, onPosition }) {
+  const [selectedClientId, setSelectedClientId] = useState('');
   const [query, setQuery] = useState('');
-  const filteredClients = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    return (clients || []).filter((client) => {
-      const list = (lists || []).find((item) => Number(item.id) === Number(client.lista_precio_id));
-      const haystack = `${client.nombre || ''} ${client.usuario || ''} ${client.lista || ''} ${list?.nombre || ''}`.toLowerCase();
-      return !normalizedQuery || haystack.includes(normalizedQuery);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [brandFilter, setBrandFilter] = useState('all');
+  const [localPrices, setLocalPrices] = useState({});
+
+  useEffect(() => {
+    if (!selectedClientId) {
+      setLocalPrices({});
+      return;
+    }
+    const client = clients.find((c) => Number(c.id) === Number(selectedClientId));
+    const list = lists.find((item) => Number(item.id) === Number(client?.lista_precio_id)) || { precios: [] };
+    const initial = {};
+    (products || []).forEach((product) => {
+      const priceDetail = list.precios?.find((p) => Number(p.producto_id) === Number(product.id)) || {};
+      initial[product.id] = {
+        precio: priceDetail.precio ?? '',
+        precio_promocion: priceDetail.precio_promocion ?? '',
+        promo_activa: priceDetail.promo_activa === true,
+        visible_cliente: priceDetail.visible_cliente !== false,
+        saving: false,
+        saved: false
+      };
     });
-  }, [clients, lists, query]);
-  const totalAssignedClients = (lists || []).reduce((sum, list) => sum + Number(list.clientes || 0), 0);
-  const totalMissingPrices = (lists || []).reduce((sum, list) => sum + Number(list.productos_faltantes || 0), 0);
+    setLocalPrices(initial);
+  }, [selectedClientId, clients, lists, products]);
+
+  const updateLocalValue = (productId, field, value) => {
+    setLocalPrices((prev) => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId] ? {
+          ...prev[productId],
+          [field]: value,
+          saved: false
+        } : {
+          precio: '',
+          precio_promocion: '',
+          promo_activa: false,
+          visible_cliente: true,
+          [field]: value,
+          saved: false
+        }
+      }
+    }));
+  };
+
+  const handleSaveProductPrice = async (productId) => {
+    const client = clients.find((c) => Number(c.id) === Number(selectedClientId));
+    if (!client) return;
+
+    setLocalPrices((prev) => ({
+      ...prev,
+      [productId]: { ...prev[productId], saving: true }
+    }));
+
+    try {
+      const values = localPrices[productId] || {};
+      const listId = client.lista_precio_id;
+      let targetListId = listId;
+
+      if (!targetListId) {
+        const listName = `Precios - ${client.nombre} #${client.id}`;
+        const savedListPayload = await api.adminSavePriceList(session.token, {
+          nombre: listName,
+          cliente_ids: [client.id]
+        });
+        targetListId = savedListPayload.lista.id;
+        
+        const latestClients = await api.adminClients(session.token);
+        setClients((latestClients.clientes || []).map(normalizeAdminClient));
+      }
+
+      const currentList = lists.find((item) => Number(item.id) === Number(targetListId)) || { precios: [] };
+
+      const precios = products.map((product) => {
+        if (product.id === productId) {
+          return {
+            producto_id: product.id,
+            precio: Number(values.precio || 0),
+            precio_promocion: values.precio_promocion === '' ? null : Number(values.precio_promocion || 0) || null,
+            promo_activa: values.promo_activa === true,
+            visible_cliente: values.visible_cliente !== false
+          };
+        } else {
+          const localVal = localPrices[product.id];
+          if (localVal) {
+            return {
+              producto_id: product.id,
+              precio: Number(localVal.precio || 0),
+              precio_promocion: localVal.precio_promocion === '' ? null : Number(localVal.precio_promocion || 0) || null,
+              promo_activa: localVal.promo_activa === true,
+              visible_cliente: localVal.visible_cliente !== false
+            };
+          }
+          const priceDetail = currentList.precios?.find((p) => Number(p.producto_id) === Number(product.id)) || {};
+          return {
+            producto_id: product.id,
+            precio: Number(priceDetail.precio || 0),
+            precio_promocion: priceDetail.precio_promocion ?? null,
+            promo_activa: priceDetail.promo_activa === true,
+            visible_cliente: priceDetail.visible_cliente !== false
+          };
+        }
+      });
+
+      const savedPricesResult = await api.adminSaveListPrices(session.token, targetListId, precios);
+
+      setPriceData((current) => ({
+        ...current,
+        listas: current.listas.map((list) => 
+          Number(list.id) === Number(targetListId) 
+            ? { ...list, precios: savedPricesResult.precios } 
+            : list
+        )
+      }));
+
+      setLocalPrices((prev) => ({
+        ...prev,
+        [productId]: {
+          ...prev[productId],
+          saving: false,
+          saved: true
+        }
+      }));
+
+      setTimeout(() => {
+        setLocalPrices((prev) => {
+          if (!prev[productId]) return prev;
+          return {
+            ...prev,
+            [productId]: {
+              ...prev[productId],
+              saved: false
+            }
+          };
+        });
+      }, 2000);
+
+    } catch (error) {
+      console.error(error);
+      alert('Error al guardar el precio: ' + (error.message || 'Error desconocido'));
+      setLocalPrices((prev) => ({
+        ...prev,
+        [productId]: { ...prev[productId], saving: false }
+      }));
+    }
+  };
+
+  const filteredProducts = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (products || []).filter((product) => {
+      const matchesSearch = !q || `${product.sku} ${product.marca} ${product.descripcion}`.toLowerCase().includes(q);
+      const matchesCategory = categoryFilter === 'all' || String(product.categoria_id) === String(categoryFilter);
+      const matchesBrand = brandFilter === 'all' || String(product.marca).toLowerCase() === String(brandFilter).toLowerCase();
+      return matchesSearch && matchesCategory && matchesBrand;
+    });
+  }, [products, query, categoryFilter, brandFilter]);
+
+  const [lightbox, setLightbox] = useState(null);
+
   return (
     <>
       <div className="admin-title-row">
-        <AdminSectionTitle title="Precios por cliente" subtitle="Visibilidad, precio normal y oferta por usuario" />
-        <div>
-          {totalMissingPrices > 0 && (
-            <button className="admin-sync-prices-button" onClick={onSyncAll}>
-              <Check size={13} /> Sincronizar todo
-            </button>
-          )}
-        </div>
+        <AdminSectionTitle title="Precios por cliente" subtitle="Configura precios personalizados por cliente" />
       </div>
-      <div className="admin-price-health">
-        <article><strong>{products.length}</strong><span>productos base</span></article>
-        <article><strong>{totalAssignedClients}/{clients.length}</strong><span>clientes asignados</span></article>
-        <article className={totalMissingPrices > 0 ? 'needs-sync' : ''}><strong>{totalMissingPrices}</strong><span>precios faltantes</span></article>
+
+      <div className="admin-price-client-picker-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', background: 'var(--paper)', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--line)' }}>
+        <Users size={16} style={{ color: 'var(--muted)' }} />
+        <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Seleccionar Cliente</span>
+          <select
+            style={{ width: '100%', height: '38px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 10px', fontSize: '13px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
+            value={selectedClientId}
+            onChange={(e) => setSelectedClientId(e.target.value)}
+          >
+            <option value="">-- Elige un cliente --</option>
+            {(clients || []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre} ({c.usuario}) {c.lista_precio_id ? '· [Con Precios]' : '· [Sin Precios]'}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-      <div className="admin-filter-bar">
-        <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar cliente o usuario" value={query} onChange={setQuery} />
-        <small className="admin-results-count">{filteredClients.length} clientes</small>
-      </div>
-      <div className="admin-price-groups">
-        {filteredClients.map((client) => {
-          const list = (lists || []).find((item) => Number(item.id) === Number(client.lista_precio_id)) || { precios: [], clientes_asignados: [] };
-          const filledPrices = list.precios?.filter((price) => Number(price.precio) > 0) || [];
-          const promoCount = filledPrices.filter((price) => price.promo_activa === true && price.precio_promocion).length;
-          const missing = Number(list.productos_faltantes ?? Math.max(0, products.length - (list.precios || []).length));
-          const coverage = products.length ? Math.round((filledPrices.length / products.length) * 100) : 0;
-          const hiddenCount = (list.precios || []).filter((price) => price.visible_cliente === false).length;
-          return (
-            <article className={`admin-price-group ${missing > 0 ? 'needs-sync' : ''}`} key={client.id}>
-              <header>
-                <span>
-                  <strong>{client.nombre}</strong>
-                  <small>{client.usuario} · {list.nombre || 'Sin precios configurados'}</small>
-                </span>
-                <b className={client.activo ? 'price-ok' : 'price-warning'}>{client.activo ? 'Activo' : 'Inactivo'}</b>
-              </header>
 
-              <div className="price-progress" aria-label={`${coverage}% configurado`}>
-                <span style={{ width: `${coverage}%` }} />
-              </div>
-
-              <div className="admin-price-group-metrics">
-                <span><strong>{filledPrices.length}/{products.length}</strong> productos</span>
-                <span><strong>{promoCount}</strong> ofertas</span>
-                <span><strong>{hiddenCount}</strong> ocultos</span>
-              </div>
-
-              <footer>
-                <button className="primary-price-action" type="button" onClick={() => onEditPrices(client)}>Editar precio</button>
-              </footer>
-            </article>
-          );
-        })}
-        {filteredClients.length === 0 && (
-          <div className="admin-empty-state">
-            <strong>No hay clientes</strong>
-            <span>Crea clientes para configurar visibilidad y precios por usuario.</span>
+      {selectedClientId ? (
+        <>
+          <div className="admin-filter-bar">
+            <ClearableSearchInput placeholder="Buscar por SKU, marca o aplicación" value={query} onChange={setQuery} />
+            
+            <label className="admin-category-filter">
+              <Folder size={14} />
+              <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
+                <option value="all">Todas las categorías</option>
+                {(categories || []).map((category) => (
+                  <option value={String(category.id)} key={category.id}>{category.nombre}</option>
+                ))}
+              </select>
+            </label>
           </div>
-        )}
-      </div>
+
+          <div className="admin-product-list">
+            {filteredProducts.map((product) => {
+              const vals = localPrices[product.id] || {
+                precio: '',
+                precio_promocion: '',
+                promo_activa: false,
+                visible_cliente: true,
+                saving: false,
+                saved: false
+              };
+              return (
+                <article className={vals.visible_cliente ? 'admin-product-row' : 'admin-product-row muted'} key={product.id}>
+                  <div className="admin-product-top">
+                    <ProductImageThumb images={product.imagenes} onClick={() => { const images = cleanProductImages(product.imagenes); if (images.length) setLightbox({ images, index: 0 }); }} />
+                    <div>
+                      <span className="sku-code">{product.sku}</span>
+                      <small>{[product.marca, product.specs?.aplicacion || product.descripcion].filter(Boolean).join(' · ')}</small>
+                      <ProductStockPill product={product} className="admin-stock-badge" />
+                    </div>
+                    
+                    {/* Inputs de Precios */}
+                    <div className="admin-price-card-inputs" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                      <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
+                          <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase' }}>Precio (L.)</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            style={{ width: '100%', height: '30px', border: '1px solid var(--line)', borderRadius: '4px', padding: '0 6px', fontSize: '12px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
+                            value={vals.precio}
+                            onChange={(e) => updateLocalValue(product.id, 'precio', e.target.value)}
+                          />
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
+                          <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase' }}>Oferta (L.)</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            style={{ width: '100%', height: '30px', border: '1px solid var(--line)', borderRadius: '4px', padding: '0 6px', fontSize: '12px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
+                            value={vals.precio_promocion}
+                            onChange={(e) => updateLocalValue(product.id, 'precio_promocion', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}>
+                        <input
+                          type="checkbox"
+                          checked={vals.promo_activa}
+                          disabled={!vals.precio_promocion}
+                          onChange={(e) => updateLocalValue(product.id, 'promo_activa', e.target.checked)}
+                        />
+                        <span>Oferta Activa</span>
+                      </label>
+                    </div>
+
+                    <div className="admin-row-actions" style={{ width: '100%', marginTop: '10px' }}>
+                      <button
+                        style={{
+                          width: '100%',
+                          background: vals.saved ? 'var(--green-strong, #10b981)' : 'var(--yellow)',
+                          color: vals.saved ? '#fff' : '#111',
+                          fontWeight: '700',
+                          transition: 'all 0.2s ease'
+                        }}
+                        disabled={vals.saving}
+                        onClick={() => handleSaveProductPrice(product.id)}
+                      >
+                        {vals.saving ? 'Guardando...' : vals.saved ? '¡Guardado!' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <footer>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', fontSize: '11px' }}>
+                      Pos. <ProductPositionInput product={product} onPosition={onPosition} />
+                    </label>
+                    <label className="switch-line" style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', fontSize: '11px' }}>
+                      {vals.visible_cliente ? 'Visible' : 'Oculto'}
+                      <input
+                        type="checkbox"
+                        checked={vals.visible_cliente}
+                        onChange={(e) => updateLocalValue(product.id, 'visible_cliente', e.target.checked)}
+                      />
+                      <span />
+                    </label>
+                  </footer>
+                </article>
+              );
+            })}
+          </div>
+          {filteredProducts.length === 0 && (
+            <div className="admin-empty-state">
+              <strong>No se encontraron productos</strong>
+              <span>Intenta buscar con otros filtros.</span>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="admin-empty-state" style={{ marginTop: '20px', padding: '40px 20px', background: 'var(--paper)', borderRadius: '12px', border: '1px solid var(--line)' }}>
+          <Users size={32} style={{ color: 'var(--muted)', marginBottom: '12px' }} />
+          <strong>Ningún cliente seleccionado</strong>
+          <span>Selecciona un cliente arriba para ver y configurar sus precios personalizados.</span>
+        </div>
+      )}
+      
+      <ImageLightbox images={lightbox?.images || []} index={lightbox?.index ?? null} onClose={() => setLightbox(null)} onIndexChange={(index) => setLightbox((current) => current ? { ...current, index } : current)} />
     </>
   );
 }
