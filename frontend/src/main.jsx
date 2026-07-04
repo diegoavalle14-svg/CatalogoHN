@@ -906,11 +906,12 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
             </button>
           </div>
         )}
-        {availableBranches.map((branch) => {
+        {availableBranches.map((branch, index) => {
           const branchId = branch.id;
           const draft = draftFor(branchId);
           const branchLabel = branch.letra || branch.codigo || branch.nombre || 'Sucursal';
           const branchTitle = [branchLabel, branch.nombre, branch.direccion].filter(Boolean).join(' · ');
+          const isFirstBranch = index === 0;
           return (
             <div className="product-cart-control" key={branchId}>
               <span className="branch-code" title={branchTitle}>{branchLabel}</span>
@@ -929,21 +930,21 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
                 />
                 <button type="button" onClick={() => stepDraft(branchId, 1)} disabled={!canOrder || (stock.stock > 0 && (Number(draftFor(branchId)) || 0) >= stock.stock)} aria-label={`Sumar cantidad para ${branchLabel}`}>+</button>
               </div>
+              {isFirstBranch && (
+                <div className="price-line">
+                  {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
+                  <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-      <div className="price-add-row">
-        {availableBranches.length > 0 && (
-          <button className="add-to-cart-button global-add" type="button" onClick={addMultipleBranches} disabled={!canOrder || !hasAnyDrafts}>
-            {isOutOfStock ? 'Agotado' : '+ Agregar'}
-          </button>
-        )}
-        <div className="price-line">
-          {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
-          <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
-        </div>
-      </div>
+      {availableBranches.length > 0 && (
+        <button className="add-to-cart-button global-add" type="button" onClick={addMultipleBranches} disabled={!canOrder || !hasAnyDrafts}>
+          {isOutOfStock ? 'Agotado' : '+ Agregar'}
+        </button>
+      )}
       {enableLightbox && <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />}
     </article>
   );
