@@ -1211,15 +1211,15 @@ button {
 }
 
 .add-to-cart-button {
-  height: 30px;
+  height: 30px;        
   border: 0;
   border-radius: 4px;
-  background: #090909;
-  color: var(--yellow);
-  padding: 0 9px;
-  font-size: 10px;
-  font-weight: 900;
-  white-space: nowrap;
+  background: var(--yellow);
+  color: #111;
+  font-size: 11px;    
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .quantity-stepper button:disabled,
@@ -1245,8 +1245,8 @@ button {
 
 .product-cart-control-actions .add-to-cart-button.global-add {
   flex: 1;
-  height: 34px;
-  font-size: 11px;
+  height: 34px;        
+  font-size: 11px;     
 }
 
 .catalog-toast {
