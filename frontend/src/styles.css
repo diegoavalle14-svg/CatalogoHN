@@ -8920,14 +8920,14 @@ button {
 }
 
 .admin-product-top img {
-  width: 72px !important;
-  height: 72px !important;
+  width: 100px !important;
+  height: 100px !important;
   object-fit: contain !important;
 }
 
 .admin-product-top .product-thumb-fallback {
-  width: 72px !important;
-  height: 72px !important;
+  width: 100px !important;
+  height: 100px !important;
 }
 
 .admin-product-top > div {
@@ -9000,8 +9000,8 @@ button {
 
   .admin-product-top img,
   .admin-product-top .product-thumb-fallback {
-    width: 50px !important;
-    height: 50px !important;
+    width: 80px !important;
+    height: 80px !important;
   }
 
   .admin-product-top .sku-code {
