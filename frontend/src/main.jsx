@@ -3041,6 +3041,11 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 placeholder={'Hilux 79 - 88\nHIERRO / METAL\n1" Pulgada (15/16)'}
                 value={form.infoText ?? ''}
                 onChange={(event) => update('infoText', event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.stopPropagation();
+                  }
+                }}
               />
             </label>
             <div className="admin-product-stock-grid">
@@ -3191,16 +3196,37 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             <section className="admin-price-list-products">
               <h3>Productos disponibles</h3>
               <small className="admin-price-list-note">Activa la visibilidad para este cliente y configura precio normal u oferta por producto.</small>
+              <div className="admin-price-editor-header">
+                <span>Producto</span>
+                <span>Visible</span>
+                <span>Precio</span>
+                <span>Oferta</span>
+                <span>Promo</span>
+              </div>
               {groupPriceProductsByCategory(priceProducts).map((group) => (
                 <section className="admin-price-category-group" key={group.category}>
                   <h3>{group.category}</h3>
                   {group.items.map((product) => (
                     <div className="admin-price-editor-row" key={product.id}>
-                      <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small><ProductStockPill product={product} /></span>
-                      <label className="price-visible-toggle"><input type="checkbox" checked={form[`visible_${product.id}`] !== false} onChange={(event) => update(`visible_${product.id}`, event.target.checked)} /> Visible</label>
-                      <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
-                      <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
-                      <label className="price-visible-toggle"><input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} /> Promo activa</label>
+                      <span className="price-product-info">
+                        <strong>{product.sku}</strong>
+                        <small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small>
+                        <ProductStockPill product={product} />
+                      </span>
+                      <label className="price-visible-checkbox" title="Visible para el cliente">
+                        <input type="checkbox" checked={form[`visible_${product.id}`] !== false} onChange={(event) => update(`visible_${product.id}`, event.target.checked)} />
+                        <span>Visible</span>
+                      </label>
+                      <div className="price-input-group">
+                        <input type="number" placeholder="Precio" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} />
+                      </div>
+                      <div className="price-input-group">
+                        <input type="number" placeholder="Oferta" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} />
+                      </div>
+                      <label className="price-promo-checkbox" title="Activar promoción">
+                        <input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} />
+                        <span>Promo</span>
+                      </label>
                     </div>
                   ))}
                 </section>
@@ -3211,15 +3237,32 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
         {editor.type === 'price' && (
           <div className="admin-form admin-price-editor">
+            <div className="admin-price-editor-header base-price-header">
+              <span>Producto</span>
+              <span>Precio</span>
+              <span>Oferta</span>
+              <span>Promo</span>
+            </div>
             {groupPriceProductsByCategory(priceProducts).map((group) => (
               <section className="admin-price-category-group" key={group.category}>
                 <h3>{group.category}</h3>
                 {group.items.map((product) => (
-                  <div className="admin-price-editor-row" key={product.id}>
-                    <span><strong>{product.sku}</strong><small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small><ProductStockPill product={product} /></span>
-                    <label>Precio<input type="number" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} /></label>
-                    <label>Precio oferta<input type="number" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} /></label>
-                    <label className="price-visible-toggle"><input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} /> Promo activa</label>
+                  <div className="admin-price-editor-row base-price-row" key={product.id}>
+                    <span className="price-product-info">
+                      <strong>{product.sku}</strong>
+                      <small>{[product.marca, product.descripcion].filter(Boolean).join(' · ')}</small>
+                      <ProductStockPill product={product} />
+                    </span>
+                    <div className="price-input-group">
+                      <input type="number" placeholder="Precio" value={form[`precio_${product.id}`] || ''} onChange={(event) => update(`precio_${product.id}`, event.target.value)} />
+                    </div>
+                    <div className="price-input-group">
+                      <input type="number" placeholder="Oferta" value={form[`promo_${product.id}`] || ''} onChange={(event) => update(`promo_${product.id}`, event.target.value)} />
+                    </div>
+                    <label className="price-promo-checkbox" title="Activar promoción">
+                      <input type="checkbox" checked={form[`promo_activa_${product.id}`] === true} onChange={(event) => update(`promo_activa_${product.id}`, event.target.checked)} disabled={!form[`promo_${product.id}`]} />
+                      <span>Promo</span>
+                    </label>
                   </div>
                 ))}
               </section>
