@@ -2441,11 +2441,11 @@ function AdminClientsSection({ clients, onNew, onEdit, onToggle, onDelete }) {
             {isExpanded && (
               <div className="admin-client-detail">
                 <div className="admin-client-detail-grid">
+                  <span className="full-width"><b>Nombre Completo</b>{client.nombre}</span>
                   <span><b>Lista de Precios</b>{client.lista || 'General'}</span>
                   <span><b>Términos de Crédito</b>{client.credito || 'Contado'}</span>
                   <span><b>Aplica ISV</b>{client.aplica_isv ? 'Sí' : 'No'}</span>
                   <span><b>Último Acceso</b>{client.ultimo_acceso ? new Date(client.ultimo_acceso).toLocaleString('es-HN') : 'Nunca'}</span>
-                  {client.ultimo_ip && <span><b>Último IP</b>{client.ultimo_ip}</span>}
                 </div>
                 {client.sucursales && client.sucursales.length > 0 ? (
                   <div className="client-detail-branches">

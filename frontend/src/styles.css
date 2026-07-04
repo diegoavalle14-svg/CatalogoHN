@@ -8749,6 +8749,7 @@ button {
   font-size: 13px !important;
   font-weight: 900 !important;
   border: 2px solid var(--line) !important;
+  flex-shrink: 0 !important;
 }
 [data-theme="dark"] .client-avatar {
   background: #334155 !important;
@@ -8804,6 +8805,10 @@ button {
   text-align: center !important;
 }
 
+.admin-client-detail-grid span.full-width {
+  grid-column: 1 / -1 !important;
+}
+
 /* Mobile client list grid layout (2x2) */
 @media (max-width: 560px) {
   .admin-client-card {
@@ -8829,5 +8834,33 @@ button {
     margin: 0 !important;
     font-size: 10px !important;
     min-height: 28px !important;
+  }
+
+  .admin-client-detail {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+  
+  .admin-client-detail-grid {
+    gap: 6px !important;
+  }
+  
+  .admin-client-detail span {
+    font-size: 10px !important;
+  }
+  
+  .admin-client-detail b {
+    font-size: 8px !important;
+  }
+  
+  .client-detail-branches {
+    font-size: 10px !important;
+    padding-top: 6px !important;
+    margin-top: 2px !important;
+  }
+  
+  .client-detail-branches ul {
+    padding-left: 12px !important;
+    gap: 2px !important;
   }
 }
