@@ -897,10 +897,6 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
         {product.descripcion && <p>{product.descripcion}</p>}
         {product.specs?.aplicacion && <p>{product.specs.aplicacion}</p>}
         {product.specs?.medida && <p>{product.specs.medida}</p>}
-        <div className="price-line">
-          {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
-          <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
-        </div>
       </div>
       <div className="branch-qty">
         {availableBranches.length === 0 && (
@@ -943,6 +939,10 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
             </button>
           </div>
         )}
+      </div>
+      <div className="price-line">
+        {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
+        <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
       </div>
       {enableLightbox && <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />}
     </article>

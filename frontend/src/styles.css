@@ -1094,25 +1094,26 @@ button {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
 }
 
 .price-line {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-top: auto;
+  margin-top: 8px;
+  padding: 0 11px 11px;
   color: #222;
 }
 
 .price-line span {
   color: #6b6b6b;
-  font-size: 11px;
+  font-size: 12px;
   text-decoration: line-through;
 }
 
 .price-line b {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 900;
 }
 
