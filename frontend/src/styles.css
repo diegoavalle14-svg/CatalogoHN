@@ -6354,7 +6354,8 @@ button {
 
 .admin-photo-preview {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 16 / 9;
+  max-height: 80px;
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid #cfd2d8;
@@ -6368,11 +6369,11 @@ button {
 
 .admin-photo-delete-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
   background: rgba(0, 0, 0, 0.6);
   color: white;
   border: none;
@@ -6388,14 +6389,15 @@ button {
 }
 
 .admin-photo-upload {
-  aspect-ratio: 1;
+  aspect-ratio: 16 / 9;
+  max-height: 80px;
   border: 2px dashed #cfd2d8;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
 }
@@ -6410,7 +6412,7 @@ button {
 }
 
 .admin-photo-upload span {
-  font-size: 12px;
+  font-size: 11px;
   color: #686b73;
   font-weight: 600;
 }

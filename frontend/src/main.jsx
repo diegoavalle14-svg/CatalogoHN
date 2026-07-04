@@ -3317,7 +3317,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                     </button>
                   </div>
                 ) : (
-                  <div className="admin-photo-upload">
+                  <label className="admin-photo-upload">
                     <input type="file" accept="image/*" onChange={(event) => {
                       const file = event.target.files?.[0];
                       if (file) {
@@ -3327,7 +3327,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                       }
                     }} />
                     <span>Subir foto</span>
-                  </div>
+                  </label>
                 )}
               </div>
               <div className="admin-product-photo-slot">
@@ -3340,7 +3340,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                     </button>
                   </div>
                 ) : (
-                  <div className="admin-photo-upload">
+                  <label className="admin-photo-upload">
                     <input type="file" accept="image/*" onChange={(event) => {
                       const file = event.target.files?.[0];
                       if (file) {
@@ -3350,7 +3350,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                       }
                     }} />
                     <span>Subir foto</span>
-                  </div>
+                  </label>
                 )}
               </div>
             </div>
