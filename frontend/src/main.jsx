@@ -2437,6 +2437,12 @@ function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, o
 function AdminPricesSection({ lists, products, clients, categories, brands, session, setPriceData, setClients, onSyncList, onSyncAll, onPosition }) {
   const [selectedClientId, setSelectedClientId] = useState('');
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (!selectedClientId && clients && clients.length > 0) {
+      setSelectedClientId(clients[0].id);
+    }
+  }, [clients, selectedClientId]);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [brandFilter, setBrandFilter] = useState('all');
   const [localPrices, setLocalPrices] = useState({});
@@ -2603,30 +2609,22 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
         <AdminSectionTitle title="Precios por cliente" subtitle="Configura precios personalizados por cliente" />
       </div>
 
-      <div className="admin-price-client-picker-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', background: 'var(--paper)', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--line)' }}>
-        <Users size={16} style={{ color: 'var(--muted)' }} />
-        <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--muted)' }}>Seleccionar Cliente</span>
-          <select
-            style={{ width: '100%', height: '38px', border: '1px solid var(--line)', borderRadius: '6px', padding: '0 10px', fontSize: '13px', fontWeight: '700', background: 'var(--paper)', color: 'var(--text)' }}
-            value={selectedClientId}
-            onChange={(e) => setSelectedClientId(e.target.value)}
-          >
-            <option value="">-- Elige un cliente --</option>
+      <div className="admin-filter-bar">
+        <label className="admin-category-filter">
+          <Users size={14} />
+          <select value={selectedClientId} onChange={(e) => setSelectedClientId(e.target.value)}>
+            <option value="">-- Seleccionar cliente --</option>
             {(clients || []).map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nombre} ({c.usuario}) {c.lista_precio_id ? '· [Con Precios]' : '· [Sin Precios]'}
+                {c.nombre} ({c.usuario})
               </option>
             ))}
           </select>
         </label>
-      </div>
-
-      {selectedClientId ? (
-        <>
-          <div className="admin-filter-bar">
-            <ClearableSearchInput placeholder="Buscar por SKU, marca o aplicación" value={query} onChange={setQuery} />
-            
+        
+        {selectedClientId && (
+          <>
+            <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar SKU, marca o aplicación" value={query} onChange={setQuery} />
             <label className="admin-category-filter">
               <Folder size={14} />
               <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
@@ -2636,8 +2634,12 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                 ))}
               </select>
             </label>
-          </div>
+          </>
+        )}
+      </div>
 
+      {selectedClientId ? (
+        <>
           <div className="admin-product-list">
             {filteredProducts.map((product) => {
               const vals = localPrices[product.id] || {
