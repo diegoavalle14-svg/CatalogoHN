@@ -1127,7 +1127,10 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     const applyCatalogPayload = (payload) => {
       if (cancelled) return;
       setCatalog(payload);
-      setProducts(payload.productos.map((product, index) => ({ ...product, posicion: product.posicion !== undefined ? product.posicion : index, visible: product.visible !== false })));
+      // Clean up duplicate positions by renumbering sequentially
+      const sorted = [...payload.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
+      const cleaned = sorted.map((product, index) => ({ ...product, posicion: index, visible: product.visible !== false }));
+      setProducts(cleaned);
       setBrands(payload.marcas || []);
       setCategories(payload.categorias || []);
     };
@@ -1256,11 +1259,19 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             pos = newPos;
             positionUpdates.push({ id: product.id, posicion: newPos });
           } else {
-            // Check if this product has the target position and needs to be shifted
-            if (product.posicion === newPos && product.id !== id) {
-              // Shift this product to old position
-              pos = oldPos;
-              positionUpdates.push({ id: product.id, posicion: oldPos });
+            // Shift other products to avoid duplicates
+            if (newPos > oldPos) {
+              // Moving down: shift products between oldPos and newPos down by 1
+              if (pos > oldPos && pos <= newPos) {
+                pos = pos - 1;
+                positionUpdates.push({ id: product.id, posicion: pos });
+              }
+            } else {
+              // Moving up: shift products between newPos and oldPos up by 1
+              if (pos >= newPos && pos < oldPos) {
+                pos = pos + 1;
+                positionUpdates.push({ id: product.id, posicion: pos });
+              }
             }
           }
           return { ...product, posicion: pos };
@@ -1281,20 +1292,22 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         // Reload catalog to get final state
         const freshCatalog = await api.adminCatalog(session.token);
         const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
-        setProducts(sorted.map((product, index) => ({ 
+        const cleaned = sorted.map((product, index) => ({ 
           ...product, 
-          posicion: product.posicion !== undefined ? product.posicion : index, 
+          posicion: index, 
           visible: product.visible !== false 
-        })));
+        }));
+        setProducts(cleaned);
       } else {
         await api.adminSaveProduct(session.token, changes.id ? changes : { ...changes, id });
         const freshCatalog = await api.adminCatalog(session.token);
         const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
-        setProducts(sorted.map((product, index) => ({ 
+        const cleaned = sorted.map((product, index) => ({ 
           ...product, 
-          posicion: product.posicion !== undefined ? product.posicion : index, 
+          posicion: index, 
           visible: product.visible !== false 
-        })));
+        }));
+        setProducts(cleaned);
       }
     } catch (error) {
       setProducts(previousProducts);
@@ -1342,11 +1355,13 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     try {
       await api.adminSaveProduct(session.token, nextPayload);
       const freshCatalog = await api.adminCatalog(session.token);
-      setProducts(freshCatalog.productos.map((product, index) => ({ 
+      const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
+      const cleaned = sorted.map((product, index) => ({ 
         ...product, 
-        posicion: product.posicion !== undefined ? product.posicion : index, 
+        posicion: index, 
         visible: product.visible !== false 
-      })));
+      }));
+      setProducts(cleaned);
       setEditor(null);
       showToast(payload.id ? 'Producto actualizado correctamente' : 'Producto agregado correctamente');
     } catch (error) {
@@ -1472,7 +1487,10 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       ]);
       setOrders(ordersPayload.pedidos);
       setCatalog(catalogPayload);
-      setProducts(catalogPayload.productos.map((product, index) => ({ ...product, posicion: product.posicion !== undefined ? product.posicion : index, visible: product.visible !== false })));
+      // Clean up duplicate positions
+      const sorted = [...catalogPayload.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
+      const cleaned = sorted.map((product, index) => ({ ...product, posicion: index, visible: product.visible !== false }));
+      setProducts(cleaned);
       setBrands(catalogPayload.marcas || []);
       setCategories(catalogPayload.categorias || []);
     } catch (error) {
@@ -1550,11 +1568,13 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       const latestPrices = await api.adminPrices(session.token);
       setPriceData(normalizeAdminPriceData(latestPrices));
       const freshCatalog = await api.adminCatalog(session.token);
-      setProducts(freshCatalog.productos.map((product, index) => ({ 
+      const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
+      const cleaned = sorted.map((product, index) => ({ 
         ...product, 
-        posicion: product.posicion !== undefined ? product.posicion : index, 
+        posicion: index, 
         visible: product.visible !== false 
-      })));
+      }));
+      setProducts(cleaned);
       showToast('Producto eliminado');
     } catch (error) {
       setProducts(previousProducts);
