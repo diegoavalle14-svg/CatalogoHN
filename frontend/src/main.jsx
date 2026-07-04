@@ -1332,8 +1332,6 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         posicion: product.posicion || index + 1, 
         visible: product.visible !== false 
       })));
-      setProductImage1(null);
-      setProductImage2(null);
       setEditor(null);
       showToast(payload.id ? 'Producto actualizado correctamente' : 'Producto agregado correctamente');
     } catch (error) {
