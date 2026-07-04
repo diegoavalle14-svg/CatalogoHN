@@ -2437,6 +2437,7 @@ function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, o
 function AdminPricesSection({ lists, products, clients, categories, brands, session, setPriceData, setClients, onSyncList, onSyncAll, onPosition }) {
   const [selectedClientId, setSelectedClientId] = useState('');
   const [query, setQuery] = useState('');
+  const [visibilityFilter, setVisibilityFilter] = useState('all');
 
   useEffect(() => {
     if (!selectedClientId && clients && clients.length > 0) {
@@ -2597,9 +2598,12 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
       const matchesSearch = !q || `${product.sku} ${product.marca} ${product.descripcion}`.toLowerCase().includes(q);
       const matchesCategory = categoryFilter === 'all' || String(product.categoria_id) === String(categoryFilter);
       const matchesBrand = brandFilter === 'all' || String(product.marca).toLowerCase() === String(brandFilter).toLowerCase();
-      return matchesSearch && matchesCategory && matchesBrand;
+      const matchesVisibility = visibilityFilter === 'all'
+        || (visibilityFilter === 'visible' && product.visible !== false)
+        || (visibilityFilter === 'hidden' && product.visible === false);
+      return matchesSearch && matchesCategory && matchesBrand && matchesVisibility;
     });
-  }, [products, query, categoryFilter, brandFilter]);
+  }, [products, query, categoryFilter, brandFilter, visibilityFilter]);
 
   const [lightbox, setLightbox] = useState(null);
 
@@ -2626,6 +2630,17 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
         {selectedClientId && (
           <>
             <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar SKU, marca o aplicación" value={query} onChange={setQuery} />
+            <div className="admin-chip-row">
+              {[
+                ['all', 'Todos'],
+                ['visible', 'Visibles'],
+                ['hidden', 'Ocultos']
+              ].map(([value, label]) => (
+                <button type="button" key={value} className={visibilityFilter === value ? 'active' : ''} onClick={() => setVisibilityFilter(value)}>
+                  {label}
+                </button>
+              ))}
+            </div>
             <label className="admin-category-filter">
               <Folder size={14} />
               <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
