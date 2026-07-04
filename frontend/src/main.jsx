@@ -1304,13 +1304,13 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         return;
       }
     }
-    const existingImages = cleanProductImages(payload.imagenes).slice(0, Math.max(0, 2 - uploadedImageUrls.length));
+    const existingImages = cleanProductImages(payload.imagenes);
     const nextPayload = prepareProductPayload(
       {
         ...payload,
         imageFile: undefined,
         imageFiles: undefined,
-        imagenes: uploadedImageUrls.length ? [...existingImages, ...uploadedImageUrls].slice(0, 2) : existingImages
+        imagenes: uploadedImageUrls.length ? uploadedImageUrls.slice(0, 2) : existingImages
       },
       products,
       brands,
