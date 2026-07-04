@@ -1288,24 +1288,29 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function saveProduct(payload) {
-    let uploadedImageUrls = [];
-    const imageFiles = [
-      ...(payload.imageFile1 ? [payload.imageFile1] : []),
-      ...(payload.imageFile2 ? [payload.imageFile2] : [])
-    ].slice(0, 2);
-    if (imageFiles.length) {
+    const existingImages = cleanProductImages(payload.imagenes);
+    let finalImages = [...existingImages];
+    
+    if (payload.imageFile1) {
       try {
-        for (const file of imageFiles) {
-          const upload = await api.adminUploadImage(session.token, file, 'product');
-          uploadedImageUrls.push(upload.url);
-        }
+        const upload = await api.adminUploadImage(session.token, payload.imageFile1, 'product');
+        finalImages[0] = upload.url;
       } catch (error) {
-        window.alert(error.message || 'No se pudieron subir las imagenes');
+        window.alert(error.message || 'No se pudo subir la imagen 1');
         return;
       }
     }
-    const existingImages = cleanProductImages(payload.imagenes);
-    const finalImages = uploadedImageUrls.length ? uploadedImageUrls.slice(0, 2) : existingImages;
+    
+    if (payload.imageFile2) {
+      try {
+        const upload = await api.adminUploadImage(session.token, payload.imageFile2, 'product');
+        finalImages[1] = upload.url;
+      } catch (error) {
+        window.alert(error.message || 'No se pudo subir la imagen 2');
+        return;
+      }
+    }
+    
     const nextPayload = prepareProductPayload(
       {
         ...payload,
@@ -1313,7 +1318,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         imageFiles: undefined,
         imageFile1: undefined,
         imageFile2: undefined,
-        imagenes: finalImages
+        imagenes: finalImages.filter(Boolean).slice(0, 2)
       },
       products,
       brands,
@@ -1327,6 +1332,8 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         posicion: product.posicion || index + 1, 
         visible: product.visible !== false 
       })));
+      setProductImage1(null);
+      setProductImage2(null);
       setEditor(null);
       showToast(payload.id ? 'Producto actualizado correctamente' : 'Producto agregado correctamente');
     } catch (error) {
@@ -3312,7 +3319,11 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 {productImage1 ? (
                   <div className="admin-photo-preview">
                     <img src={productImage1} alt="Foto 1" />
-                    <button type="button" className="admin-photo-delete-btn" onClick={() => setProductImage1(null)}>
+                    <button type="button" className="admin-photo-delete-btn" onClick={() => {
+                      setProductImage1(null);
+                      const currentImages = cleanProductImages(form.imagenes);
+                      update('imagenes', [null, currentImages[1]].filter(Boolean));
+                    }}>
                       <X size={14} />
                     </button>
                   </div>
@@ -3335,7 +3346,11 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 {productImage2 ? (
                   <div className="admin-photo-preview">
                     <img src={productImage2} alt="Foto 2" />
-                    <button type="button" className="admin-photo-delete-btn" onClick={() => setProductImage2(null)}>
+                    <button type="button" className="admin-photo-delete-btn" onClick={() => {
+                      setProductImage2(null);
+                      const currentImages = cleanProductImages(form.imagenes);
+                      update('imagenes', [currentImages[0], null].filter(Boolean));
+                    }}>
                       <X size={14} />
                     </button>
                   </div>
