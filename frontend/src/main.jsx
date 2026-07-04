@@ -3243,36 +3243,32 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
         {editor.type === 'client-detail' && (
           <div className="admin-form">
-            <div className="admin-client-row-header" style={{ marginBottom: '14px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
-              <span className={editor.value.activo ? 'client-avatar' : 'client-avatar off'}>{editor.value.iniciales}</span>
-              <span className="admin-client-main">
-                <strong style={{ fontSize: '15px' }}>{editor.value.nombre}</strong>
-                <small>{editor.value.usuario}</small>
-              </span>
-            </div>
-            <div className="admin-client-detail-grid" style={{ gap: '12px' }}>
-              <span><b>Lista de Precios</b>{editor.value.lista || 'General'}</span>
-              <span><b>Términos de Crédito</b>{editor.value.credito || 'Contado'}</span>
-              <span><b>Aplica ISV</b>{editor.value.aplica_isv ? 'Sí' : 'No'}</span>
-              <span><b>Último Acceso</b>{editor.value.ultimo_acceso ? new Date(editor.value.ultimo_acceso).toLocaleString('es-HN') : 'Nunca'}</span>
-            </div>
-            {editor.value.sucursales && editor.value.sucursales.length > 0 ? (
-              <div className="client-detail-branches" style={{ marginTop: '14px' }}>
-                <b>Sucursales Configuradas:</b>
-                <ul style={{ margin: '8px 0 0', paddingLeft: '16px', display: 'grid', gap: '6px' }}>
-                  {editor.value.sucursales.map((sub, idx) => (
-                    <li key={idx} style={{ fontSize: '12.5px', color: 'var(--text)' }}>
-                      <strong>{String.fromCharCode(65 + idx)}</strong> · {sub.nombre} {sub.direccion ? `(${sub.direccion})` : ''}
-                    </li>
-                  ))}
-                </ul>
+            <div className="admin-client-detail" style={{ border: 'none', background: 'transparent', padding: 0 }}>
+              <div className="admin-client-detail-grid" style={{ gap: '12px' }}>
+                <span className="full-width"><b>Nombre Completo</b>{editor.value.nombre}</span>
+                <span><b>Lista de Precios</b>{editor.value.lista || 'General'}</span>
+                <span><b>Términos de Crédito</b>{editor.value.credito || 'Contado'}</span>
+                <span><b>Aplica ISV</b>{editor.value.aplica_isv ? 'Sí' : 'No'}</span>
+                <span><b>Último Acceso</b>{editor.value.ultimo_acceso ? new Date(editor.value.ultimo_acceso).toLocaleString('es-HN') : 'Nunca'}</span>
               </div>
-            ) : (
-              <div className="client-detail-branches" style={{ marginTop: '14px' }}>
-                <b>Sucursales Configuradas:</b>
-                <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '4px' }}>Sin sucursales registradas</small>
-              </div>
-            )}
+              {editor.value.sucursales && editor.value.sucursales.length > 0 ? (
+                <div className="client-detail-branches" style={{ marginTop: '14px' }}>
+                  <b>Sucursales Configuradas:</b>
+                  <ul style={{ margin: '8px 0 0', paddingLeft: '16px', display: 'grid', gap: '6px' }}>
+                    {editor.value.sucursales.map((sub, idx) => (
+                      <li key={idx} style={{ fontSize: '12.5px', color: 'var(--text)' }}>
+                        <strong>{String.fromCharCode(65 + idx)}</strong> · {sub.nombre} {sub.direccion ? `(${sub.direccion})` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="client-detail-branches" style={{ marginTop: '14px' }}>
+                  <b>Sucursales Configuradas:</b>
+                  <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', marginTop: '4px' }}>Sin sucursales registradas</small>
+                </div>
+              )}
+            </div>
             <button type="button" className="primary-button" onClick={onClose} style={{ marginTop: '20px' }}>
               Cerrar
             </button>
