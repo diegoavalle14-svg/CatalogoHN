@@ -7275,6 +7275,14 @@ button {
     font-size: 10px;
   }
 
+  .price-line b {
+    font-size: 14px !important;
+  }
+
+  .price-line span {
+    font-size: 11px !important;
+  }
+
   .login-header {
     display: flex;
     min-height: 32px;
