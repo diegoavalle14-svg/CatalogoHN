@@ -1245,6 +1245,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     const previousProducts = products;
     
     // Shift positions locally for instant feedback
+    let positionUpdates = [];
     if (changes.posicion !== undefined && changes.posicion !== currentProduct.posicion) {
       const oldPos = currentProduct.posicion;
       const newPos = changes.posicion;
@@ -1253,14 +1254,17 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
           let pos = product.posicion;
           if (product.id === id) {
             pos = newPos;
+            positionUpdates.push({ id: product.id, posicion: newPos });
           } else {
             if (newPos > oldPos) {
               if (pos > oldPos && pos <= newPos) {
                 pos = pos - 1;
+                positionUpdates.push({ id: product.id, posicion: pos });
               }
             } else {
               if (pos >= newPos && pos < oldPos) {
                 pos = pos + 1;
+                positionUpdates.push({ id: product.id, posicion: pos });
               }
             }
           }
@@ -1274,7 +1278,14 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     }
 
     try {
-      await api.adminSaveProduct(session.token, changes.id ? changes : { ...changes, id });
+      // If position changed, update all affected products
+      if (positionUpdates.length > 0) {
+        for (const update of positionUpdates) {
+          await api.adminSaveProduct(session.token, { ...changes, id: update.id, posicion: update.posicion });
+        }
+      } else {
+        await api.adminSaveProduct(session.token, changes.id ? changes : { ...changes, id });
+      }
       const freshCatalog = await api.adminCatalog(session.token);
       setProducts(freshCatalog.productos.map((product, index) => ({ 
         ...product, 
