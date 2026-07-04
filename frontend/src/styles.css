@@ -7720,7 +7720,47 @@ button {
 
 }
 
+@media (max-width: 600px) {
+  .product-cart-control {
+    grid-template-columns: 26px 38px 1fr;
+    gap: 5px;
+  }
+
+  .price-line {
+    gap: 4px;
+  }
+
+  .price-line b {
+    font-size: 14px;
+  }
+
+  .price-line span {
+    font-size: 11px;
+  }
+}
+
 @media (max-width: 420px) {
+  .product-cart-control {
+    grid-template-columns: 26px 38px 1fr;
+    grid-template-rows: auto auto;
+    gap: 4px;
+  }
+
+  .price-line {
+    grid-column: 2 / -1;
+    grid-row: 1;
+    justify-self: start;
+    gap: 4px;
+  }
+
+  .price-line b {
+    font-size: 13px;
+  }
+
+  .price-line span {
+    font-size: 10px;
+  }
+
   .admin-mobile-shell {
     --admin-header-space: 108px;
   }
