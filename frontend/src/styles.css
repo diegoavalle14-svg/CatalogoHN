@@ -1097,13 +1097,25 @@ button {
   -webkit-line-clamp: 4;
 }
 
+.price-add-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 11px 11px;
+}
+
+.price-add-row .add-to-cart-button {
+  flex: 0 0 auto;
+}
+
 .price-line {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-top: 8px;
-  padding: 0 11px 11px;
   color: #222;
+  margin: 0;
+  padding: 0;
 }
 
 .price-line span {

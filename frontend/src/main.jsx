@@ -932,17 +932,17 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
             </div>
           );
         })}
-        {availableBranches.length > 0 && (
-          <div className="product-cart-control-actions" style={{ marginTop: '4px', paddingTop: '6px' }}>
-            <button className="add-to-cart-button global-add" type="button" onClick={addMultipleBranches} disabled={!canOrder || !hasAnyDrafts}>
-              {isOutOfStock ? 'Agotado' : '+ Agregar'}
-            </button>
-          </div>
-        )}
       </div>
-      <div className="price-line">
-        {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
-        <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
+      <div className="price-add-row">
+        {availableBranches.length > 0 && (
+          <button className="add-to-cart-button global-add" type="button" onClick={addMultipleBranches} disabled={!canOrder || !hasAnyDrafts}>
+            {isOutOfStock ? 'Agotado' : '+ Agregar'}
+          </button>
+        )}
+        <div className="price-line">
+          {product.en_promocion && oldPrice > currentPrice && <span>{money(oldPrice)}</span>}
+          <b className={product.en_promocion ? 'promo-price' : ''}>{money(currentPrice)}</b>
+        </div>
       </div>
       {enableLightbox && <ImageLightbox images={productImages} index={lightboxIndex} onClose={() => setLightboxIndex(null)} onIndexChange={setLightboxIndex} />}
     </article>
