@@ -3064,7 +3064,15 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
             </select></label>
-            <label className="price-visible-toggle"><input type="checkbox" checked={form.aplica_isv === true} onChange={(event) => update('aplica_isv', event.target.checked)} /> Aplica ISV</label>
+            <label className="admin-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: '12px 0 16px', userSelect: 'none' }}>
+              <input
+                type="checkbox"
+                style={{ width: '18px', height: '18px', margin: 0, cursor: 'pointer' }}
+                checked={form.aplica_isv === true}
+                onChange={(event) => update('aplica_isv', event.target.checked)}
+              />
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text)' }}>Aplica ISV</span>
+            </label>
             <section className="client-branches-editor">
               <div className="client-branches-head">
                 <strong>Sucursales</strong>
