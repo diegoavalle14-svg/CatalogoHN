@@ -2595,15 +2595,19 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (products || []).filter((product) => {
-      const matchesSearch = !q || `${product.sku} ${product.marca} ${product.descripcion}`.toLowerCase().includes(q);
-      const matchesCategory = categoryFilter === 'all' || String(product.categoria_id) === String(categoryFilter);
-      const matchesBrand = brandFilter === 'all' || String(product.marca).toLowerCase() === String(brandFilter).toLowerCase();
+      const matchesSearch = !q || `${product.sku || ''} ${product.marca || ''} ${product.descripcion || ''}`.toLowerCase().includes(q);
+      const matchesCategory = categoryFilter === 'all' || String(product.categoria_id || '') === String(categoryFilter);
+      const matchesBrand = brandFilter === 'all' || String(product.marca || '').toLowerCase() === String(brandFilter).toLowerCase();
+      
+      const currentPrice = priceMap[product.id] || {};
+      const isVisible = currentPrice.visible_cliente ?? true;
       const matchesVisibility = visibilityFilter === 'all'
-        || (visibilityFilter === 'visible' && product.visible !== false)
-        || (visibilityFilter === 'hidden' && product.visible === false);
+        || (visibilityFilter === 'visible' && isVisible !== false)
+        || (visibilityFilter === 'hidden' && isVisible === false);
+        
       return matchesSearch && matchesCategory && matchesBrand && matchesVisibility;
     });
-  }, [products, query, categoryFilter, brandFilter, visibilityFilter]);
+  }, [products, query, categoryFilter, brandFilter, visibilityFilter, priceMap]);
 
   const [lightbox, setLightbox] = useState(null);
 

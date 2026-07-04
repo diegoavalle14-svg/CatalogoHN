@@ -889,13 +889,13 @@ async function queryAdminPriceData(tenantId) {
   const [lists, products, prices, assignedClients] = await Promise.all([
     db.query('SELECT * FROM listas_precios WHERE empresa_id = $1 ORDER BY nombre', [tenantId]),
     db.query(
-      `SELECT p.id, p.sku, p.descripcion, p.visible, p.stock_actual, p.stock_minimo, COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes, m.nombre AS marca, c.nombre AS categoria
+      `SELECT p.id, p.sku, p.descripcion, p.visible, p.stock_actual, p.stock_minimo, p.categoria_id, p.marca_id, p.posicion, COALESCE(json_agg(DISTINCT pi.url) FILTER (WHERE pi.url IS NOT NULL), '[]') AS imagenes, m.nombre AS marca, c.nombre AS categoria
        FROM productos p
        LEFT JOIN marcas m ON m.id = p.marca_id
        LEFT JOIN categorias c ON c.id = p.categoria_id
        LEFT JOIN producto_imagenes pi ON pi.producto_id = p.id
        WHERE p.empresa_id = $1
-       GROUP BY p.id, m.nombre, c.nombre
+       GROUP BY p.id, m.nombre, c.nombre, p.categoria_id, p.marca_id, p.posicion
        ORDER BY p.posicion, p.sku`,
       [tenantId]
     ),
