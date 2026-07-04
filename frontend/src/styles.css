@@ -7337,8 +7337,8 @@ button {
 
   .sku-code,
   .cart-sku {
-    padding: 5px 8px;
-    font-size: 12px;
+    padding: 4px 6px;
+    font-size: 10px;
   }
 
   .product-card p {
@@ -7362,9 +7362,17 @@ button {
 
   .sku-stock-line {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    justify-content: space-between;
     gap: 4px;
     align-items: center;
+    width: 100%;
+  }
+
+  .stock-pill {
+    padding: 0 5px;
+    font-size: 9px;
+    min-height: 18px;
   }
 
   .product-category-logo {
