@@ -3267,7 +3267,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     }
   }
 
-  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password' || editor.type === 'price-list' || editor.type === 'price' || editor.type === 'client-detail';
+  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password' || editor.type === 'price-list' || editor.type === 'price' || editor.type === 'client-detail' || editor.type === 'product';
   const isPasswordModal = editor.type === 'account-password';
   const isClientModal = editor.type === 'client';
   return (
