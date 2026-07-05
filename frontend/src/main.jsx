@@ -1255,25 +1255,30 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     if (changes.posicion !== undefined && changes.posicion !== currentProduct.posicion) {
       const oldPos = currentProduct.posicion;
       const newPos = changes.posicion;
+      const currentCategoryId = currentProduct.categoria_id;
+      
       setProducts((current) => {
         const next = current.map((product) => {
           let pos = product.posicion;
-          if (product.id === id) {
-            pos = newPos;
-            positionUpdates.push({ id: product.id, posicion: newPos });
-          } else {
-            // Shift other products to avoid duplicates
-            if (newPos > oldPos) {
-              // Moving down: shift products between oldPos and newPos down by 1
-              if (pos > oldPos && pos <= newPos) {
-                pos = pos - 1;
-                positionUpdates.push({ id: product.id, posicion: pos });
-              }
+          // Only shift positions for products in the same category
+          if (String(product.categoria_id || '') === String(currentCategoryId || '')) {
+            if (product.id === id) {
+              pos = newPos;
+              positionUpdates.push({ id: product.id, posicion: newPos });
             } else {
-              // Moving up: shift products between newPos and oldPos up by 1
-              if (pos >= newPos && pos < oldPos) {
-                pos = pos + 1;
-                positionUpdates.push({ id: product.id, posicion: pos });
+              // Shift other products to avoid duplicates (same category only)
+              if (newPos > oldPos) {
+                // Moving down: shift products between oldPos and newPos down by 1
+                if (pos > oldPos && pos <= newPos) {
+                  pos = pos - 1;
+                  positionUpdates.push({ id: product.id, posicion: pos });
+                }
+              } else {
+                // Moving up: shift products between newPos and oldPos up by 1
+                if (pos >= newPos && pos < oldPos) {
+                  pos = pos + 1;
+                  positionUpdates.push({ id: product.id, posicion: pos });
+                }
               }
             }
           }
