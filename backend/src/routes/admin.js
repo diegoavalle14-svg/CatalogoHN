@@ -606,19 +606,29 @@ router.post('/admin/products', authenticate, requireRole('admin', 'superadmin'),
     client = await db.pool.connect();
     await client.query('BEGIN');
 
+    // If position is not provided, assign the next available position (max + 1)
+    let posicion = payload.posicion;
+    if (posicion === null || posicion === undefined) {
+      const maxPosRes = await client.query(
+        `SELECT COALESCE(MAX(posicion), -1) as max_pos FROM productos WHERE empresa_id = $1`,
+        [req.tenant.id]
+      );
+      posicion = (maxPosRes.rows[0].max_pos || -1) + 1;
+    }
+
     // Desplazar las posiciones de los productos existentes para hacer espacio
     await client.query(
       `UPDATE productos 
        SET posicion = posicion + 1 
        WHERE empresa_id = $1 AND posicion >= $2`,
-      [req.tenant.id, payload.posicion]
+      [req.tenant.id, posicion]
     );
 
     const result = await client.query(
       `INSERT INTO productos (empresa_id, marca_id, categoria_id, sku, descripcion, specs, stock_actual, stock_minimo, visible, en_promocion, posicion)
        VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11)
        RETURNING id`,
-      [req.tenant.id, payload.marca_id, payload.categoria_id, payload.sku, payload.descripcion, JSON.stringify(payload.specs), payload.stock_actual, payload.stock_minimo, payload.visible, payload.en_promocion, payload.posicion]
+      [req.tenant.id, payload.marca_id, payload.categoria_id, payload.sku, payload.descripcion, JSON.stringify(payload.specs), payload.stock_actual, payload.stock_minimo, payload.visible, payload.en_promocion, posicion]
     );
 
     const newProductId = result.rows[0].id;

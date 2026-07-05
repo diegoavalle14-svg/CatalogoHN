@@ -1250,35 +1250,31 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     const currentProduct = products.find((product) => product.id === id);
     const previousProducts = products;
     
-    // Shift positions locally for instant feedback
+    // Shift positions locally for instant feedback (only for "all categories" filter)
     let positionUpdates = [];
     if (changes.posicion !== undefined && changes.posicion !== currentProduct.posicion) {
       const oldPos = currentProduct.posicion;
       const newPos = changes.posicion;
-      const currentCategoryId = currentProduct.categoria_id;
       
       setProducts((current) => {
         const next = current.map((product) => {
           let pos = product.posicion;
-          // Only shift positions for products in the same category
-          if (String(product.categoria_id || '') === String(currentCategoryId || '')) {
-            if (product.id === id) {
-              pos = newPos;
-              positionUpdates.push({ id: product.id, posicion: newPos });
+          if (product.id === id) {
+            pos = newPos;
+            positionUpdates.push({ id: product.id, posicion: newPos });
+          } else {
+            // Shift other products to avoid duplicates (all products)
+            if (newPos > oldPos) {
+              // Moving down: shift products between oldPos and newPos down by 1
+              if (pos > oldPos && pos <= newPos) {
+                pos = pos - 1;
+                positionUpdates.push({ id: product.id, posicion: pos });
+              }
             } else {
-              // Shift other products to avoid duplicates (same category only)
-              if (newPos > oldPos) {
-                // Moving down: shift products between oldPos and newPos down by 1
-                if (pos > oldPos && pos <= newPos) {
-                  pos = pos - 1;
-                  positionUpdates.push({ id: product.id, posicion: pos });
-                }
-              } else {
-                // Moving up: shift products between newPos and oldPos up by 1
-                if (pos >= newPos && pos < oldPos) {
-                  pos = pos + 1;
-                  positionUpdates.push({ id: product.id, posicion: pos });
-                }
+              // Moving up: shift products between newPos and oldPos up by 1
+              if (pos >= newPos && pos < oldPos) {
+                pos = pos + 1;
+                positionUpdates.push({ id: product.id, posicion: pos });
               }
             }
           }
@@ -1862,7 +1858,6 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             setClients={setClients}
             onSyncList={syncPriceList}
             onSyncAll={syncAllPriceLists}
-            onPosition={(product, posicion) => updateProduct(product.id, { posicion })}
           />
         )}
 
@@ -2529,7 +2524,7 @@ function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, o
   );
 }
 
-function AdminPricesSection({ lists, products, clients, categories, brands, session, setPriceData, setClients, onSyncList, onSyncAll, onPosition }) {
+function AdminPricesSection({ lists, products, clients, categories, brands, session, setPriceData, setClients, onSyncList, onSyncAll }) {
   const [selectedClientId, setSelectedClientId] = useState('');
   const [query, setQuery] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('all');
@@ -2837,9 +2832,6 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                   </div>
                   
                   <footer>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', fontSize: '11px' }}>
-                      Pos. <ProductPositionInput product={product} onPosition={onPosition} />
-                    </label>
                     <label className="switch-line" style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', fontSize: '11px' }}>
                       {vals.visible_cliente ? 'Visible' : 'Oculto'}
                       <input
@@ -3995,10 +3987,10 @@ function prepareProductPayload(product, products, brands, categories) {
 
   const productImages = cleanProductImages(product.imagenes);
   
-  // For existing products, only set position if explicitly provided, otherwise keep current
+  // For existing products, only set position if explicitly provided, otherwise don't send it
   const posicion = product.id !== undefined 
     ? (product.posicion !== undefined ? product.posicion : undefined)
-    : (product.posicion || products.length);
+    : (product.posicion !== undefined ? product.posicion : products.length);
 
   return normalizeAdminProduct(
     {
