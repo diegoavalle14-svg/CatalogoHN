@@ -894,7 +894,16 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
           <span className={`stock-pill ${stock.tone}`}>{stock.label}</span>
         </div>
         <span className="product-category-badge" style={categoryBadgeStyle(categoryMeta)}>{product.categoria || categoryMeta?.nombre || 'Sin categoría'}</span>
-        {product.descripcion && <p>{product.descripcion}</p>}
+        {product.descripcion && (
+          <p>
+            {product.descripcion.includes('LAND CRUISER') 
+              ? product.descripcion.replace('LAND CRUISER', '\nLAND CRUISER').split('\n').map((line, i, arr) => (
+                  <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+                ))
+              : product.descripcion
+            }
+          </p>
+        )}
         {product.specs?.aplicacion && <p>{product.specs.aplicacion}</p>}
         {product.specs?.medida && product.specs.medida.split(/\r?\n/).filter((line) => line.trim()).map((line, index) => <p key={index}>{line}</p>)}
       </div>
