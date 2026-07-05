@@ -6376,9 +6376,10 @@ button {
 }
 
 .admin-product-form textarea {
-  min-height: 100px;
-  line-height: 1.4;
-  padding: 8px 10px;
+  min-height: 120px;
+  line-height: 1.5;
+  padding: 10px;
+  resize: vertical;
 }
 
 .admin-product-form textarea::placeholder {
