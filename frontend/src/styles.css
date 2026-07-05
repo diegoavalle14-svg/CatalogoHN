@@ -7680,8 +7680,16 @@ button {
   .product-category-logo {
     left: 8px;
     bottom: 8px;
+    width: 36px;
+    height: 36px;
+    overflow: visible;
+  }
+  
+  .product-category-logo img {
     width: 48px;
     height: 48px;
+    max-width: none;
+    max-height: none;
   }
 
   .price-line {
