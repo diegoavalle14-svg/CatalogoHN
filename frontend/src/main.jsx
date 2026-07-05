@@ -896,7 +896,7 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
         <span className="product-category-badge" style={categoryBadgeStyle(categoryMeta)}>{product.categoria || categoryMeta?.nombre || 'Sin categoría'}</span>
         {product.descripcion && <p>{product.descripcion}</p>}
         {product.specs?.aplicacion && <p>{product.specs.aplicacion}</p>}
-        {product.specs?.medida && <p>{product.specs.medida}</p>}
+        {product.specs?.medida && product.specs.medida.split(/\r?\n/).filter((line) => line.trim()).map((line, index) => <p key={index}>{line}</p>)}
       </div>
       <div className="branch-qty">
         {availableBranches.length === 0 && (
