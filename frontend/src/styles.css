@@ -6376,7 +6376,7 @@ button {
 }
 
 .admin-product-form textarea {
-  min-height: 120px;
+  min-height: 140px;
   line-height: 1.5;
   padding: 10px;
   resize: vertical;
