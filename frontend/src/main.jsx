@@ -3989,6 +3989,12 @@ function prepareProductPayload(product, products, brands, categories) {
   const medida = lines.slice(2).join('\n').trim();
 
   const productImages = cleanProductImages(product.imagenes);
+  
+  // For existing products, only set position if explicitly provided, otherwise keep current
+  const posicion = product.id !== undefined 
+    ? (product.posicion !== undefined ? product.posicion : undefined)
+    : (product.posicion || products.length);
+
   return normalizeAdminProduct(
     {
       ...product,
@@ -4001,7 +4007,7 @@ function prepareProductPayload(product, products, brands, categories) {
       marca_id: product.marca_id || brands[0]?.id || null,
       categoria_id: product.categoria_id || categories[0]?.id || null,
       visible: product.visible !== false,
-      posicion: product.posicion || (products.length + 1),
+      posicion,
       imagenes: productImages,
       precio: Number(product.precio || product.precio_final || 0),
       stock_actual: normalizeInventoryCount(product.stock_actual),
