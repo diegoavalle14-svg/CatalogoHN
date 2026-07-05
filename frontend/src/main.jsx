@@ -2730,10 +2730,10 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                     </div>
                     
                     {/* Controles de Precio */}
-                    <div className="admin-price-controls" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', minWidth: '180px' }}>
-                      <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
-                          <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase' }}>Precio (L.)</span>
+                    <div className="admin-price-controls" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', minWidth: '160px', maxWidth: '220px' }}>
+                      <div className="price-inputs-row" style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left', minWidth: 0 }}>
+                          <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Precio (L.)</span>
                           <input
                             type="number"
                             step="0.01"
@@ -2744,8 +2744,8 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                             onChange={(e) => updateLocalValue(product.id, 'precio', e.target.value)}
                           />
                         </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
-                          <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase' }}>Oferta (L.)</span>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left', minWidth: 0 }}>
+                          <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Oferta (L.)</span>
                           <input
                             type="number"
                             step="0.01"
@@ -2757,8 +2757,8 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                           />
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}>
+                      <div className="price-actions-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
                           <input
                             type="checkbox"
                             checked={vals.promo_activa}
@@ -2778,7 +2778,8 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                             fontSize: '11px',
                             transition: 'all 0.2s ease',
                             cursor: 'pointer',
-                            flex: 1
+                            flex: 1,
+                            whiteSpace: 'nowrap'
                           }}
                           disabled={vals.saving}
                           onClick={() => handleSaveProductPrice(product.id)}

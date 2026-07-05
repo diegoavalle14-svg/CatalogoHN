@@ -5175,9 +5175,32 @@ button {
 .admin-product-top {
   display: grid;
   grid-template-columns: 58px 1fr auto;
-  align-items: center;
+  align-items: start;
   gap: 12px;
   padding: 14px 14px 12px;
+}
+
+.admin-product-top > div:nth-child(2) {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.admin-product-top small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price-inputs-row {
+  gap: 6px;
+}
+
+.price-inputs-row > div {
+  min-width: 0;
+}
+
+.price-actions-row {
+  gap: 8px;
 }
 
 .admin-product-top img {
@@ -9187,21 +9210,56 @@ button {
   .admin-product-top {
     padding: 10px !important;
     gap: 6px !important;
+    grid-template-columns: 50px 1fr !important;
   }
 
   .admin-product-top img,
   .admin-product-top .product-thumb-fallback {
-    width: 80px !important;
-    height: 80px !important;
+    width: 40px !important;
+    height: 40px !important;
   }
 
   .admin-product-top .sku-code {
-    font-size: 10.5px !important;
+    font-size: 9px !important;
     padding: 2px 4px !important;
   }
 
   .admin-product-top small {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+  }
+
+  .admin-price-controls {
+    padding: 0 4px !important;
+    min-width: unset !important;
+  }
+
+  .admin-price-controls > div:first-child {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .admin-price-controls input {
+    height: 26px !important;
     font-size: 10px !important;
+    padding: 0 4px !important;
+  }
+
+  .admin-price-controls > div:last-child {
+    flex-direction: column !important;
+    gap: 6px !important;
+    align-items: stretch !important;
+  }
+
+  .admin-price-controls button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    min-height: 26px !important;
   }
 
   .admin-row-actions {
