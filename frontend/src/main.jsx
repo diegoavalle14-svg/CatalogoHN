@@ -1320,7 +1320,11 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
             const updatedMap = new Map(freshCatalog.productos.map(p => [Number(p.id), p]));
             return current.map(product => {
               const updated = updatedMap.get(Number(product.id));
-              return updated ? { ...product, ...updated } : product;
+              if (updated) {
+                // Keep the original position from current array, only update other fields
+                return { ...product, ...updated, posicion: product.posicion };
+              }
+              return product;
             });
           });
         }
@@ -1387,7 +1391,11 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
           const updatedMap = new Map(freshCatalog.productos.map(p => [Number(p.id), p]));
           return current.map(product => {
             const updated = updatedMap.get(Number(product.id));
-            return updated ? { ...product, ...updated } : product;
+            if (updated) {
+              // Keep the original position from current array, only update other fields
+              return { ...product, ...updated, posicion: product.posicion };
+            }
+            return product;
           });
         });
       }
