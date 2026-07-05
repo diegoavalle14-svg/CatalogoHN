@@ -974,8 +974,8 @@ button {
   left: 11px;
   bottom: 10px;
   z-index: 3;
-  width: 42px;
-  height: 42px;
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -7679,8 +7679,8 @@ button {
   .product-category-logo {
     left: 8px;
     bottom: 8px;
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
   }
 
   .price-line {
