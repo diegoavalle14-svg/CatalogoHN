@@ -976,7 +976,9 @@ button {
   z-index: 3;
   width: 42px;
   height: 42px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   border: 1px solid rgba(17, 17, 17, .14);
   border-radius: 50%;
@@ -986,9 +988,9 @@ button {
 }
 
 .product-category-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
   border-radius: 0;
 }
 
@@ -7678,8 +7680,8 @@ button {
   .product-category-logo {
     left: 8px;
     bottom: 8px;
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
   }
 
   .price-line {
