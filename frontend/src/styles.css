@@ -6337,10 +6337,17 @@ button {
   padding: 0 10px;
 }
 
-.admin-form textarea {
+.admin-form textarea:not(.admin-product-form textarea) {
   min-height: 92px;
   padding: 10px;
   resize: vertical;
+}
+
+.admin-product-form textarea {
+  min-height: 160px !important;
+  line-height: 1.5 !important;
+  padding: 10px !important;
+  resize: vertical !important;
 }
 
 .admin-product-form {
