@@ -6343,13 +6343,6 @@ button {
   resize: vertical;
 }
 
-.admin-product-form textarea {
-  min-height: 160px !important;
-  line-height: 1.5 !important;
-  padding: 10px !important;
-  resize: vertical !important;
-}
-
 .admin-product-form {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 10px;
@@ -6383,7 +6376,7 @@ button {
 }
 
 .admin-product-form textarea {
-  min-height: 140px !important;
+  min-height: 100px !important;
   line-height: 1.5 !important;
   padding: 10px !important;
   resize: vertical !important;
