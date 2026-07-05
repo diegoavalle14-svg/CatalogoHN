@@ -1315,10 +1315,14 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
           }));
           setProducts(cleaned);
         } else {
-          setProducts((current) => current.map((product) => {
-            const updated = freshCatalog.productos.find((p) => Number(p.id) === Number(product.id));
-            return updated ? { ...product, ...updated } : product;
-          }));
+          // For existing products, update the specific product while maintaining current order
+          setProducts((current) => {
+            const updatedMap = new Map(freshCatalog.productos.map(p => [Number(p.id), p]));
+            return current.map(product => {
+              const updated = updatedMap.get(Number(product.id));
+              return updated ? { ...product, ...updated } : product;
+            });
+          });
         }
       }
     } catch (error) {
@@ -1378,11 +1382,14 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         }));
         setProducts(cleaned);
       } else {
-        // For existing products, just update the specific product
-        setProducts((current) => current.map((product) => {
-          const updated = freshCatalog.productos.find((p) => Number(p.id) === Number(product.id));
-          return updated ? { ...product, ...updated } : product;
-        }));
+        // For existing products, update the specific product while maintaining current order
+        setProducts((current) => {
+          const updatedMap = new Map(freshCatalog.productos.map(p => [Number(p.id), p]));
+          return current.map(product => {
+            const updated = updatedMap.get(Number(product.id));
+            return updated ? { ...product, ...updated } : product;
+          });
+        });
       }
       
       setEditor(null);
