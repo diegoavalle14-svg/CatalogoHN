@@ -7993,6 +7993,33 @@ button {
   }
 }
 
+@media (max-width: 480px) {
+  .product-category-logo {
+    left: 6px;
+    bottom: 6px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 360px) {
+  .product-category-logo {
+    left: 5px;
+    bottom: 5px;
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 320px) {
+  .product-category-logo {
+    left: 4px;
+    bottom: 4px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
 @media (max-width: 360px) {
   .admin-brand-button strong {
     font-size: 14px;
