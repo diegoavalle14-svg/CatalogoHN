@@ -976,8 +976,7 @@ button {
   z-index: 3;
   width: 42px;
   height: 42px;
-  display: grid;
-  place-items: center;
+  display: block;
   overflow: hidden;
   border: 1px solid rgba(17, 17, 17, .14);
   border-radius: 50%;
