@@ -1304,13 +1304,22 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       } else {
         await api.adminSaveProduct(session.token, changes.id ? changes : { ...changes, id });
         const freshCatalog = await api.adminCatalog(session.token);
-        const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
-        const cleaned = sorted.map((product, index) => ({ 
-          ...product, 
-          posicion: index, 
-          visible: product.visible !== false 
-        }));
-        setProducts(cleaned);
+        
+        // Only renumber if this was a position change, otherwise just update the product
+        if (changes.posicion !== undefined) {
+          const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
+          const cleaned = sorted.map((product, index) => ({
+            ...product,
+            posicion: index,
+            visible: product.visible !== false
+          }));
+          setProducts(cleaned);
+        } else {
+          setProducts((current) => current.map((product) => {
+            const updated = freshCatalog.productos.find((p) => Number(p.id) === Number(product.id));
+            return updated ? { ...product, ...updated } : product;
+          }));
+        }
       }
     } catch (error) {
       setProducts(previousProducts);
@@ -1358,13 +1367,24 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     try {
       await api.adminSaveProduct(session.token, nextPayload);
       const freshCatalog = await api.adminCatalog(session.token);
-      const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
-      const cleaned = sorted.map((product, index) => ({ 
-        ...product, 
-        posicion: index, 
-        visible: product.visible !== false 
-      }));
-      setProducts(cleaned);
+      
+      // Only renumber positions if creating a new product
+      if (!payload.id) {
+        const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
+        const cleaned = sorted.map((product, index) => ({
+          ...product,
+          posicion: index,
+          visible: product.visible !== false
+        }));
+        setProducts(cleaned);
+      } else {
+        // For existing products, just update the specific product
+        setProducts((current) => current.map((product) => {
+          const updated = freshCatalog.productos.find((p) => Number(p.id) === Number(product.id));
+          return updated ? { ...product, ...updated } : product;
+        }));
+      }
+      
       setEditor(null);
       showToast(payload.id ? 'Producto actualizado correctamente' : 'Producto agregado correctamente');
     } catch (error) {
@@ -1572,11 +1592,17 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       setPriceData(normalizeAdminPriceData(latestPrices));
       const freshCatalog = await api.adminCatalog(session.token);
       const sorted = [...freshCatalog.productos].sort((a, b) => Number(a.posicion || 0) - Number(b.posicion || 0));
-      const cleaned = sorted.map((product, index) => ({ 
-        ...product, 
-        posicion: index, 
-        visible: product.visible !== false 
+      const cleaned = sorted.map((product, index) => ({
+        ...product,
+        posicion: index,
+        visible: product.visible !== false
       }));
+      
+      // Update positions in backend to maintain sequential order
+      for (const product of cleaned) {
+        await api.adminSaveProduct(session.token, { id: product.id, posicion: product.posicion });
+      }
+      
       setProducts(cleaned);
       showToast('Producto eliminado');
     } catch (error) {
