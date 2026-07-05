@@ -3387,7 +3387,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               Aplicación (una por línea)
               <textarea
                 rows={4}
-                style={{ minHeight: '120px', lineHeight: '1.5', padding: '10px' }}
+                style={{ height: '120px', lineHeight: '1.5', padding: '10px', resize: 'vertical' }}
                 placeholder={'Hilux 79 - 88\nHIERRO / METAL\n1" Pulgada (15/16)\nMás texto aquí'}
                 value={form.infoText ?? ''}
                 onChange={(event) => update('infoText', event.target.value)}
