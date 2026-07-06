@@ -622,6 +622,11 @@ function Catalog({ session, onSessionUpdated }) {
 
   useEffect(() => saveCart(session?.usuario?.id, cart), [cart, session?.usuario?.id]);
 
+  // Recargar carrito cuando cambia el usuario de sesión
+  useEffect(() => {
+    setCart(loadCart(session?.usuario?.id));
+  }, [session?.usuario?.id]);
+
   const products = useMemo(() => {
     if (!data) return [];
     return data.productos.filter((product) => {
