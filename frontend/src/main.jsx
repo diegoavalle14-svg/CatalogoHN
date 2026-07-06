@@ -276,10 +276,22 @@ function Shell({ session, view, setView, onLogout, theme, onThemeToggle, childre
       window.dispatchEvent(new Event('catalog:open-cart'));
     }
   }
+  const topbarRef = useRef(null);
+
+  useEffect(() => {
+    if (!topbarRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        document.documentElement.style.setProperty('--catalog-topbar-height', `${entry.target.offsetHeight}px`);
+      }
+    });
+    observer.observe(topbarRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="app-shell" style={tenantBrandStyle(tenant)}>
-      <header className="topbar">
+      <header className="topbar" ref={topbarRef}>
         <button className="brand-lockup" onClick={goToCatalog} aria-label="Abrir catálogo">
           <TenantLogoMark tenant={tenant} />
           <span>
