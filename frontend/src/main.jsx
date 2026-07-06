@@ -2537,6 +2537,7 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
   const [selectedClientId, setSelectedClientId] = useState('');
   const [query, setQuery] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('visible');
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     if (!selectedClientId && clients && clients.length > 0) {
@@ -2667,6 +2668,9 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
           saved: true
         }
       }));
+      
+      setToastMessage('¡Precio guardado exitosamente!');
+      setTimeout(() => setToastMessage(''), 3000);
 
       setTimeout(() => {
         setLocalPrices((prev) => {
@@ -2711,6 +2715,26 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
 
   return (
     <>
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(16, 185, 129, 0.95)',
+          color: 'white',
+          padding: '16px 24px',
+          borderRadius: '12px',
+          fontWeight: 'bold',
+          fontSize: '15px',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          {toastMessage}
+        </div>
+      )}
       <div className="admin-title-row">
         <AdminSectionTitle title="Precios por cliente" subtitle="Configura precios personalizados por cliente" />
         <div />
