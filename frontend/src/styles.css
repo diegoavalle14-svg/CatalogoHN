@@ -7188,7 +7188,7 @@ button {
 
   .brand-lockup > span:last-child small {
     display: block;
-    font-size: min(var(--subnombre-size, 18px), 13.5px);
+    font-size: min(var(--subnombre-size, 18px), 20px);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

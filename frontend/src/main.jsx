@@ -3382,7 +3382,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 <input 
                   type="range" 
                   min="10" 
-                  max="24" 
+                  max="40" 
                   step="1" 
                   value={form.subnombre_size || 18} 
                   onChange={(event) => update('subnombre_size', parseInt(event.target.value, 10))} 
