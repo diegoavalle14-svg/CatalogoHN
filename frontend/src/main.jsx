@@ -284,7 +284,7 @@ function Shell({ session, view, setView, onLogout, theme, onThemeToggle, childre
           <TenantLogoMark tenant={tenant} />
           <span>
             <strong>{tenant.nombre || 'Empresa'}</strong>
-            <small style={{ fontSize: `clamp(10px, 2.8vw, ${tenant.subnombre_size || 18}px)` }}>{tenant.subnombre || 'Catálogo privado'}</small>
+            <small style={{ '--subnombre-size': `${tenant.subnombre_size || 18}px` }}>{tenant.subnombre || 'Catálogo privado'}</small>
           </span>
         </button>
 
@@ -1804,7 +1804,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       <header className="admin-mobile-topbar admin-mobile-topbar-fixed" ref={adminHeaderRef}>
         <button className="admin-brand-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
           <TenantLogoMark tenant={liveTenant} size="small" />
-          <span><strong>{liveTenant?.nombre || 'Empresa'}</strong><small style={{ fontSize: `clamp(10px, 2.8vw, ${liveTenant?.subnombre_size || 18}px)` }}>{liveTenant?.subnombre || 'Panel Admin'}</small></span>
+          <span><strong>{liveTenant?.nombre || 'Empresa'}</strong><small style={{ '--subnombre-size': `${liveTenant?.subnombre_size || 18}px` }}>{liveTenant?.subnombre || 'Panel Admin'}</small></span>
         </button>
         <div className="admin-quick-actions">
           <button className="admin-logo-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
@@ -3174,7 +3174,7 @@ function AdminSitePreview({ tenant }) {
           <TenantLogoMark tenant={tenant} size="small" />
           <span>
             <strong>{tenant?.nombre || 'Nombre de empresa'}</strong>
-            <small style={{ fontSize: `clamp(10px, 2.8vw, ${tenant?.subnombre_size || 18}px)` }}>{tenant?.subnombre || 'Subnombre del catálogo'}</small>
+            <small style={{ '--subnombre-size': `${tenant?.subnombre_size || 18}px` }}>{tenant?.subnombre || 'Subnombre del catálogo'}</small>
           </span>
         </header>
         <div>
@@ -3186,7 +3186,7 @@ function AdminSitePreview({ tenant }) {
       <div className="admin-site-preview-dark">
         <span>Modo oscuro</span>
         <strong>{tenant?.nombre || 'Empresa'}</strong>
-        <small style={{ fontSize: `clamp(10px, 2.8vw, ${tenant?.subnombre_size || 18}px)` }}>Vista cliente con fondo oscuro</small>
+        <small style={{ '--subnombre-size': `${tenant?.subnombre_size || 18}px` }}>Vista cliente con fondo oscuro</small>
       </div>
     </section>
   );

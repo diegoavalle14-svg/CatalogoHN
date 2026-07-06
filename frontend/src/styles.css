@@ -137,7 +137,7 @@ button {
 .brand-lockup > span:last-child small {
   overflow: hidden;
   color: rgba(255, 255, 255, .62);
-  font-size: 10px;
+  font-size: var(--subnombre-size, 18px);
   font-weight: 800;
   letter-spacing: 0;
   text-overflow: ellipsis;
@@ -7188,6 +7188,7 @@ button {
 
   .brand-lockup > span:last-child small {
     display: block;
+    font-size: min(var(--subnombre-size, 18px), 13.5px);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
