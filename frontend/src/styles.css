@@ -7296,7 +7296,7 @@ button {
   }
 
   .brand-lockup > span:last-child small {
-    font-size: 9px;
+    font-size: min(var(--subnombre-size, 18px), 18px);
   }
 
   .topbar-actions {
