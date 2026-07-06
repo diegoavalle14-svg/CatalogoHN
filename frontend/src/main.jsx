@@ -3174,7 +3174,7 @@ function AdminSitePreview({ tenant }) {
           <TenantLogoMark tenant={tenant} size="small" />
           <span>
             <strong>{tenant?.nombre || 'Nombre de empresa'}</strong>
-            <small>{tenant?.subnombre || 'Subnombre del catálogo'}</small>
+            <small style={{ fontSize: `clamp(13px, 3.5vw, ${tenant?.subnombre_size || 18}px)` }}>{tenant?.subnombre || 'Subnombre del catálogo'}</small>
           </span>
         </header>
         <div>
@@ -3186,7 +3186,7 @@ function AdminSitePreview({ tenant }) {
       <div className="admin-site-preview-dark">
         <span>Modo oscuro</span>
         <strong>{tenant?.nombre || 'Empresa'}</strong>
-        <small>Vista cliente con fondo oscuro</small>
+        <small style={{ fontSize: `clamp(13px, 3.5vw, ${tenant?.subnombre_size || 18}px)` }}>Vista cliente con fondo oscuro</small>
       </div>
     </section>
   );
