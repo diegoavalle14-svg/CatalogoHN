@@ -83,18 +83,22 @@ export function clearUiState() {
   localStorage.removeItem(UI_STATE_KEY);
 }
 
-export function loadCart() {
+export function getCartKey(clientId) {
+  return clientId ? `catalogohn.kolben.cart.${clientId}` : 'catalogohn.kolben.cart';
+}
+
+export function loadCart(clientId) {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY)) || {};
+    return JSON.parse(localStorage.getItem(getCartKey(clientId))) || {};
   } catch {
     return {};
   }
 }
 
-export function saveCart(cart) {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+export function saveCart(clientId, cart) {
+  localStorage.setItem(getCartKey(clientId), JSON.stringify(cart));
 }
 
-export function clearCart() {
-  localStorage.removeItem(CART_KEY);
+export function clearCart(clientId) {
+  localStorage.removeItem(getCartKey(clientId));
 }
