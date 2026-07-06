@@ -2733,16 +2733,8 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
         {selectedClientId && (
           <>
             <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar SKU, marca o aplicación" value={query} onChange={setQuery} />
-            <div className="admin-chip-row">
-              {[
-                ['all', 'Todos'],
-                ['visible', 'Visibles'],
-                ['hidden', 'Ocultos']
-              ].map(([value, label]) => (
-                <button type="button" key={value} className={visibilityFilter === value ? 'active' : ''} onClick={() => setVisibilityFilter(value)}>
-                  {label}
-                </button>
-              ))}
+            <div className="admin-chip-row" style={{ display: 'none' }}>
+              {/* Ocultado por solicitud de remover filtros de visibilidad */}
             </div>
             <label className="admin-category-filter">
               <Folder size={14} />
@@ -2770,7 +2762,7 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                 saved: false
               };
               return (
-                <article className={vals.visible_cliente ? 'admin-product-row' : 'admin-product-row muted'} key={product.id}>
+                <article className="admin-product-row" key={product.id}>
                   <div className="admin-product-top">
                     <ProductImageThumb images={product.imagenes} onClick={() => { const images = cleanProductImages(product.imagenes); if (images.length) setLightbox({ images, index: 0 }); }} />
                     <div>
@@ -2840,17 +2832,6 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                     </div>
                   </div>
                   
-                  <footer>
-                    <label className="switch-line" style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', fontSize: '11px' }}>
-                      {vals.visible_cliente ? 'Visible' : 'Oculto'}
-                      <input
-                        type="checkbox"
-                        checked={vals.visible_cliente}
-                        onChange={(e) => updateLocalValue(product.id, 'visible_cliente', e.target.checked)}
-                      />
-                      <span />
-                    </label>
-                  </footer>
                 </article>
               );
             })}
