@@ -75,10 +75,10 @@ router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), a
       [
         nombre ? String(nombre).trim() : null,
         subnombre === undefined ? null : String(subnombre || '').trim(),
-        logo_url,
-        color_primario,
-        color_secundario,
-        fuente,
+        logo_url === undefined ? null : logo_url,
+        color_primario === undefined ? null : color_primario,
+        color_secundario === undefined ? null : color_secundario,
+        fuente === undefined ? null : fuente,
         subnombre_size === undefined ? null : parseInt(subnombre_size, 10),
         req.tenant.id
       ]
