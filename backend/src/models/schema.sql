@@ -26,7 +26,7 @@ CREATE TABLE empresas (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     subnombre VARCHAR(140) DEFAULT '',
-    subnombre_size INT DEFAULT 24,
+    subnombre_size INT DEFAULT 18,
     slug VARCHAR(60) UNIQUE NOT NULL,
     logo_url TEXT,
     color_primario VARCHAR(7) DEFAULT '#f0f0f0', -- Hex colors

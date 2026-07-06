@@ -57,7 +57,7 @@ router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), a
   try {
     if (!tenantProfileColumnsReady) {
       await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre VARCHAR(140) DEFAULT ''`);
-      await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre_size INT DEFAULT 24`);
+      await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre_size INT DEFAULT 18`);
       tenantProfileColumnsReady = true;
     }
     const result = await db.query(
