@@ -586,7 +586,8 @@ function Catalog({ session, onSessionUpdated }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [brand, setBrand] = useState('all');
-  const [cart, setCart] = useState(() => loadCart(session?.usuario?.id));
+  const [cart, setCart] = useState(() => loadCart(session?.user?.id));
+  const userIdRef = useRef(session?.user?.id);
   const [cartOpen, setCartOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [sending, setSending] = useState(false);
@@ -620,12 +621,18 @@ function Catalog({ session, onSessionUpdated }) {
     };
   }, [session.token, session?.tenant?.slug]);
 
-  useEffect(() => saveCart(session?.usuario?.id, cart), [cart, session?.usuario?.id]);
+  // Guardar carrito solo cuando cambia el contenido del carrito
+  useEffect(() => {
+    if (userIdRef.current != null) {
+      saveCart(userIdRef.current, cart);
+    }
+  }, [cart]);
 
   // Recargar carrito cuando cambia el usuario de sesión
   useEffect(() => {
-    setCart(loadCart(session?.usuario?.id));
-  }, [session?.usuario?.id]);
+    userIdRef.current = session?.user?.id;
+    setCart(loadCart(session?.user?.id));
+  }, [session?.user?.id]);
 
   const products = useMemo(() => {
     if (!data) return [];
@@ -716,7 +723,7 @@ function Catalog({ session, onSessionUpdated }) {
       const validLines = lines.filter((line) => Number(line.cantidad) > 0);
       if (!validLines.length) throw new Error('El pedido no tiene productos con cantidades válidas.');
       const payload = await api.createOrder(session.token, validLines);
-      clearCart(session?.usuario?.id);
+      clearCart(session?.user?.id);
       setCart({});
       setConfirming(false);
       setCartOpen(false);
