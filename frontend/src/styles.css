@@ -1040,6 +1040,14 @@ button {
   white-space: nowrap;
 }
 
+@media (min-width: 1024px) {
+  .stock-pill {
+    font-size: 14px;
+    min-height: 33px;
+    padding: 0 10px;
+  }
+}
+
 .stock-pill::before {
   content: "";
   width: 5px;
