@@ -2769,7 +2769,7 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                 saved: false
               };
               return (
-                <article className="admin-product-row" key={product.id}>
+                <article className={product.visible !== false ? 'admin-product-row' : 'admin-product-row muted'} key={product.id}>
                   <div className="admin-product-top">
                     <ProductImageThumb images={product.imagenes} onClick={() => { const images = cleanProductImages(product.imagenes); if (images.length) setLightbox({ images, index: 0 }); }} />
                     <div>
