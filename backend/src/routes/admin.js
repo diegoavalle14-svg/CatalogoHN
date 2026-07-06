@@ -1291,7 +1291,7 @@ async function storeImage(key, buffer, contentType, localPublicBaseUrl) {
   const filePath = path.join(uploadRoot, key);
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, buffer);
-  return { url: `${localPublicBaseUrl}/uploads/${key.replace(/\\/g, '/')}`, storage: 'local' };
+  return { url: `/uploads/${key.replace(/\\/g, '/')}`, storage: 'local' };
 }
 
 module.exports = router;
