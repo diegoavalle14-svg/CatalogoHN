@@ -7159,7 +7159,7 @@ button {
   }
 
   :root {
-    --catalog-topbar-height: 108px;
+    --catalog-topbar-height: 126px;
   }
 
   .brand-lockup {
@@ -7278,7 +7278,7 @@ button {
 
 @media (max-width: 520px) {
   :root {
-    --catalog-topbar-height: 100px;
+    --catalog-topbar-height: 118px;
   }
 
   .topbar {
