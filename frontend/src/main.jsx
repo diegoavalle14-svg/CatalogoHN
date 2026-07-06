@@ -2799,7 +2799,7 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
                           />
                         </div>
                       </div>
-                      <div className="price-actions-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <div className="price-actions-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
                           <input
                             type="checkbox"
