@@ -2093,27 +2093,27 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
               </div>
 
               {isExpanded && (
-                <div className="admin-order-items" style={{ padding: '0 14px 14px', borderTop: '1px solid #f0f0f0', fontSize: '11px', overflowX: 'auto' }}>
+                <div className="admin-order-items" style={{ padding: '0 14px 14px', borderTop: '1px solid var(--border-color)', fontSize: '11px', overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid #eee', textAlign: 'left', color: '#888', fontWeight: 'bold' }}>
-                        <th onClick={() => handleSort(order.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sku' ? '#111' : '#888' }}>
+                      <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                        <th onClick={() => handleSort(order.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sku' ? 'var(--text-color)' : 'var(--text-muted)' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             Código <span style={{ fontSize: '8px', opacity: sortInfo.key === 'sku' ? 1 : 0.25 }}>{sortInfo.key === 'sku' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
                         <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
-                        <th onClick={() => handleSort(order.id, 'sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sucursal' ? '#111' : '#888' }}>
+                        <th onClick={() => handleSort(order.id, 'sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sucursal' ? 'var(--text-color)' : 'var(--text-muted)' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
                             Suc. <span style={{ fontSize: '8px', opacity: sortInfo.key === 'sucursal' ? 1 : 0.25 }}>{sortInfo.key === 'sucursal' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
-                        <th onClick={() => handleSort(order.id, 'cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'cantidad' ? '#111' : '#888' }}>
+                        <th onClick={() => handleSort(order.id, 'cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'cantidad' ? 'var(--text-color)' : 'var(--text-muted)' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
                             Cant. <span style={{ fontSize: '8px', opacity: sortInfo.key === 'cantidad' ? 1 : 0.25 }}>{sortInfo.key === 'cantidad' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
-                        <th onClick={() => handleSort(order.id, 'precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'precio_unitario' ? '#111' : '#888' }}>
+                        <th onClick={() => handleSort(order.id, 'precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'precio_unitario' ? 'var(--text-color)' : 'var(--text-muted)' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end', width: '100%' }}>
                             Precio <span style={{ fontSize: '8px', opacity: sortInfo.key === 'precio_unitario' ? 1 : 0.25 }}>{sortInfo.key === 'precio_unitario' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
@@ -2140,10 +2140,10 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                         if (valA > valB) return sortInfo.asc ? 1 : -1;
                         return 0;
                       }).map((item) => (
-                        <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f9f9f9' }}>
+                        <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
                           <td style={{ padding: '8px 4px 8px 0', fontWeight: '700' }}>{item.sku}</td>
-                          <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
-                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', color: '#555' }}>{item.sucursal || '-'}</td>
+                          <td style={{ padding: '8px 4px', color: 'var(--text-color)' }}>{item.descripcion}</td>
+                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)' }}>{item.sucursal || '-'}</td>
                           <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>
                             {order.estado === 'pendiente' ? (
                               <input
@@ -2151,7 +2151,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                                 min="1"
                                 value={item.cantidad}
                                 onChange={(e) => onQtyChange(order.id, item.id, e.target.value)}
-                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid #ccc', borderRadius: '3px', fontWeight: 'bold' }}
+                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '3px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)' }}
                               />
                             ) : (
                               item.cantidad
