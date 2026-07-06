@@ -2084,10 +2084,10 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                 <div className="admin-order-main">
                   <span>Pedido</span>
                   <strong>{order.cliente_nombre || 'Cliente mayorista'}</strong>
-                  <small style={{ display: 'flex', flexWrap: 'wrap', columnGap: '6px' }}>
-                    <span style={{ whiteSpace: 'nowrap' }}>{order.fecha_label || `${new Date(order.fecha).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })}`}</span>
-                    <span style={{ whiteSpace: 'nowrap' }}>· <b style={{ fontSize: '13px', fontWeight: '900' }}>{money(order.total)}</b></span>
-                  </small>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: '14px', color: 'var(--text-muted)' }}>{order.fecha_label || `${new Date(order.fecha).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })}`}</span>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: '16px', color: 'var(--text-muted)' }}>· <b style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-color)' }}>{money(order.total)}</b></span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <b className={`admin-state ${order.estado}`}>{stateLabel(order.estado)}</b>
