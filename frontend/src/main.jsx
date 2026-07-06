@@ -2084,7 +2084,10 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                 <div className="admin-order-main">
                   <span>Pedido</span>
                   <strong>{order.cliente_nombre || 'Cliente mayorista'}</strong>
-                  <small>{order.fecha_label || new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' }) + ' - ' + new Date(order.fecha).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })} · {money(order.total)}</small>
+                  <small style={{ display: 'flex', flexWrap: 'wrap', columnGap: '6px' }}>
+                    <span style={{ whiteSpace: 'nowrap' }}>{order.fecha_label || `${new Date(order.fecha).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })}`}</span>
+                    <span style={{ whiteSpace: 'nowrap' }}>· {money(order.total)}</span>
+                  </small>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <b className={`admin-state ${order.estado}`}>{stateLabel(order.estado)}</b>
