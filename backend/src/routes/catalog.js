@@ -35,7 +35,7 @@ router.get('/tenants/public', async (req, res) => {
   try {
     await ensureTenantProfileColumns();
     const result = await db.query(
-      `SELECT id, nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa
+      `SELECT id, nombre, subnombre, subnombre_size, slug, logo_url, color_primario, color_secundario, fuente, activa
        FROM empresas
        WHERE activa = true
        ORDER BY created_at ASC`

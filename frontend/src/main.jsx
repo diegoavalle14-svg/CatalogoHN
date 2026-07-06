@@ -284,7 +284,7 @@ function Shell({ session, view, setView, onLogout, theme, onThemeToggle, childre
           <TenantLogoMark tenant={tenant} />
           <span>
             <strong>{tenant.nombre || 'Empresa'}</strong>
-            <small>{tenant.subnombre || 'Catálogo privado'}</small>
+            <small style={{ fontSize: `clamp(10px, 1.8vw, ${tenant.subnombre_size || 24}px)` }}>{tenant.subnombre || 'Catálogo privado'}</small>
           </span>
         </button>
 
@@ -1804,7 +1804,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       <header className="admin-mobile-topbar admin-mobile-topbar-fixed" ref={adminHeaderRef}>
         <button className="admin-brand-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
           <TenantLogoMark tenant={liveTenant} size="small" />
-          <span><strong>{liveTenant?.nombre || 'Empresa'}</strong><small>{liveTenant?.subnombre || 'Panel Admin'}</small></span>
+          <span><strong>{liveTenant?.nombre || 'Empresa'}</strong><small style={{ fontSize: `clamp(10px, 1.8vw, ${liveTenant?.subnombre_size || 24}px)` }}>{liveTenant?.subnombre || 'Panel Admin'}</small></span>
         </button>
         <div className="admin-quick-actions">
           <button className="admin-logo-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
@@ -3377,6 +3377,17 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               {customSubnameMode && (
                 <label>Nuevo subnombre<input value={form.subnombre || ''} onChange={(event) => update('subnombre', event.target.value)} /></label>
               )}
+              <label>
+                Tamaño del Subnombre ({form.subnombre_size || 24}px)
+                <input 
+                  type="range" 
+                  min="10" 
+                  max="24" 
+                  step="1" 
+                  value={form.subnombre_size || 24} 
+                  onChange={(event) => update('subnombre_size', parseInt(event.target.value, 10))} 
+                />
+              </label>
               <label>
                 Fuente
                 <select value={form.fuente || 'Aptos'} onChange={(event) => update('fuente', event.target.value)}>
