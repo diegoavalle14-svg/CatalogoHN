@@ -2536,7 +2536,7 @@ function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, o
 function AdminPricesSection({ lists, products, clients, categories, brands, session, setPriceData, setClients, onSyncList, onSyncAll }) {
   const [selectedClientId, setSelectedClientId] = useState('');
   const [query, setQuery] = useState('');
-  const [visibilityFilter, setVisibilityFilter] = useState('all');
+  const [visibilityFilter, setVisibilityFilter] = useState('visible');
 
   useEffect(() => {
     if (!selectedClientId && clients && clients.length > 0) {
@@ -2698,11 +2698,10 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
       const matchesCategory = categoryFilter === 'all' || String(product.categoria_id || '') === String(categoryFilter);
       const matchesBrand = brandFilter === 'all' || String(product.marca || '').toLowerCase() === String(brandFilter).toLowerCase();
       
-      const localVal = localPrices[product.id] || {};
-      const isVisible = localVal.visible_cliente ?? true;
+      const isVisible = product.visible !== false;
       const matchesVisibility = visibilityFilter === 'all'
-        || (visibilityFilter === 'visible' && isVisible !== false)
-        || (visibilityFilter === 'hidden' && isVisible === false);
+        || (visibilityFilter === 'visible' && isVisible)
+        || (visibilityFilter === 'hidden' && !isVisible);
         
       return matchesSearch && matchesCategory && matchesBrand && matchesVisibility;
     });
@@ -2733,8 +2732,16 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
         {selectedClientId && (
           <>
             <ClearableSearchInput className="admin-search-inline" iconSize={15} placeholder="Buscar SKU, marca o aplicación" value={query} onChange={setQuery} />
-            <div className="admin-chip-row" style={{ display: 'none' }}>
-              {/* Ocultado por solicitud de remover filtros de visibilidad */}
+            <div className="admin-chip-row">
+              {[
+                ['all', 'Todos'],
+                ['visible', 'Visibles'],
+                ['hidden', 'Ocultos']
+              ].map(([value, label]) => (
+                <button type="button" key={value} className={visibilityFilter === value ? 'active' : ''} onClick={() => setVisibilityFilter(value)}>
+                  {label}
+                </button>
+              ))}
             </div>
             <label className="admin-category-filter">
               <Folder size={14} />
