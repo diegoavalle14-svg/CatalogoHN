@@ -1012,6 +1012,11 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
   const isv = aplicaIsv ? (total * 0.15) : 0;
   const grandTotal = total + isv;
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   return (
     <div className="cart-overlay">
       <button className="cart-scrim" onClick={onClose} aria-label="Cerrar pedido" />
@@ -1940,6 +1945,13 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
   const [expandedOrders, setExpandedOrders] = useState({});
   const [selectedHistoryOrder, setSelectedHistoryOrder] = useState(null);
   const [itemsSortKeys, setItemsSortKeys] = useState({});
+
+  useEffect(() => {
+    if (selectedHistoryOrder) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [selectedHistoryOrder]);
 
   const handleSort = (orderId, key) => {
     setItemsSortKeys((current) => {

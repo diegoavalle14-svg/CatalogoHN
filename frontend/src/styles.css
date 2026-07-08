@@ -1314,6 +1314,8 @@ button {
   align-items: flex-start;
   justify-content: center;
   padding: clamp(72px, 10vh, 110px) 14px 14px;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .cart-scrim {
@@ -1321,6 +1323,7 @@ button {
   inset: 0;
   border: 0;
   background: rgba(0, 0, 0, .58);
+  touch-action: none;
 }
 
 .cart-panel {
@@ -6150,6 +6153,9 @@ button {
   display: grid;
   place-items: end center;
   background: rgba(0, 0, 0, .42);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .admin-modal {
@@ -6157,6 +6163,8 @@ button {
   max-height: 86vh;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   border-radius: 16px 16px 0 0;
   background: #fff;
   padding: 0 16px 16px;
