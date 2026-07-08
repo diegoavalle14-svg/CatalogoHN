@@ -1307,6 +1307,42 @@ button {
   animation: toastFadeScale 1000ms ease forwards;
 }
 
+.catalog-toast.pendiente {
+  background: #fff1d8;
+  color: #de7600;
+  border: 1px solid #ffe2b7;
+}
+
+.catalog-toast.preparando {
+  background: #dff0fb;
+  color: #006299;
+  border: 1px solid #bce1f8;
+}
+
+.catalog-toast.enviado {
+  background: #dbf5ea;
+  color: #008355;
+  border: 1px solid #aef0d5;
+}
+
+[data-theme="dark"] .catalog-toast.pendiente {
+  background: #3a2812;
+  color: #ffbf62;
+  border: 1px solid #5c3f1a;
+}
+
+[data-theme="dark"] .catalog-toast.preparando {
+  background: #102638;
+  color: #84c6ff;
+  border: 1px solid #173852;
+}
+
+[data-theme="dark"] .catalog-toast.enviado {
+  background: #102a1f;
+  color: #7ee0b2;
+  border: 1px solid #163f2e;
+}
+
 .cart-overlay {
   position: fixed;
   inset: 0;

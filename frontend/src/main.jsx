@@ -1142,13 +1142,13 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   const [liveTenantDraft, setLiveTenantDraft] = useState(null);
   const adminHeaderRef = useRef(null);
   const [adminHeaderSpace, setAdminHeaderSpace] = useState(116);
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
-  function showToast(message) {
-    setToast(message);
+  function showToast(message, tone = '') {
+    setToast({ message, tone });
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(''), 1000);
+    toastTimer.current = window.setTimeout(() => setToast(null), 1000);
   }
 
   useEffect(() => {
@@ -1570,6 +1570,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       setProducts(cleaned);
       setBrands(catalogPayload.marcas || []);
       setCategories(catalogPayload.categorias || []);
+      showToast(`Pedido ${saved.pedido?.numero || ''} cambiado a ${stateLabel(estado)}`, estado);
     } catch (error) {
       setOrders(previous);
       window.alert(error.message || 'No se pudo cambiar el estado del pedido');
@@ -1817,7 +1818,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
 
   return (
     <div className="admin-mobile-shell" style={adminShellStyle}>
-      {toast && <div className="catalog-toast admin-toast">{toast}</div>}
+      {toast && <div className={`catalog-toast admin-toast ${toast.tone || ''}`}>{toast.message}</div>}
       <header className="admin-mobile-topbar admin-mobile-topbar-fixed" ref={adminHeaderRef}>
         <button className="admin-brand-button" onClick={() => setEditor({ type: 'site', title: 'Configuración del sitio', value: liveTenant })}>
           <TenantLogoMark tenant={liveTenant} size="small" />
