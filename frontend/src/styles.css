@@ -1294,17 +1294,17 @@ button {
   left: 50%;
   top: 50%;
   z-index: 95;
-  width: min(340px, calc(100% - 28px));
+  width: min(300px, calc(100% - 28px));
   transform: translate(-50%, -50%);
-  border-radius: 8px;
+  border-radius: 6px;
   background: #111;
   color: var(--yellow);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, .44);
-  padding: 18px 24px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, .44);
+  padding: 10px 18px;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
-  animation: toastFadeScale 2200ms ease forwards;
+  animation: toastFadeScale 1000ms ease forwards;
 }
 
 .cart-overlay {
@@ -3364,16 +3364,33 @@ button {
   left: 50%;
   z-index: 120;
   transform: translateX(-50%);
-  min-width: min(420px, calc(100vw - 32px));
+  min-width: min(300px, calc(100vw - 32px));
   border: 1px solid rgba(17, 17, 17, .10);
-  border-radius: 8px;
+  border-radius: 6px;
   background: #111;
   color: #fff;
-  box-shadow: 0 18px 48px rgba(20, 24, 31, .22);
-  padding: 12px 16px;
+  box-shadow: 0 12px 32px rgba(20, 24, 31, .22);
+  padding: 8px 14px;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
+  animation: toastFadeTop 1000ms ease forwards;
+}
+
+@keyframes toastFadeTop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  12%,
+  82% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
 }
 
 .superadmin-top-header {

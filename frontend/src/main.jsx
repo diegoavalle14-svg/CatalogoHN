@@ -610,7 +610,7 @@ function Catalog({ session, onSessionUpdated }) {
   function showToast(message) {
     setToast(message);
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(''), 3200);
+    toastTimer.current = window.setTimeout(() => setToast(''), 1000);
   }
 
   useEffect(() => {
@@ -1148,7 +1148,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   function showToast(message) {
     setToast(message);
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(''), 3200);
+    toastTimer.current = window.setTimeout(() => setToast(''), 1000);
   }
 
   useEffect(() => {
@@ -2719,7 +2719,7 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
       }));
       
       setToastMessage('¡Precio guardado exitosamente!');
-      setTimeout(() => setToastMessage(''), 3000);
+      setTimeout(() => setToastMessage(''), 1000);
 
       setTimeout(() => {
         setLocalPrices((prev) => {
@@ -2772,10 +2772,10 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
           transform: 'translate(-50%, -50%)',
           background: 'rgba(16, 185, 129, 0.95)',
           color: 'white',
-          padding: '16px 24px',
-          borderRadius: '12px',
+          padding: '10px 18px',
+          borderRadius: '8px',
           fontWeight: 'bold',
-          fontSize: '15px',
+          fontSize: '13px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
           zIndex: 9999,
           pointerEvents: 'none',
@@ -4370,7 +4370,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
   function showToast(message) {
     setToast(message);
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(''), 3200);
+    toastTimer.current = window.setTimeout(() => setToast(''), 1000);
   }
 
   useEffect(() => {
