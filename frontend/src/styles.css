@@ -9012,15 +9012,48 @@ button {
 }
 
 .admin-client-modal {
-  max-width: 480px !important;
-  border-radius: 12px !important;
-  padding: 0 20px 20px !important;
+  max-width: 440px !important;
+  border-radius: 14px !important;
+  padding: 0 18px 16px !important;
 }
 
 .admin-client-modal header {
-  margin-bottom: 20px !important;
+  margin-bottom: 10px !important;
   box-shadow: none !important;
-  padding-bottom: 8px !important;
+  padding: 14px 0 8px !important;
+}
+
+.admin-client-modal .admin-form {
+  gap: 6px !important;
+}
+
+.admin-client-modal .admin-form label {
+  gap: 3px !important;
+  font-size: 11px !important;
+}
+
+.admin-client-modal .admin-form input,
+.admin-client-modal .admin-form select {
+  min-height: 32px !important;
+  font-size: 13px !important;
+}
+
+.admin-client-modal h2 {
+  font-size: 16px !important;
+}
+
+.admin-client-modal .client-branches-editor {
+  padding: 10px !important;
+  margin-top: 2px !important;
+}
+
+.admin-client-modal .client-branches-head {
+  margin-bottom: 6px !important;
+}
+
+.admin-client-modal .primary-button {
+  min-height: 38px !important;
+  margin-top: 4px !important;
 }
 
 /* Unify admin-client-card to use grid layout (similar to admin-price-groups) */

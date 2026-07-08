@@ -3368,7 +3368,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     }
   }
 
-  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password' || editor.type === 'price-list' || editor.type === 'price' || editor.type === 'client-detail' || editor.type === 'product';
+  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password' || editor.type === 'price-list' || editor.type === 'price' || editor.type === 'client-detail' || editor.type === 'product' || editor.type === 'client';
   const isPasswordModal = editor.type === 'account-password';
   const isClientModal = editor.type === 'client';
   return (
@@ -3542,7 +3542,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
             </select></label>
-            <label className="admin-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: '12px 0 16px', userSelect: 'none' }}>
+            <label className="admin-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: '4px 0 8px', userSelect: 'none' }}>
               <input
                 type="checkbox"
                 style={{ width: '18px', height: '18px', margin: 0, cursor: 'pointer' }}
