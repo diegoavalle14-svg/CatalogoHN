@@ -2089,7 +2089,8 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
         )}
         {filteredOrders.map((order) => {
           const isExpanded = expandedOrders[order.id];
-          const sortInfo = itemsSortKeys[order.id] || { key: 'sku', asc: true };
+          const sortInfo = itemsSortKeys[order.id] || { key: 'sucursal', asc: true };
+          const totalUnidades = (order.items || []).reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
           return (
             <article className="admin-order-card" key={order.id}>
               <div className="admin-order-card-head" onClick={() => toggleOrder(order.id)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
@@ -2099,6 +2100,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                   <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '6px', marginTop: '4px', alignItems: 'center' }}>
                     <span style={{ whiteSpace: 'nowrap', fontSize: '14px', color: 'var(--text-muted)' }}>{order.fecha_label || `${new Date(order.fecha).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })}`}</span>
                     <span style={{ whiteSpace: 'nowrap', fontSize: '16px', color: 'var(--text-muted)' }}>· <b style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-color)' }}>{money(order.total)}</b></span>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: '13px', color: 'var(--text-muted)', background: 'var(--surface-color)', padding: '1px 7px', borderRadius: '8px', fontWeight: '700', border: '1px solid var(--border-color)' }}>{totalUnidades} uds.</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2108,8 +2110,8 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
               </div>
 
               {isExpanded && (
-                <div className="admin-order-items" style={{ padding: '0 14px 14px', borderTop: '1px solid var(--border-color)', fontSize: '11px', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                <div className="admin-order-items" style={{ padding: '0 12px 10px', borderTop: '1px solid var(--border-color)', fontSize: '11px', overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 'bold' }}>
                         <th onClick={() => handleSort(order.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sku' ? 'var(--text-color)' : 'var(--text-muted)' }}>
@@ -2156,10 +2158,10 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                         return 0;
                       }).map((item) => (
                         <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '8px 4px 8px 0', fontWeight: '700' }}>{item.sku}</td>
-                          <td style={{ padding: '8px 4px', color: 'var(--text-color)' }}>{item.descripcion}</td>
-                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)' }}>{item.sucursal || '-'}</td>
-                          <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>
+                          <td style={{ padding: '4px 4px 4px 0', fontWeight: '700' }}>{item.sku}</td>
+                          <td style={{ padding: '4px 4px', color: 'var(--text-color)' }}>{item.descripcion}</td>
+                          <td style={{ padding: '4px 4px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)' }}>{item.sucursal || '-'}</td>
+                          <td style={{ padding: '4px 4px', textAlign: 'center', fontWeight: '700' }}>
                             {order.estado === 'pendiente' ? (
                               <input
                                 type="number"
@@ -2172,10 +2174,18 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                               item.cantidad
                             )}
                           </td>
-                          <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
+                          <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: '2px solid var(--border-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 4px 6px 0', fontWeight: '800', fontSize: '11px', textAlign: 'right' }}>Total:</td>
+                        <td></td>
+                        <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '900', fontSize: '12px' }}>{totalUnidades}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '900', fontSize: '12px' }}>{money(order.total)}</td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               )}
