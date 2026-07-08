@@ -6576,7 +6576,12 @@ button {
   color: #8b8e98;
 }
 
-.client-branch-add,
+.client-branch-add {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(0, 1.5fr) auto;
+  gap: 8px;
+}
+
 .client-branch-row {
   display: grid;
   grid-template-columns: 28px minmax(76px, 1fr) minmax(0, 1.5fr) auto;
