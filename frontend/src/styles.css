@@ -227,8 +227,9 @@ button {
   align-items: center;
   gap: 4px;
   color: #a9a9a9;
-  font-size: clamp(14px, 1.8vw, 24px);
+  font-size: clamp(12px, 1.4vw, 16px);
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .welcome-line span {
