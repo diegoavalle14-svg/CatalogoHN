@@ -1144,6 +1144,7 @@ function History({ session }) {
   const [orders, setOrders] = useState(null);
   const [expandedOrders, setExpandedOrders] = useState({});
   const [confirmDeleteOrder, setConfirmDeleteOrder] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     api.setTenantSlug(session?.tenant?.slug || 'kolben');
@@ -1175,18 +1176,69 @@ function History({ session }) {
 
   if (!orders) return <Loading label="Cargando historial" />;
 
+  const filteredOrders = orders.filter((order) => {
+    if (statusFilter === 'all') return true;
+    return order.estado === statusFilter;
+  });
+
   return (
     <section className="list-page">
       <h1>Historial de pedidos</h1>
+
+      {/* Filtros de Estado */}
+      <div className="admin-chip-row" style={{ marginBottom: '20px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        {[
+          ['all', 'Todos'],
+          ['pendiente', 'Pendientes'],
+          ['preparando', 'Preparando'],
+          ['enviado', 'Enviados']
+        ].map(([value, label]) => (
+          <button 
+            type="button" 
+            key={value} 
+            className={statusFilter === value ? 'active' : ''} 
+            onClick={() => setStatusFilter(value)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '20px',
+              border: '1px solid var(--border-color)',
+              background: statusFilter === value ? 'var(--yellow)' : 'var(--surface-color)',
+              color: statusFilter === value ? '#000' : 'var(--text-color)',
+              fontWeight: '800',
+              fontSize: '11px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              cursor: 'pointer'
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'grid', gap: '16px', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
-        {orders.length === 0 && (
+        {filteredOrders.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)' }}>
-            <strong>No tienes pedidos en tu historial.</strong>
+            <strong>No hay pedidos con este estado en tu historial.</strong>
           </div>
         )}
-        {orders.map((order) => {
+        {filteredOrders.map((order) => {
           const isExpanded = expandedOrders[order.id];
           const totalUnidades = (order.items || []).reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
+          
+          // Ordenar items por Sucursal (A-Z) y luego por SKU
+          const sortedItems = [...(order.items || [])].sort((a, b) => {
+            const sucA = String(a.sucursal || '').toLowerCase();
+            const sucB = String(b.sucursal || '').toLowerCase();
+            if (sucA < sucB) return -1;
+            if (sucA > sucB) return 1;
+            const skuA = String(a.sku || '').toLowerCase();
+            const skuB = String(b.sku || '').toLowerCase();
+            if (skuA < skuB) return -1;
+            if (skuA > skuB) return 1;
+            return 0;
+          });
+
           return (
             <article className="admin-order-card" key={order.id} style={{ margin: 0 }}>
               <div className="admin-order-card-head" onClick={() => toggleOrder(order.id)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '14px' }}>
@@ -1224,7 +1276,7 @@ function History({ session }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {(order.items || []).map((item) => (
+                      {sortedItems.map((item) => (
                         <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
                           <td style={{ padding: '6px 4px 6px 0', fontWeight: '700' }}>{item.sku}</td>
                           <td style={{ padding: '6px 4px', color: 'var(--text-color)' }}>{item.descripcion}</td>
