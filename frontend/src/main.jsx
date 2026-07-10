@@ -2166,11 +2166,37 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                   <strong>{order.cliente_nombre || 'Cliente mayorista'}</strong>
                   <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '6px', marginTop: '4px', alignItems: 'center' }}>
                     <span style={{ whiteSpace: 'nowrap', fontSize: '14px', color: 'var(--text-muted)' }}>{order.fecha_label || `${new Date(order.fecha).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })}`}</span>
-                    <span style={{ whiteSpace: 'nowrap', fontSize: '16px', color: 'var(--text-muted)' }}>· <b style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-color)' }}>{money(order.total)}</b></span>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: '16px', color: 'var(--text-muted)' }}><b style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-color)' }}>{money(order.total)}</b></span>
                     <span style={{ whiteSpace: 'nowrap', fontSize: '13px', color: 'var(--text-muted)', background: 'var(--surface-color)', padding: '1px 7px', borderRadius: '8px', fontWeight: '700', border: '1px solid var(--border-color)' }}>{totalUnidades} uds.</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {order.estado !== 'pendiente' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onState(order.id, order.estado === 'enviado' ? 'preparando' : 'pendiente');
+                      }}
+                      title="Revertir estado"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#7b8491',
+                        padding: '4px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        marginRight: '2px'
+                      }}
+                    >
+                      <RotateCcw size={12} />
+                    </button>
+                  )}
                   <b className={`admin-state ${order.estado}`}>{stateLabel(order.estado)}</b>
                   {isExpanded ? <ChevronUp size={16} style={{ color: '#888' }} /> : <ChevronDown size={16} style={{ color: '#888' }} />}
                 </div>
@@ -2281,18 +2307,8 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                     </>
                   )}
                   {order.estado === 'preparando' && (
-                    <>
-                      <button className="pill-action" onClick={() => onState(order.id, 'enviado')}>
-                        Enviado
-                      </button>
-                      <button className="pill-action undo" onClick={() => onState(order.id, 'pendiente')} title="Revertir estado" style={{ background: 'transparent', color: '#7b8491', borderColor: 'transparent', padding: '6px', minWidth: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <RotateCcw size={15} />
-                      </button>
-                    </>
-                  )}
-                  {order.estado === 'enviado' && (
-                    <button className="pill-action undo" onClick={() => onState(order.id, 'preparando')} title="Revertir estado" style={{ background: 'transparent', color: '#7b8491', borderColor: 'transparent', padding: '6px', minWidth: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <RotateCcw size={15} />
+                    <button className="pill-action" onClick={() => onState(order.id, 'enviado')}>
+                      Enviado
                     </button>
                   )}
                   <button className="pill-action delete" onClick={() => onDelete(order.id)}>
