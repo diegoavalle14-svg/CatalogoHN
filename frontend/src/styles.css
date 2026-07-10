@@ -2086,14 +2086,6 @@ button {
   font-weight: 800;
 }
 
-.superadmin-login-button {
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 800;
-}
-
 .tenant-footer {
   display: grid;
   gap: 8px;
@@ -7609,12 +7601,6 @@ button {
 
   .tenant-tile-domain {
     font-size: 8px;
-  }
-
-  .superadmin-login-button {
-    min-height: 32px;
-    padding: 0 11px;
-    font-size: 10px;
   }
 
   .tenant-footer {
