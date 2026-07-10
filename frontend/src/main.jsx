@@ -1142,32 +1142,141 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
 
 function History({ session }) {
   const [orders, setOrders] = useState(null);
+  const [expandedOrders, setExpandedOrders] = useState({});
+  const [confirmDeleteOrder, setConfirmDeleteOrder] = useState(null);
 
   useEffect(() => {
     api.setTenantSlug(session?.tenant?.slug || 'kolben');
     api.orders(session.token).then((payload) => setOrders(payload.pedidos)).catch(console.error);
   }, [session.token, session?.tenant?.slug]);
 
+  const toggleOrder = (orderId) => {
+    setExpandedOrders(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  };
+
+  const stateLabel = (state) => {
+    if (state === 'pendiente') return 'Pendiente';
+    if (state === 'preparando') return 'Preparando';
+    if (state === 'enviado') return 'Enviado';
+    return state;
+  };
+
+  const handleDelete = async (orderId) => {
+    try {
+      await api.deleteOrder(session.token, orderId);
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      window.dispatchEvent(new CustomEvent('catalog:toast', { detail: 'Pedido eliminado con éxito' }));
+    } catch (err) {
+      window.dispatchEvent(new CustomEvent('catalog:toast', { detail: err.message || 'Error al eliminar pedido' }));
+    } finally {
+      setConfirmDeleteOrder(null);
+    }
+  };
+
   if (!orders) return <Loading label="Cargando historial" />;
 
   return (
     <section className="list-page">
       <h1>Historial de pedidos</h1>
-      {orders.map((order) => (
-        <article className="order-card" key={order.id}>
-          <div className="order-head">
-            <div><strong>{order.numero}</strong><span>{new Date(order.fecha).toLocaleString('es-HN')}</span></div>
-            <b>{order.estado}</b>
+      <div style={{ display: 'grid', gap: '16px', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+        {orders.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)' }}>
+            <strong>No tienes pedidos en tu historial.</strong>
           </div>
-          {order.items?.map((item) => (
-            <p key={`${item.producto_id}-${item.sucursal_id}`}>{item.sku} · {item.sucursal || 'Sucursal'} · {item.cantidad}</p>
-          ))}
-          <strong>{money(order.total)}</strong>
-        </article>
-      ))}
+        )}
+        {orders.map((order) => {
+          const isExpanded = expandedOrders[order.id];
+          const totalUnidades = (order.items || []).reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
+          return (
+            <article className="admin-order-card" key={order.id} style={{ margin: 0 }}>
+              <div className="admin-order-card-head" onClick={() => toggleOrder(order.id)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '14px' }}>
+                <div className="admin-order-main">
+                  <span>Pedido</span>
+                  <strong>{order.numero}</strong>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: '12px', color: 'var(--text-muted)' }}>
+                      {new Date(order.fecha).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })} {new Date(order.fecha).toLocaleTimeString('es-HN', { hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: '14px', color: 'var(--text-muted)' }}>
+                      <b style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-color)' }}>{money(order.total)}</b>
+                    </span>
+                    <span style={{ whiteSpace: 'nowrap', fontSize: '11px', color: 'var(--text-muted)', background: 'var(--surface-color)', padding: '1px 6px', borderRadius: '6px', fontWeight: '700', border: '1px solid var(--border-color)' }}>
+                      {totalUnidades} uds.
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <b className={`admin-state ${order.estado}`} style={{ fontSize: '12px', padding: '2px 8px' }}>{stateLabel(order.estado)}</b>
+                  {isExpanded ? <ChevronUp size={16} style={{ color: '#888' }} /> : <ChevronDown size={16} style={{ color: '#888' }} />}
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="admin-order-items" style={{ padding: '0 14px 10px', borderTop: '1px solid var(--border-color)', fontSize: '11px', overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                        <th style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase' }}>Código</th>
+                        <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
+                        <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase' }}>Suc.</th>
+                        <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase' }}>Cant.</th>
+                        <th style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase' }}>Precio</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(order.items || []).map((item) => (
+                        <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: '6px 4px 6px 0', fontWeight: '700' }}>{item.sku}</td>
+                          <td style={{ padding: '6px 4px', color: 'var(--text-color)' }}>{item.descripcion}</td>
+                          <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)' }}>{item.sucursal || '-'}</td>
+                          <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>
+                          <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: '2px solid var(--border-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 4px 6px 0', fontWeight: '800', fontSize: '11px', textAlign: 'right' }}>Total:</td>
+                        <td></td>
+                        <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '900', fontSize: '12px' }}>{totalUnidades}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '900', fontSize: '12px' }}>{money(order.total)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {order.estado === 'pendiente' && (
+                <footer style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 14px', borderTop: '1px dashed var(--border-color)', gap: '8px' }}>
+                  <button 
+                    className="pill-action delete" 
+                    onClick={() => setConfirmDeleteOrder(order.id)}
+                    style={{ background: 'var(--color-danger, #d32f2f)', color: '#fff', borderColor: 'var(--color-danger, #d32f2f)', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    Eliminar Pedido
+                  </button>
+                </footer>
+              )}
+            </article>
+          );
+        })}
+      </div>
+
+      {confirmDeleteOrder && (
+        <AdminConfirmModal
+          title="Eliminar Pedido"
+          message="¿Estás seguro de que deseas eliminar este pedido permanentemente? Esta acción no se puede deshacer."
+          confirmText="Sí, eliminar"
+          cancelText="Cancelar"
+          onConfirm={() => handleDelete(confirmDeleteOrder)}
+          onCancel={() => setConfirmDeleteOrder(null)}
+        />
+      )}
     </section>
   );
 }
+
+
 
 function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenantUpdated, theme, onThemeToggle }) {
   const [confirmAction, setConfirmAction] = useState(null);

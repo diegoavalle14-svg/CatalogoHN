@@ -434,12 +434,27 @@ router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmi
   }
 });
 
-router.delete('/orders/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/orders/:id', authenticate, requireRole('cliente', 'admin', 'superadmin'), async (req, res) => {
   if (req.body.confirmacion !== 'ELIMINAR') {
     return res.status(400).json({ message: 'Se requiere doble confirmación' });
   }
 
   try {
+    const orderRes = await db.query('SELECT estado, cliente_id FROM pedidos WHERE id = $1 AND empresa_id = $2', [req.params.id, req.tenant.id]);
+    const order = orderRes.rows[0];
+    if (!order) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+
+    if (req.user.rol === 'cliente') {
+      if (order.cliente_id !== req.user.cliente_id) {
+        return res.status(403).json({ message: 'No tienes permiso para eliminar este pedido' });
+      }
+      if (order.estado !== 'pendiente') {
+        return res.status(400).json({ message: 'Solo se pueden eliminar pedidos en estado pendiente' });
+      }
+    }
+
     await db.query('DELETE FROM pedidos WHERE id = $1 AND empresa_id = $2', [req.params.id, req.tenant.id]);
     res.status(204).send();
   } catch (error) {
