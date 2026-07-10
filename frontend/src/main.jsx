@@ -390,8 +390,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
   const [selectedTenantName, setSelectedTenantName] = useState('');
   const [superadminMode, setSuperadminMode] = useState(false);
   const [tenantTiles, setTenantTiles] = useState([]);
-  const secretTapCount = useRef(0);
-  const secretTapTimer = useRef(null);
 
   useEffect(() => {
     api.publicTenants()
@@ -584,26 +582,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
       )}
 
       <footer className="login-page-footer">
-        <span
-          style={{ cursor: 'default', userSelect: 'none' }}
-          onClick={() => {
-            secretTapCount.current += 1;
-            window.clearTimeout(secretTapTimer.current);
-            if (secretTapCount.current >= 5) {
-              secretTapCount.current = 0;
-              setSuperadminMode(true);
-              setUsername('');
-              setPassword('');
-              setForgotOpen(false);
-              setForgotValue('');
-              setForgotError('');
-              setForgotMessage('');
-              setLoginOpen(true);
-            } else {
-              secretTapTimer.current = window.setTimeout(() => { secretTapCount.current = 0; }, 2000);
-            }
-          }}
-        >Honduras</span>
+        <span>Honduras</span>
         <a href="mailto:contacto@catalogohn.com">contacto@catalogohn.com</a>
         <span>Soporte y registro de empresas</span>
       </footer>
