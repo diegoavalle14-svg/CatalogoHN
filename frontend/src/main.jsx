@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
-import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
+import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
@@ -2282,17 +2282,17 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                   )}
                   {order.estado === 'preparando' && (
                     <>
-                      <button className="pill-action undo" onClick={() => onState(order.id, 'pendiente')} style={{ background: '#7b8491', color: '#fff', borderColor: '#7b8491' }}>
-                        Deshacer a Pendiente
-                      </button>
                       <button className="pill-action" onClick={() => onState(order.id, 'enviado')}>
                         Enviado
+                      </button>
+                      <button className="pill-action undo" onClick={() => onState(order.id, 'pendiente')} title="Revertir estado" style={{ background: 'transparent', color: '#7b8491', borderColor: 'transparent', padding: '6px', minWidth: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <RotateCcw size={15} />
                       </button>
                     </>
                   )}
                   {order.estado === 'enviado' && (
-                    <button className="pill-action undo" onClick={() => onState(order.id, 'preparando')} style={{ background: '#7b8491', color: '#fff', borderColor: '#7b8491' }}>
-                      Deshacer a Preparando
+                    <button className="pill-action undo" onClick={() => onState(order.id, 'preparando')} title="Revertir estado" style={{ background: 'transparent', color: '#7b8491', borderColor: 'transparent', padding: '6px', minWidth: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <RotateCcw size={15} />
                     </button>
                   )}
                   <button className="pill-action delete" onClick={() => onDelete(order.id)}>
