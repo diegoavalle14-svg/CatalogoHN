@@ -2270,14 +2270,29 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                       </button>
                     </>
                   )}
-                  {order.estado !== 'preparando' && order.estado !== 'enviado' && (
-                    <button className="pill-action" onClick={() => onState(order.id, 'preparando')}>
-                      Preparando
-                    </button>
+                  {order.estado === 'pendiente' && (
+                    <>
+                      <button className="pill-action" onClick={() => onState(order.id, 'preparando')}>
+                        Preparando
+                      </button>
+                      <button className="pill-action" onClick={() => onState(order.id, 'enviado')}>
+                        Enviado
+                      </button>
+                    </>
                   )}
-                  {order.estado !== 'enviado' && (
-                    <button className="pill-action" onClick={() => onState(order.id, 'enviado')}>
-                      Enviado
+                  {order.estado === 'preparando' && (
+                    <>
+                      <button className="pill-action undo" onClick={() => onState(order.id, 'pendiente')} style={{ background: '#7b8491', color: '#fff', borderColor: '#7b8491' }}>
+                        Deshacer a Pendiente
+                      </button>
+                      <button className="pill-action" onClick={() => onState(order.id, 'enviado')}>
+                        Enviado
+                      </button>
+                    </>
+                  )}
+                  {order.estado === 'enviado' && (
+                    <button className="pill-action undo" onClick={() => onState(order.id, 'preparando')} style={{ background: '#7b8491', color: '#fff', borderColor: '#7b8491' }}>
+                      Deshacer a Preparando
                     </button>
                   )}
                   <button className="pill-action delete" onClick={() => onDelete(order.id)}>
