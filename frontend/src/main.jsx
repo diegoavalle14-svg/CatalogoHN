@@ -1122,6 +1122,7 @@ function History({ session }) {
 }
 
 function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenantUpdated, theme, onThemeToggle }) {
+  const [confirmAction, setConfirmAction] = useState(null);
   const [summary, setSummary] = useState(null);
   const [orders, setOrders] = useState([]);
   const [catalog, setCatalog] = useState(null);
@@ -1547,9 +1548,13 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     }
   }
 
-  async function updateOrderState(id, estado) {
-    const ok = window.confirm(`Confirmar cambio a "${stateLabel(estado)}"`) && window.confirm('Segunda confirmación requerida');
-    if (!ok) return;
+  function updateOrderState(id, estado) {
+    setConfirmAction({
+      title: 'Cambiar estado de pedido',
+      message: `¿Confirmar cambio a "${stateLabel(estado)}"?`,
+      confirmText: 'Cambiar',
+      onConfirm: async () => {
+        setConfirmAction(null);
     const previous = orders;
     setOrders((current) => current.map((order) => (order.id === id ? { ...order, estado } : order)));
     try {
@@ -1568,10 +1573,11 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       setBrands(catalogPayload.marcas || []);
       setCategories(catalogPayload.categorias || []);
       showToast(`Pedido ${saved.pedido?.numero || ''} cambiado a ${stateLabel(estado)}`, estado);
-    } catch (error) {
-      setOrders(previous);
-      window.alert(error.message || 'No se pudo cambiar el estado del pedido');
-    }
+      } catch (error) {
+        setOrders(previous);
+        window.alert(error.message || 'No se pudo cambiar el estado del pedido');
+      }
+    });
   }
 
   function handleOrderQtyChange(orderId, itemId, nextQty) {
@@ -1633,9 +1639,13 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     }
   }
 
-  async function deleteProduct(product) {
-    const ok = window.confirm(`Eliminar producto ${product.sku || product.descripcion}?`) && window.confirm('Segunda confirmación requerida');
-    if (!ok) return;
+  function deleteProduct(product) {
+    setConfirmAction({
+      title: 'Eliminar producto',
+      message: `¿Seguro que quieres eliminar "${product.sku || product.descripcion}"?`,
+      confirmText: 'Eliminar',
+      onConfirm: async () => {
+        setConfirmAction(null);
     const previousProducts = products;
     setProducts((current) => current.filter((item) => item.id !== product.id));
     try {
@@ -1657,15 +1667,20 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       
       setProducts(cleaned);
       showToast('Producto eliminado');
-    } catch (error) {
-      setProducts(previousProducts);
-      window.alert(error.message || 'No se pudo eliminar el producto');
-    }
+      } catch (error) {
+        setProducts(previousProducts);
+        window.alert(error.message || 'No se pudo eliminar el producto');
+      }
+    });
   }
 
-  async function deleteClient(client) {
-    const ok = window.confirm(`Eliminar cliente ${client.nombre}?`) && window.confirm('Segunda confirmación requerida');
-    if (!ok) return;
+  function deleteClient(client) {
+    setConfirmAction({
+      title: 'Eliminar cliente',
+      message: `¿Seguro que quieres eliminar a "${client.nombre}"?`,
+      confirmText: 'Eliminar',
+      onConfirm: async () => {
+        setConfirmAction(null);
     const previousClients = clients;
     setClients((current) => current.filter((item) => item.id !== client.id));
     try {
@@ -1673,22 +1688,29 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       const latestPrices = await api.adminPrices(session.token);
       setPriceData(normalizeAdminPriceData(latestPrices));
       showToast('Cliente eliminado');
-    } catch (error) {
-      setClients(previousClients);
-      window.alert(error.message || 'No se pudo eliminar el cliente');
-    }
+      } catch (error) {
+        setClients(previousClients);
+        window.alert(error.message || 'No se pudo eliminar el cliente');
+      }
+    });
   }
 
-  async function deleteOrder(id) {
-    const ok = window.confirm('Confirmar eliminación del pedido') && window.confirm('Segunda confirmación requerida');
-    if (!ok) return;
+  function deleteOrder(id) {
+    setConfirmAction({
+      title: 'Eliminar pedido',
+      message: '¿Seguro que quieres eliminar este pedido permanentemente?',
+      confirmText: 'Eliminar',
+      onConfirm: async () => {
+        setConfirmAction(null);
     const previous = orders;
     setOrders((current) => current.filter((order) => order.id !== id));
     try {
       await api.deleteOrder(session.token, id);
-    } catch {
-      setOrders(previous);
-    }
+      } catch {
+        setOrders(previous);
+        window.alert('No se pudo eliminar el pedido');
+      }
+    });
   }
 
   async function saveBrand(payload) {
@@ -1911,6 +1933,16 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
 
       <AdminBottomNav tab={tab} setTab={setTab} pending={pending} missingPrices={missingPriceCount} />
 
+      {confirmAction && (
+        <ConfirmModal
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmText={confirmAction.confirmText}
+          onConfirm={confirmAction.onConfirm}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
+
       {editor && (
         <AdminEditor
           editor={editor}
@@ -1936,6 +1968,27 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   );
 }
 
+
+function ConfirmModal({ title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, onCancel }) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  return createPortal(
+    <div className="admin-modal-backdrop" onClick={onCancel} style={{ placeItems: 'center' }}>
+      <section className="admin-modal" onClick={e => e.stopPropagation()} style={{ width: 'min(360px, calc(100% - 32px))', padding: '24px', textAlign: 'center', borderRadius: '16px', margin: 'auto' }}>
+        <h2 style={{ fontSize: '18px', marginBottom: '10px' }}>{title}</h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px', lineHeight: 1.5 }}>{message}</p>
+        <div style={{ display: 'grid', gap: '8px' }}>
+          <button className="primary-button" onClick={onConfirm} style={{ background: 'var(--color-danger, #d32f2f)' }}>{confirmText}</button>
+          <button className="secondary-button" onClick={onCancel}>{cancelText}</button>
+        </div>
+      </section>
+    </div>,
+    document.body
+  );
+}
 
 function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [], onState, onDelete, onQtyChange, onSaveItems, onUndoItems }) {
   const [query, setQuery] = useState('');
