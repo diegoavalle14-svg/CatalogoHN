@@ -1006,6 +1006,7 @@ function BrandImageBadge({ brand, label }) {
 }
 
 function CartPanel({ lines, total, confirming, sending, orderError, onClose, onRemove, onQty, onConfirm, onReview, onSend, aplicaIsv = true }) {
+  const [lightbox, setLightbox] = useState(null);
   const isv = aplicaIsv ? (total * 0.15) : 0;
   const grandTotal = total + isv;
 
@@ -1042,7 +1043,7 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
             return [...branchMap.entries()].map(([sucursalId, { sucursal, items }]) => (
               <div key={sucursalId} style={{ marginBottom: '10px' }}>
                 {/* Título de sucursal */}
-                <div style={{ padding: '4px 0 4px 2px', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', marginBottom: '4px' }}>
+                <div style={{ padding: '6px 0 6px 2px', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', marginBottom: '6px' }}>
                   Sucursal {sucursal}
                 </div>
                 {/* Productos de esta sucursal */}
@@ -1050,13 +1051,13 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                   const otherTotal = lines.filter(l => l.producto_id === line.producto_id && l.sucursal_id !== line.sucursal_id).reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
                   const maxAllowed = line.stock_actual > 0 ? Math.max(0, line.stock_actual - otherTotal) : undefined;
                   return (
-                    <div key={`${line.producto_id}-${line.sucursal_id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0', fontSize: '12px' }}>
-                      <div className="cart-branch-img">
+                    <div key={`${line.producto_id}-${line.sucursal_id}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', fontSize: '13px' }}>
+                      <div className="cart-branch-img" onClick={() => { if (line.imagen) setLightbox({ images: [line.imagen], index: 0 }); }} style={{ cursor: 'pointer' }}>
                         <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <span className="cart-sku" style={{ display: 'block', fontSize: '10px' }}>{line.sku}</span>
-                        <span style={{ color: 'var(--text-color)', fontWeight: 600, fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{line.descripcion}</span>
+                        <span className="cart-sku" style={{ display: 'inline-flex', fontSize: '10px', minHeight: '18px', padding: '2px 6px', width: 'fit-content', marginBottom: '2px' }}>{line.sku}</span>
+                        <span style={{ color: 'var(--text-color)', fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{line.descripcion}</span>
                       </div>
                       <input
                         type="number"
@@ -1071,11 +1072,11 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                           }
                           onQty({ id: line.producto_id }, line.sucursal_id, val);
                         }}
-                        style={{ width: '44px', textAlign: 'center', padding: '2px 4px', border: '1px solid var(--border-color)', borderRadius: '4px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '12px', flexShrink: 0 }}
+                        style={{ width: '52px', height: '32px', textAlign: 'center', padding: '2px 4px', border: '1px solid var(--border-color)', borderRadius: '4px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '13px', flexShrink: 0 }}
                       />
-                      <span style={{ minWidth: '58px', textAlign: 'right', fontWeight: '700', color: 'var(--text-color)', fontSize: '12px', flexShrink: 0 }}>{money(line.precio_unitario * line.cantidad)}</span>
-                      <button onClick={() => onRemove({ id: line.producto_id }, line.sucursal_id, 0)} aria-label="Quitar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                        <X size={13} />
+                      <span style={{ minWidth: '68px', textAlign: 'right', fontWeight: '700', color: 'var(--text-color)', fontSize: '14px', flexShrink: 0 }}>{money(line.precio_unitario * line.cantidad)}</span>
+                      <button onClick={() => onRemove({ id: line.producto_id }, line.sucursal_id, 0)} aria-label="Quitar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <X size={15} />
                       </button>
                     </div>
                   );
@@ -1103,6 +1104,14 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
           {!confirming && <button className="cart-send-button" onClick={onConfirm} disabled={lines.length === 0}>Enviar Pedido</button>}
         </footer>
       </aside>
+      {lightbox && (
+        <ImageLightbox 
+          images={lightbox.images} 
+          index={lightbox.index} 
+          onClose={() => setLightbox(null)} 
+          onIndexChange={(index) => setLightbox((current) => current ? { ...current, index } : current)} 
+        />
+      )}
     </div>
   );
 }
