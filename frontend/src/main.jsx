@@ -1938,7 +1938,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       <AdminBottomNav tab={tab} setTab={setTab} pending={pending} missingPrices={missingPriceCount} />
 
       {confirmAction && (
-        <ConfirmModal
+        <AdminConfirmModal
           title={confirmAction.title}
           message={confirmAction.message}
           confirmText={confirmAction.confirmText}
@@ -1973,7 +1973,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
 }
 
 
-function ConfirmModal({ title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, onCancel }) {
+function AdminConfirmModal({ title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, onCancel }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
