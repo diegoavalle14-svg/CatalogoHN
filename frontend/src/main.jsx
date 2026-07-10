@@ -1051,7 +1051,9 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                   const maxAllowed = line.stock_actual > 0 ? Math.max(0, line.stock_actual - otherTotal) : undefined;
                   return (
                     <div key={`${line.producto_id}-${line.sucursal_id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0', fontSize: '12px' }}>
-                      <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
+                      <div className="cart-branch-img">
+                        <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
+                      </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <span className="cart-sku" style={{ display: 'block', fontSize: '10px' }}>{line.sku}</span>
                         <span style={{ color: 'var(--text-color)', fontWeight: 600, fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{line.descripcion}</span>
