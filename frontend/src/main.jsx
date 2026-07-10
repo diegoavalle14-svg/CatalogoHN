@@ -1577,6 +1577,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         setOrders(previous);
         window.alert(error.message || 'No se pudo cambiar el estado del pedido');
       }
+    }
     });
   }
 
@@ -1671,6 +1672,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         setProducts(previousProducts);
         window.alert(error.message || 'No se pudo eliminar el producto');
       }
+    }
     });
   }
 
@@ -1692,6 +1694,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         setClients(previousClients);
         window.alert(error.message || 'No se pudo eliminar el cliente');
       }
+    }
     });
   }
 
@@ -1710,6 +1713,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         setOrders(previous);
         window.alert('No se pudo eliminar el pedido');
       }
+    }
     });
   }
 
