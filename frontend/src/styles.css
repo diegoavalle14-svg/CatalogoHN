@@ -1464,14 +1464,14 @@ button {
 
 .cart-branch-img {
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   overflow: hidden;
 }
 
 .cart-branch-img img {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   border: 1px solid #f0f0f0;
   border-radius: 4px;
@@ -1480,16 +1480,16 @@ button {
 }
 
 .cart-branch-img .product-thumb-fallback {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   border: 1px solid #f0f0f0;
   border-radius: 4px;
 }
 
 .cart-branch-img .product-thumb-wrap {
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
 }
 
 .cart-line-main {

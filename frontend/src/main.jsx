@@ -1095,6 +1095,16 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                     </div>
                   );
                 })}
+                {/* Total por sucursal */}
+                {(() => {
+                  const branchTotal = items.reduce((sum, item) => sum + (Number(item.precio_unitario) * Number(item.cantidad || 0)), 0);
+                  return (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '6px 0', borderTop: '1px dashed var(--border-color)', marginTop: '4px', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)' }}>
+                      <span style={{ marginRight: '6px', textTransform: 'uppercase' }}>Subtotal Sucursal:</span>
+                      <span style={{ color: 'var(--text-color)', fontSize: '12px', fontWeight: '900' }}>{money(branchTotal)}</span>
+                    </div>
+                  );
+                })()}
               </div>
             ));
           })()}
