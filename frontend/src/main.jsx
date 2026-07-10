@@ -1030,44 +1030,57 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
               <button type="button" onClick={onClose}>Volver al catálogo</button>
             </div>
           )}
-          {lines.map((line) => {
-            const otherTotal = lines.filter(l => l.producto_id === line.producto_id && l.sucursal_id !== line.sucursal_id).reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
-            const maxAllowed = line.stock_actual > 0 ? Math.max(0, line.stock_actual - otherTotal) : undefined;
-            return (
-            <div className="cart-line" key={`${line.producto_id}-${line.sucursal_id}`}>
-              <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
-              <div className="cart-line-main">
-                <span className="cart-sku">{line.sku}</span>
-                <strong className="cart-line-title">{line.descripcion}</strong>
-                <small className="cart-branch-label">Sucursal: {line.sucursal}</small>
-                <label>
-                  {line.stock_actual !== undefined && line.stock_actual !== null && (
-                    <span className="cart-stock-label">Stock {Number(line.stock_actual) || 0}</span>
-                  )}
-                  Cant.
-                  <input
-                    type="number"
-                    min="1"
-                    max={maxAllowed}
-                    value={line.cantidad}
-                    onChange={(event) => {
-                       let val = event.target.value;
-                       if (val !== '' && maxAllowed !== undefined && Number(val) > maxAllowed) {
-                           val = maxAllowed;
-                           window.dispatchEvent(new CustomEvent('catalog:toast', { detail: `Límite: Solo hay ${line.stock_actual} disponibles en total` }));
-                       }
-                       onQty({ id: line.producto_id }, line.sucursal_id, val);
-                    }}
-                  />
-                </label>
-                <strong className="cart-line-total">{money(line.precio_unitario * line.cantidad)}</strong>
+          {(() => {
+            // Agrupar por sucursal
+            const branchMap = new Map();
+            for (const line of lines) {
+              if (!branchMap.has(line.sucursal_id)) {
+                branchMap.set(line.sucursal_id, { sucursal: line.sucursal, items: [] });
+              }
+              branchMap.get(line.sucursal_id).items.push(line);
+            }
+            return [...branchMap.entries()].map(([sucursalId, { sucursal, items }]) => (
+              <div key={sucursalId} style={{ marginBottom: '10px' }}>
+                {/* Título de sucursal */}
+                <div style={{ padding: '4px 0 4px 2px', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', marginBottom: '4px' }}>
+                  Sucursal {sucursal}
+                </div>
+                {/* Productos de esta sucursal */}
+                {items.map((line) => {
+                  const otherTotal = lines.filter(l => l.producto_id === line.producto_id && l.sucursal_id !== line.sucursal_id).reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
+                  const maxAllowed = line.stock_actual > 0 ? Math.max(0, line.stock_actual - otherTotal) : undefined;
+                  return (
+                    <div key={`${line.producto_id}-${line.sucursal_id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0', fontSize: '12px' }}>
+                      <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span className="cart-sku" style={{ display: 'block', fontSize: '10px' }}>{line.sku}</span>
+                        <span style={{ color: 'var(--text-color)', fontWeight: 600, fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{line.descripcion}</span>
+                      </div>
+                      <input
+                        type="number"
+                        min="1"
+                        max={maxAllowed}
+                        value={line.cantidad}
+                        onChange={(event) => {
+                          let val = event.target.value;
+                          if (val !== '' && maxAllowed !== undefined && Number(val) > maxAllowed) {
+                            val = maxAllowed;
+                            window.dispatchEvent(new CustomEvent('catalog:toast', { detail: `Límite: Solo hay ${line.stock_actual} disponibles en total` }));
+                          }
+                          onQty({ id: line.producto_id }, line.sucursal_id, val);
+                        }}
+                        style={{ width: '44px', textAlign: 'center', padding: '2px 4px', border: '1px solid var(--border-color)', borderRadius: '4px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '12px', flexShrink: 0 }}
+                      />
+                      <span style={{ minWidth: '58px', textAlign: 'right', fontWeight: '700', color: 'var(--text-color)', fontSize: '12px', flexShrink: 0 }}>{money(line.precio_unitario * line.cantidad)}</span>
+                      <button onClick={() => onRemove({ id: line.producto_id }, line.sucursal_id, 0)} aria-label="Quitar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <X size={13} />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-              <button className="cart-remove-button" onClick={() => onRemove({ id: line.producto_id }, line.sucursal_id, 0)} aria-label="Quitar producto">
-                <X size={18} />
-              </button>
-            </div>
-            );
-          })}
+            ));
+          })()}
         </div>
 
         <footer className="cart-footer">
