@@ -280,7 +280,7 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
   }
 });
 
-router.put('/orders/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+router.put('/orders/:id', authenticate, requireRole('cliente', 'admin', 'superadmin'), async (req, res) => {
   const { items } = req.body;
   console.log('[DEBUG] PUT /orders/:id - items received:', items);
   
@@ -308,6 +308,13 @@ router.put('/orders/:id', authenticate, requireRole('admin', 'superadmin'), asyn
         console.log('[DEBUG] Order not found:', req.params.id, req.tenant.id);
         return res.status(404).json({ message: 'Pedido no encontrado' });
       }
+      
+      // If user is a client, check if they own the order
+      if (req.user.role === 'cliente' && order.cliente_id !== req.user.cliente_id) {
+        console.log('[DEBUG] Unauthorized: client does not own this order', req.user.cliente_id, 'order.cliente_id:', order.cliente_id);
+        return res.status(403).json({ message: 'No tienes permiso para editar este pedido' });
+      }
+
       if (order.estado !== 'pendiente') {
         console.log('[DEBUG] Order state is not pendiente:', order.estado);
         return res.status(400).json({ message: 'Solo se pueden editar pedidos en estado pendiente' });

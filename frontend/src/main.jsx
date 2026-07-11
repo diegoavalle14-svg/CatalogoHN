@@ -1057,46 +1057,69 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
               branchMap.get(line.sucursal_id).items.push(line);
             }
             return [...branchMap.entries()].map(([sucursalId, { sucursal, items }]) => (
-              <div key={sucursalId} style={{ marginBottom: '10px' }}>
+              <div key={sucursalId} style={{ marginBottom: '16px' }}>
                 {/* Título de sucursal */}
-                <div style={{ padding: '6px 0 6px 2px', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', marginBottom: '6px' }}>
+                <div style={{ padding: '6px 0 6px 2px', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', marginBottom: '6px' }}>
                   Sucursal {sucursal}
                 </div>
-                {/* Productos de esta sucursal */}
-                {items.map((line) => {
-                  const otherTotal = lines.filter(l => l.producto_id === line.producto_id && l.sucursal_id !== line.sucursal_id).reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
-                  const maxAllowed = line.stock_actual > 0 ? Math.max(0, line.stock_actual - otherTotal) : undefined;
-                  return (
-                    <div key={`${line.producto_id}-${line.sucursal_id}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', fontSize: '13px' }}>
-                      <div className="cart-branch-img" onClick={() => { if (line.imagen) setLightbox({ images: [line.imagen], index: 0 }); }} style={{ cursor: 'pointer' }}>
-                        <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span className="cart-sku" style={{ display: 'inline-flex', fontSize: '10px', minHeight: '18px', padding: '2px 6px', width: 'fit-content', marginBottom: '2px' }}>{line.sku}</span>
-                        <span style={{ color: 'var(--text-color)', fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{line.descripcion}</span>
-                      </div>
-                      <input
-                        type="number"
-                        min="1"
-                        max={maxAllowed}
-                        value={line.cantidad}
-                        onChange={(event) => {
-                          let val = event.target.value;
-                          if (val !== '' && maxAllowed !== undefined && Number(val) > maxAllowed) {
-                            val = maxAllowed;
-                            window.dispatchEvent(new CustomEvent('catalog:toast', { detail: `Límite: Solo hay ${line.stock_actual} disponibles en total` }));
-                          }
-                          onQty({ id: line.producto_id }, line.sucursal_id, val);
-                        }}
-                        style={{ width: '52px', height: '32px', textAlign: 'center', padding: '2px 4px', border: '1px solid var(--border-color)', borderRadius: '4px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '13px', flexShrink: 0 }}
-                      />
-                      <span style={{ minWidth: '68px', textAlign: 'right', fontWeight: '700', color: 'var(--text-color)', fontSize: '14px', flexShrink: 0 }}>{money(line.precio_unitario * line.cantidad)}</span>
-                      <button onClick={() => onRemove({ id: line.producto_id }, line.sucursal_id, 0)} aria-label="Quitar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                        <X size={15} />
-                      </button>
-                    </div>
-                  );
-                })}
+                {/* Tabla de Productos de esta sucursal */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--border-color)', fontSize: '12px' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--surface-color)', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                      <th style={{ padding: '6px 4px', fontSize: '9px', textTransform: 'uppercase', border: '1px solid var(--border-color)', width: '36px', textAlign: 'center' }}>Foto</th>
+                      <th style={{ padding: '6px 6px', fontSize: '9px', textTransform: 'uppercase', border: '1px solid var(--border-color)', textAlign: 'left' }}>Detalle</th>
+                      <th style={{ padding: '6px 4px', fontSize: '9px', textTransform: 'uppercase', border: '1px solid var(--border-color)', width: '54px', textAlign: 'center' }}>Cant.</th>
+                      <th style={{ padding: '6px 6px', fontSize: '9px', textTransform: 'uppercase', border: '1px solid var(--border-color)', width: '70px', textAlign: 'right' }}>Total</th>
+                      <th style={{ padding: '6px 4px', border: '1px solid var(--border-color)', width: '24px', textAlign: 'center' }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((line) => {
+                      const otherTotal = lines.filter(l => l.producto_id === line.producto_id && l.sucursal_id !== line.sucursal_id).reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
+                      const maxAllowed = line.stock_actual > 0 ? Math.max(0, line.stock_actual - otherTotal) : undefined;
+                      return (
+                        <tr key={`${line.producto_id}-${line.sucursal_id}`}>
+                          <td style={{ padding: '6px 4px', border: '1px solid var(--border-color)', textAlign: 'center', verticalAlign: 'middle' }}>
+                            <div className="cart-branch-img" onClick={() => { if (line.imagen) setLightbox({ images: [line.imagen], index: 0 }); }} style={{ cursor: 'pointer', display: 'inline-block' }}>
+                              <ProductImageThumb images={line.imagen ? [line.imagen] : []} />
+                            </div>
+                          </td>
+                          <td style={{ padding: '6px 6px', border: '1px solid var(--border-color)', verticalAlign: 'middle', minWidth: 0 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <span className="cart-sku" style={{ display: 'inline-flex', fontSize: '8px', minHeight: '14px', padding: '1px 4px', width: 'fit-content' }}>{line.sku}</span>
+                              <span style={{ color: 'var(--text-color)', fontWeight: 600, fontSize: '11px', wordBreak: 'break-word', display: 'block', lineHeight: '1.2' }}>{line.descripcion}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '6px 4px', border: '1px solid var(--border-color)', textAlign: 'center', verticalAlign: 'middle' }}>
+                            <input
+                              type="number"
+                              min="1"
+                              max={maxAllowed}
+                              value={line.cantidad}
+                              onChange={(event) => {
+                                let val = event.target.value;
+                                if (val !== '' && maxAllowed !== undefined && Number(val) > maxAllowed) {
+                                  val = maxAllowed;
+                                  window.dispatchEvent(new CustomEvent('catalog:toast', { detail: `Límite: Solo hay ${line.stock_actual} disponibles en total` }));
+                                }
+                                onQty({ id: line.producto_id }, line.sucursal_id, val);
+                              }}
+                              style={{ width: '46px', height: '28px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '4px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '11px' }}
+                            />
+                          </td>
+                          <td style={{ padding: '6px 6px', border: '1px solid var(--border-color)', textAlign: 'right', fontWeight: '700', color: 'var(--text-color)', fontSize: '12px', verticalAlign: 'middle' }}>
+                            {money(line.precio_unitario * line.cantidad)}
+                          </td>
+                          <td style={{ padding: '6px 4px', border: '1px solid var(--border-color)', textAlign: 'center', verticalAlign: 'middle' }}>
+                            <button onClick={() => onRemove({ id: line.producto_id }, line.sucursal_id, 0)} aria-label="Quitar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'inline-flex', alignItems: 'center' }}>
+                              <X size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
                 {/* Total por sucursal */}
                 {(() => {
                   const branchTotal = items.reduce((sum, item) => sum + (Number(item.precio_unitario) * Number(item.cantidad || 0)), 0);
@@ -1173,6 +1196,65 @@ function History({ session }) {
       window.dispatchEvent(new CustomEvent('catalog:toast', { detail: err.message || 'Error al eliminar pedido' }));
     } finally {
       setConfirmDeleteOrder(null);
+    }
+  };
+
+  const handleQtyChange = (orderId, itemId, nextQty) => {
+    let qty;
+    if (nextQty === '') {
+      qty = '';
+    } else {
+      qty = Math.max(1, Number(nextQty) || 1);
+    }
+    setOrders((current) =>
+      current.map((order) => {
+        if (order.id !== orderId) return order;
+
+        const updatedItems = (order.items || []).map((item) => {
+          if (item.id !== itemId) return item;
+          return { ...item, cantidad: qty };
+        });
+
+        const subtotal = updatedItems.reduce((sum, item) => sum + Number(item.precio_unitario || 0) * Number(item.cantidad || 0), 0);
+        const aplicaIsv = order.aplica_isv === true;
+        const isv = aplicaIsv ? subtotal * 0.15 : 0;
+        const total = subtotal + isv;
+
+        return {
+          ...order,
+          items: updatedItems,
+          total,
+          isv,
+          isModified: true
+        };
+      })
+    );
+  };
+
+  const handleSave = async (order) => {
+    const invalid = (order.items || []).some(item => !Number.isInteger(Number(item.cantidad)) || Number(item.cantidad) <= 0);
+    if (invalid) {
+      window.alert('Por favor ingrese cantidades válidas mayores a cero.');
+      return;
+    }
+    try {
+      await api.updateOrderItems(session.token, order.id, order.items);
+      window.dispatchEvent(new CustomEvent('catalog:toast', { detail: 'Pedido actualizado con éxito' }));
+      setOrders((current) =>
+        current.map((o) => (o.id === order.id ? { ...o, isModified: false } : o))
+      );
+    } catch (err) {
+      window.alert(err.message || 'No se pudo actualizar el pedido');
+    }
+  };
+
+  const handleUndo = async (orderId) => {
+    try {
+      const payload = await api.orders(session.token);
+      setOrders(payload.pedidos);
+      window.dispatchEvent(new CustomEvent('catalog:toast', { detail: 'Cambios revertidos' }));
+    } catch (err) {
+      window.alert('No se pudieron revertir los cambios');
     }
   };
 
@@ -1267,33 +1349,59 @@ function History({ session }) {
 
               {isExpanded && (
                 <div className="admin-order-items" style={{ padding: '0 14px 10px', borderTop: '1px solid var(--border-color)', fontSize: '11px', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', border: '1px solid var(--border-color)' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 'bold' }}>
-                        <th style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase' }}>Código</th>
-                        <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
-                        <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase' }}>Suc.</th>
-                        <th style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase' }}>Cant.</th>
-                        <th style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase' }}>Precio</th>
+                      <tr style={{ background: 'var(--surface-color)', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                        <th style={{ padding: '6px 8px', fontSize: '10px', textTransform: 'uppercase', border: '1px solid var(--border-color)' }}>Código</th>
+                        <th style={{ padding: '6px 8px', fontSize: '10px', textTransform: 'uppercase', border: '1px solid var(--border-color)' }}>Descripción</th>
+                        <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', border: '1px solid var(--border-color)' }}>Suc.</th>
+                        <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', border: '1px solid var(--border-color)', width: '60px' }}>Cant.</th>
+                        <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', border: '1px solid var(--border-color)' }}>Precio</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sortedItems.map((item) => (
-                        <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '6px 4px 6px 0', fontWeight: '700' }}>{item.sku}</td>
-                          <td style={{ padding: '6px 4px', color: 'var(--text-color)' }}>{item.descripcion}</td>
-                          <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)' }}>{item.sucursal || '-'}</td>
-                          <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>
-                          <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
+                        <tr key={`${item.producto_id}-${item.sucursal_id}`}>
+                          <td style={{ padding: '6px 8px', fontWeight: '700', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{item.sku}</td>
+                          <td style={{ padding: '6px 8px', color: 'var(--text-color)', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{item.descripcion}</td>
+                          <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{item.sucursal || '-'}</td>
+                          <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '700', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>
+                            {order.estado === 'pendiente' ? (
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.cantidad}
+                                onChange={(e) => handleQtyChange(order.id, item.id, e.target.value)}
+                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '3px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '11px' }}
+                              />
+                            ) : (
+                              item.cantidad
+                            )}
+                          </td>
+                          <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{money(Number(item.precio_unitario || 0))}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr style={{ borderTop: '2px solid var(--border-color)' }}>
-                        <td colSpan={2} style={{ padding: '6px 4px 6px 0', fontWeight: '800', fontSize: '11px', textAlign: 'right' }}>Total:</td>
-                        <td></td>
-                        <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '900', fontSize: '12px' }}>{totalUnidades}</td>
-                        <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '900', fontSize: '12px' }}>{money(order.total)}</td>
+                      <tr style={{ background: 'var(--surface-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 8px', fontWeight: '800', fontSize: '11px', textAlign: 'right', border: '1px solid var(--border-color)' }}>Subtotal:</td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', fontSize: '11px', border: '1px solid var(--border-color)' }}>{money(Number(order.total) - Number(order.isv))}</td>
+                      </tr>
+                      <tr style={{ background: 'var(--surface-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 8px', fontWeight: '800', fontSize: '11px', textAlign: 'right', border: '1px solid var(--border-color)' }}>
+                          ISV ({order.aplica_isv ? '15%' : 'Exento'}):
+                        </td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', fontSize: '11px', border: '1px solid var(--border-color)' }}>{money(order.isv)}</td>
+                      </tr>
+                      <tr style={{ background: 'var(--surface-color)', borderTop: '2px solid var(--border-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 8px', fontWeight: '900', fontSize: '11px', textAlign: 'right', border: '1px solid var(--border-color)' }}>Total:</td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '900', fontSize: '11px', border: '1px solid var(--border-color)' }}>{totalUnidades} uds.</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '900', fontSize: '12px', border: '1px solid var(--border-color)' }}>{money(order.total)}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -1302,10 +1410,28 @@ function History({ session }) {
 
               {order.estado === 'pendiente' && (
                 <footer style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 14px', borderTop: '1px dashed var(--border-color)', gap: '8px' }}>
+                  {order.isModified && (
+                    <>
+                      <button 
+                        className="pill-action save" 
+                        onClick={() => handleSave(order)} 
+                        style={{ background: '#20935f', color: '#fff', borderColor: '#20935f', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', border: '1px solid #20935f' }}
+                      >
+                        Guardar
+                      </button>
+                      <button 
+                        className="pill-action undo" 
+                        onClick={() => handleUndo(order.id)} 
+                        style={{ background: '#7b8491', color: '#fff', borderColor: '#7b8491', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', border: '1px solid #7b8491' }}
+                      >
+                        Deshacer
+                      </button>
+                    </>
+                  )}
                   <button 
                     className="pill-action delete" 
                     onClick={() => setConfirmDeleteOrder(order.id)}
-                    style={{ background: 'var(--color-danger, #d32f2f)', color: '#fff', borderColor: 'var(--color-danger, #d32f2f)', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                    style={{ background: 'var(--color-danger, #d32f2f)', color: '#fff', borderColor: 'var(--color-danger, #d32f2f)', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', border: '1px solid var(--color-danger, #d32f2f)' }}
                   >
                     Eliminar Pedido
                   </button>
@@ -2415,26 +2541,26 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
 
               {isExpanded && (
                 <div className="admin-order-items" style={{ padding: '0 12px 10px', borderTop: '1px solid var(--border-color)', fontSize: '11px', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', border: '1px solid var(--border-color)' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 'bold' }}>
-                        <th onClick={() => handleSort(order.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sku' ? 'var(--text-color)' : 'var(--text-muted)' }}>
+                      <tr style={{ background: 'var(--surface-color)', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                        <th onClick={() => handleSort(order.id, 'sku')} style={{ padding: '6px 8px', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sku' ? 'var(--text-color)' : 'var(--text-muted)', border: '1px solid var(--border-color)' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             Código <span style={{ fontSize: '8px', opacity: sortInfo.key === 'sku' ? 1 : 0.25 }}>{sortInfo.key === 'sku' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
-                        <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
-                        <th onClick={() => handleSort(order.id, 'sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sucursal' ? 'var(--text-color)' : 'var(--text-muted)' }}>
+                        <th style={{ padding: '6px 8px', fontSize: '10px', textTransform: 'uppercase', border: '1px solid var(--border-color)' }}>Descripción</th>
+                        <th onClick={() => handleSort(order.id, 'sucursal')} style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'sucursal' ? 'var(--text-color)' : 'var(--text-muted)', border: '1px solid var(--border-color)' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
                             Suc. <span style={{ fontSize: '8px', opacity: sortInfo.key === 'sucursal' ? 1 : 0.25 }}>{sortInfo.key === 'sucursal' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
-                        <th onClick={() => handleSort(order.id, 'cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'cantidad' ? 'var(--text-color)' : 'var(--text-muted)' }}>
+                        <th onClick={() => handleSort(order.id, 'cantidad')} style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'cantidad' ? 'var(--text-color)' : 'var(--text-muted)', border: '1px solid var(--border-color)', width: '60px' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
                             Cant. <span style={{ fontSize: '8px', opacity: sortInfo.key === 'cantidad' ? 1 : 0.25 }}>{sortInfo.key === 'cantidad' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
                         </th>
-                        <th onClick={() => handleSort(order.id, 'precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'precio_unitario' ? 'var(--text-color)' : 'var(--text-muted)' }}>
+                        <th onClick={() => handleSort(order.id, 'precio_unitario')} style={{ padding: '6px 8px', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: sortInfo.key === 'precio_unitario' ? 'var(--text-color)' : 'var(--text-muted)', border: '1px solid var(--border-color)' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end', width: '100%' }}>
                             Precio <span style={{ fontSize: '8px', opacity: sortInfo.key === 'precio_unitario' ? 1 : 0.25 }}>{sortInfo.key === 'precio_unitario' ? (sortInfo.asc ? '▲' : '▼') : '▲'}</span>
                           </span>
@@ -2461,33 +2587,47 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                         if (valA > valB) return sortInfo.asc ? 1 : -1;
                         return 0;
                       }).map((item) => (
-                        <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '4px 4px 4px 0', fontWeight: '700' }}>{item.sku}</td>
-                          <td style={{ padding: '4px 4px', color: 'var(--text-color)' }}>{item.descripcion}</td>
-                          <td style={{ padding: '4px 4px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)' }}>{item.sucursal || '-'}</td>
-                          <td style={{ padding: '4px 4px', textAlign: 'center', fontWeight: '700' }}>
+                        <tr key={`${item.producto_id}-${item.sucursal_id}`}>
+                          <td style={{ padding: '6px 8px', fontWeight: '700', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{item.sku}</td>
+                          <td style={{ padding: '6px 8px', color: 'var(--text-color)', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{item.descripcion}</td>
+                          <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{item.sucursal || '-'}</td>
+                          <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '700', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>
                             {order.estado === 'pendiente' ? (
                               <input
                                 type="number"
                                 min="1"
                                 value={item.cantidad}
                                 onChange={(e) => onQtyChange(order.id, item.id, e.target.value)}
-                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '3px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)' }}
+                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '3px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '11px' }}
                               />
                             ) : (
                               item.cantidad
                             )}
                           </td>
-                          <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
+                          <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', border: '1px solid var(--border-color)', verticalAlign: 'middle' }}>{money(Number(item.precio_unitario || 0))}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr style={{ borderTop: '2px solid var(--border-color)' }}>
-                        <td colSpan={2} style={{ padding: '6px 4px 6px 0', fontWeight: '800', fontSize: '11px', textAlign: 'right' }}>Total:</td>
-                        <td></td>
-                        <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '900', fontSize: '12px' }}>{totalUnidades}</td>
-                        <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '900', fontSize: '12px' }}>{money(order.total)}</td>
+                      <tr style={{ background: 'var(--surface-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 8px', fontWeight: '800', fontSize: '11px', textAlign: 'right', border: '1px solid var(--border-color)' }}>Subtotal:</td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', fontSize: '11px', border: '1px solid var(--border-color)' }}>{money(Number(order.total) - Number(order.isv))}</td>
+                      </tr>
+                      <tr style={{ background: 'var(--surface-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 8px', fontWeight: '800', fontSize: '11px', textAlign: 'right', border: '1px solid var(--border-color)' }}>
+                          ISV ({order.aplica_isv ? '15%' : 'Exento'}):
+                        </td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', fontSize: '11px', border: '1px solid var(--border-color)' }}>{money(order.isv)}</td>
+                      </tr>
+                      <tr style={{ background: 'var(--surface-color)', borderTop: '2px solid var(--border-color)' }}>
+                        <td colSpan={2} style={{ padding: '6px 8px', fontWeight: '900', fontSize: '11px', textAlign: 'right', border: '1px solid var(--border-color)' }}>Total:</td>
+                        <td style={{ border: '1px solid var(--border-color)' }}></td>
+                        <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '900', fontSize: '11px', border: '1px solid var(--border-color)' }}>{totalUnidades} uds.</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '900', fontSize: '12px', border: '1px solid var(--border-color)' }}>{money(order.total)}</td>
                       </tr>
                     </tfoot>
                   </table>
