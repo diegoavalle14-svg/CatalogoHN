@@ -7464,6 +7464,12 @@ button {
 }
 
 @media (max-width: 520px) {
+  .sku-stock-line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
   :root {
     --catalog-topbar-height: 118px;
   }
