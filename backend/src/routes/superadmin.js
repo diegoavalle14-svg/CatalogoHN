@@ -150,6 +150,8 @@ router.get('/superadmin/tenants', authenticate, requireRole('superadmin'), async
          e.color_secundario,
          e.fuente,
          e.activa,
+         e.email_notificaciones,
+         e.notificaciones_activas,
          e.created_at,
          e.updated_at,
          count(DISTINCT u.id)::int AS admin_count,
@@ -277,7 +279,7 @@ router.post('/superadmin/tenants', authenticate, requireRole('superadmin'), asyn
   const result = await db.query(
     `INSERT INTO empresas (nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa)
      VALUES ($1, $2, $3, '', '#f0f0f0', '#111111', 'Aptos', true)
-     RETURNING id, nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa, created_at, updated_at`,
+     RETURNING id, nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa, email_notificaciones, notificaciones_activas, created_at, updated_at`,
     [String(nombre).trim(), safeSubname, safeSlug]
   );
 
