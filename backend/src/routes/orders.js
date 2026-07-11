@@ -71,6 +71,32 @@ async function decrementOrderStock(client, tenantId, orderId) {
   }
 }
 
+async function incrementOrderStock(client, tenantId, orderId) {
+  const items = await client.query(
+    `SELECT pi.producto_id,
+            pr.sku,
+            pr.descripcion,
+            SUM(pi.cantidad)::int AS cantidad
+     FROM pedido_items pi
+     JOIN productos pr ON pr.id = pi.producto_id
+     JOIN pedidos p ON p.id = pi.pedido_id
+     WHERE p.id = $1 AND p.empresa_id = $2
+     GROUP BY pi.producto_id, pr.sku, pr.descripcion`,
+    [orderId, tenantId]
+  );
+
+  for (const item of items.rows) {
+    await client.query(
+      `UPDATE productos
+       SET stock_actual = stock_actual + $1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+         AND empresa_id = $3`,
+      [item.cantidad, item.producto_id, tenantId]
+    );
+  }
+}
+
 router.get('/orders', authenticate, async (req, res) => {
   try {
     const params = [req.tenant.id];
@@ -389,8 +415,12 @@ router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmi
 
       const previousStatus = current.rows[0].estado;
       const shouldDiscountStock = previousStatus === 'pendiente' && ['preparando', 'enviado'].includes(estado);
+      const shouldRevertStock = ['preparando', 'enviado'].includes(previousStatus) && estado === 'pendiente';
+      
       if (shouldDiscountStock) {
         await decrementOrderStock(client, req.tenant.id, req.params.id);
+      } else if (shouldRevertStock) {
+        await incrementOrderStock(client, req.tenant.id, req.params.id);
       }
 
       const result = await client.query(
