@@ -5560,12 +5560,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 <article className="tenant-card" key={tenant.id}>
                   <div className="tenant-card-head">
                     <strong>{tenant.slug}.catalogohn.com</strong>
-                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                      <b style={{ background: tenant.notificaciones_activas !== false ? '#eefbf3' : '#fcedf0', color: tenant.notificaciones_activas !== false ? '#20935f' : '#ef3d47', fontSize: '9px', padding: '1px 5px', borderRadius: '4px', border: '1px solid currentColor', whiteSpace: 'nowrap' }}>
-                        {tenant.notificaciones_activas !== false ? '🔔 Activas' : '🔕 Inactivas'}
-                      </b>
-                      <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'}>{tenant.activa ? 'Activa' : 'Suspendida'}</b>
-                    </div>
+                    <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'}>{tenant.activa ? 'Activa' : 'Suspendida'}</b>
                   </div>
                   <p>{tenant.nombre}</p>
                   <small>{tenant.subnombre || 'Sin subnombre configurado'}</small>
@@ -5579,6 +5574,12 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                     <span><Users size={13} />{tenant.admin_count || 0} admins</span>
                     <span><Package size={13} />{tenant.product_count || 0} productos</span>
                     <span><ClipboardList size={13} />{tenant.order_count || 0} pedidos</span>
+                    <span style={{
+                      background: tenant.notificaciones_activas !== false ? 'rgba(32, 147, 95, 0.08)' : 'rgba(239, 61, 71, 0.08)',
+                      color: tenant.notificaciones_activas !== false ? '#20935f' : '#ef3d47'
+                    }}>
+                      {tenant.notificaciones_activas !== false ? '🔔 Notificaciones' : '🔕 Inactivas'}
+                    </span>
                   </div>
                   <div className="tenant-readiness">
                     <strong>{readiness.label}</strong>
