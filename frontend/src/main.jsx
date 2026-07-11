@@ -1104,7 +1104,7 @@ function CartPanel({ lines, total, confirming, sending, orderError, onClose, onR
                                 }
                                 onQty({ id: line.producto_id }, line.sucursal_id, val);
                               }}
-                              style={{ width: '46px', height: '28px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '4px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '11px' }}
+                              style={{ width: '46px', height: '28px', textAlign: 'center', padding: '2px', border: '1.5px solid var(--yellow-strong, #c59b00)', borderRadius: '4px', fontWeight: 'bold', background: 'rgba(245, 194, 0, 0.06)', color: 'var(--text-color)', fontSize: '11px', outline: 'none' }}
                             />
                           </td>
                           <td style={{ padding: '6px 6px', border: '1px solid var(--border-color)', textAlign: 'right', fontWeight: '700', color: 'var(--text-color)', fontSize: '12px', verticalAlign: 'middle' }}>
@@ -1360,7 +1360,7 @@ function History({ session }) {
                                 min="1"
                                 value={item.cantidad}
                                 onChange={(e) => handleQtyChange(order.id, item.id, e.target.value)}
-                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '3px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '11px' }}
+                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1.5px solid var(--yellow-strong, #c59b00)', borderRadius: '3px', fontWeight: 'bold', background: 'rgba(245, 194, 0, 0.06)', color: 'var(--text-color)', fontSize: '11px', outline: 'none' }}
                               />
                             ) : (
                               item.cantidad
@@ -2586,7 +2586,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                                 min="1"
                                 value={item.cantidad}
                                 onChange={(e) => onQtyChange(order.id, item.id, e.target.value)}
-                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '3px', fontWeight: 'bold', background: 'var(--surface-color)', color: 'var(--text-color)', fontSize: '11px' }}
+                                style={{ width: '45px', textAlign: 'center', padding: '2px', border: '1.5px solid var(--yellow-strong, #c59b00)', borderRadius: '3px', fontWeight: 'bold', background: 'rgba(245, 194, 0, 0.06)', color: 'var(--text-color)', fontSize: '11px', outline: 'none' }}
                               />
                             ) : (
                               item.cantidad
