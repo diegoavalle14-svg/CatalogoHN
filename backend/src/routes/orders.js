@@ -288,7 +288,7 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
             (ctx.order.notificaciones_activas !== false && ctx.order.email_notificaciones) ? ctx.order.email_notificaciones : null
           ].filter(Boolean)));
 
-          if (to.length === 0) return;
+          console.log('[DEBUG] [orders] New Order - to:', to, 'notif_active:', ctx.order.notificaciones_activas, 'email_notif:', ctx.order.email_notificaciones);
 
           const email = buildAdminNewOrderEmail({
             tenantName: ctx.order.tenant_nombre,
@@ -296,7 +296,15 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
             clientName: ctx.order.cliente_nombre,
             items: ctx.items
           });
-          await sendMail({ to, subject: email.subject, html: email.html });
+
+          for (const recipient of to) {
+            try {
+              await sendMail({ to: recipient, subject: email.subject, html: email.html });
+              console.log('[mailer] Sent new order email to:', recipient);
+            } catch (err) {
+              console.warn('[mailer] Failed to send new order email to:', recipient, err.message || err);
+            }
+          }
         } catch (err) {
           console.warn('[orders] admin email failed:', err.message || err);
         }
@@ -398,7 +406,7 @@ router.put('/orders/:id', authenticate, requireRole('cliente', 'admin', 'superad
             (ctx.order.notificaciones_activas !== false && ctx.order.email_notificaciones) ? ctx.order.email_notificaciones : null
           ].filter(Boolean)));
           
-          if (to.length === 0) return;
+          console.log('[DEBUG] [orders] Edited Order - to:', to, 'notif_active:', ctx.order.notificaciones_activas, 'email_notif:', ctx.order.email_notificaciones);
           
           const email = buildAdminEditedOrderEmail({
             tenantName: ctx.order.tenant_nombre,
@@ -406,7 +414,15 @@ router.put('/orders/:id', authenticate, requireRole('cliente', 'admin', 'superad
             clientName: ctx.order.cliente_nombre,
             items: ctx.items
           });
-          await sendMail({ to, subject: email.subject, html: email.html });
+
+          for (const recipient of to) {
+            try {
+              await sendMail({ to: recipient, subject: email.subject, html: email.html });
+              console.log('[mailer] Sent edit order email to:', recipient);
+            } catch (err) {
+              console.warn('[mailer] Failed to send edit order email to:', recipient, err.message || err);
+            }
+          }
         } catch (err) {
           console.warn('[orders] admin edit email failed:', err.message || err);
         }
@@ -555,7 +571,7 @@ router.delete('/orders/:id', authenticate, requireRole('cliente', 'admin', 'supe
             (emailCtx.order.notificaciones_activas !== false && emailCtx.order.email_notificaciones) ? emailCtx.order.email_notificaciones : null
           ].filter(Boolean)));
           
-          if (to.length === 0) return;
+          console.log('[DEBUG] [orders] Deleted Order - to:', to, 'notif_active:', emailCtx.order.notificaciones_activas, 'email_notif:', emailCtx.order.email_notificaciones);
           
           const email = buildAdminDeletedOrderEmail({
             tenantName: emailCtx.order.tenant_nombre,
@@ -563,7 +579,15 @@ router.delete('/orders/:id', authenticate, requireRole('cliente', 'admin', 'supe
             clientName: emailCtx.order.cliente_nombre,
             items: emailCtx.items
           });
-          await sendMail({ to, subject: email.subject, html: email.html });
+
+          for (const recipient of to) {
+            try {
+              await sendMail({ to: recipient, subject: email.subject, html: email.html });
+              console.log('[mailer] Sent delete order email to:', recipient);
+            } catch (err) {
+              console.warn('[mailer] Failed to send delete order email to:', recipient, err.message || err);
+            }
+          }
         } catch (err) {
           console.warn('[orders] admin delete notification email failed:', err.message || err);
         }
