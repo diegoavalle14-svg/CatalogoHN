@@ -61,6 +61,15 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('catalogohn.session');
+        localStorage.removeItem('catalogohn.uiState');
+      }
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }
     const error = await response.json().catch(() => ({ message: 'Error de conexion' }));
     const requestError = new Error(error.message || 'Error de conexion');
     requestError.status = response.status;
