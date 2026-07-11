@@ -36,6 +36,8 @@ function slugifyName(name) {
 async function ensureTenantColumns() {
   if (tenantColumnsReady) return;
   await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre VARCHAR(140) DEFAULT ''`);
+  await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS email_notificaciones VARCHAR(255) DEFAULT ''`);
+  await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS notificaciones_activas BOOLEAN DEFAULT TRUE`);
   tenantColumnsReady = true;
 }
 
@@ -291,30 +293,63 @@ router.post('/superadmin/tenants', authenticate, requireRole('superadmin'), asyn
 
 router.patch('/superadmin/tenants/:id', authenticate, requireRole('superadmin'), async (req, res) => {
   await ensureTenantColumns();
-  const { activa } = req.body || {};
-  if (typeof activa !== 'boolean') {
-    return res.status(400).json({ message: 'Campo "activa" es requerido' });
+  const { activa, notificaciones_activas } = req.body || {};
+
+  const updates = [];
+  const params = [];
+  let paramIdx = 1;
+
+  if (activa !== undefined) {
+    if (typeof activa !== 'boolean') {
+      return res.status(400).json({ message: 'Campo "activa" debe ser booleano' });
+    }
+    updates.push(`activa = $${paramIdx++}`);
+    params.push(activa);
   }
 
+  if (notificaciones_activas !== undefined) {
+    if (typeof notificaciones_activas !== 'boolean') {
+      return res.status(400).json({ message: 'Campo "notificaciones_activas" debe ser booleano' });
+    }
+    updates.push(`notificaciones_activas = $${paramIdx++}`);
+    params.push(notificaciones_activas);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ message: 'Se requiere al menos un campo para actualizar (activa o notificaciones_activas)' });
+  }
+
+  params.push(req.params.id);
   const result = await db.query(
     `UPDATE empresas
-     SET activa = $1,
+     SET ${updates.join(', ')},
          updated_at = CURRENT_TIMESTAMP
-     WHERE id = $2
-     RETURNING id, nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa, created_at, updated_at`,
-    [activa, req.params.id]
+     WHERE id = $${paramIdx}
+     RETURNING id, nombre, subnombre, slug, logo_url, color_primario, color_secundario, fuente, activa, email_notificaciones, notificaciones_activas, created_at, updated_at`,
+    params
   );
 
   if (!result.rows[0]) {
     return res.status(404).json({ message: 'Tenant no encontrado' });
   }
 
-  await logSuperadminEvent(req, {
-    tipo: activa ? 'empresa_activada' : 'empresa_desactivada',
-    descripcion: `Empresa ${result.rows[0].nombre} ${activa ? 'activada' : 'desactivada'}`,
-    empresaId: result.rows[0].id,
-    metadata: { slug: result.rows[0].slug }
-  });
+  if (activa !== undefined) {
+    await logSuperadminEvent(req, {
+      tipo: activa ? 'empresa_activada' : 'empresa_desactivada',
+      descripcion: `Empresa ${result.rows[0].nombre} ${activa ? 'activada' : 'desactivada'}`,
+      empresaId: result.rows[0].id,
+      metadata: { slug: result.rows[0].slug }
+    });
+  }
+
+  if (notificaciones_activas !== undefined) {
+    await logSuperadminEvent(req, {
+      tipo: notificaciones_activas ? 'notificaciones_activadas' : 'notificaciones_desactivadas',
+      descripcion: `Notificaciones de la empresa ${result.rows[0].nombre} ${notificaciones_activas ? 'activadas' : 'desactivadas'}`,
+      empresaId: result.rows[0].id,
+      metadata: { slug: result.rows[0].slug }
+    });
+  }
 
   res.json({ tenant: result.rows[0] });
 });

@@ -3819,6 +3819,15 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             <div className="admin-form admin-site-form">
               <label>Nombre comercial<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
               <label>
+                Correo para notificaciones de pedidos (Opcional)
+                <input
+                  type="email"
+                  placeholder="ejemplo@correo.com"
+                  value={form.email_notificaciones || ''}
+                  onChange={(event) => update('email_notificaciones', event.target.value)}
+                />
+              </label>
+              <label>
                 Subnombre
                 <select
                   value={selectedSubname}
@@ -5139,6 +5148,18 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
     }
   }
 
+  async function toggleTenantNotifications(tenant) {
+    setError('');
+    try {
+      const nextValue = tenant.notificaciones_activas !== false ? false : true;
+      const updated = await api.superadminSetTenantNotifications(token, tenant.id, nextValue);
+      setTenants((current) => (current || []).map((item) => (item.id === tenant.id ? { ...item, ...updated.tenant } : item)));
+      showToast(`Notificaciones de ${tenant.nombre} ${nextValue ? 'activadas' : 'desactivadas'}`);
+    } catch (err) {
+      setError(err.message || 'No se pudo cambiar el estado de las notificaciones');
+    }
+  }
+
   function handleSubnombreChange(value) {
     setSubnombreSeleccionado(value);
     if (value === '__nuevo__') {
@@ -5539,10 +5560,21 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 <article className="tenant-card" key={tenant.id}>
                   <div className="tenant-card-head">
                     <strong>{tenant.slug}.catalogohn.com</strong>
-                    <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'}>{tenant.activa ? 'Activa' : 'Suspendida'}</b>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <b style={{ background: tenant.notificaciones_activas !== false ? '#eefbf3' : '#fcedf0', color: tenant.notificaciones_activas !== false ? '#20935f' : '#ef3d47', fontSize: '9px', padding: '1px 5px', borderRadius: '4px', border: '1px solid currentColor', whiteSpace: 'nowrap' }}>
+                        {tenant.notificaciones_activas !== false ? '🔔 Activas' : '🔕 Inactivas'}
+                      </b>
+                      <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'}>{tenant.activa ? 'Activa' : 'Suspendida'}</b>
+                    </div>
                   </div>
                   <p>{tenant.nombre}</p>
                   <small>{tenant.subnombre || 'Sin subnombre configurado'}</small>
+                  {tenant.email_notificaciones && (
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>✉️ Notificar a:</span>
+                      <strong style={{ color: 'var(--text-color)' }}>{tenant.email_notificaciones}</strong>
+                    </div>
+                  )}
                   <div className="tenant-card-stats">
                     <span><Users size={13} />{tenant.admin_count || 0} admins</span>
                     <span><Package size={13} />{tenant.product_count || 0} productos</span>
@@ -5578,10 +5610,13 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                       </button>
                       {openTenantMenu === tenant.id && (
                         <div className="tenant-options-menu">
-                          <button type="button" onClick={() => requestTenantStatusChange(tenant)}>
+                          <button type="button" onClick={() => { requestTenantStatusChange(tenant); setOpenTenantMenu(null); }}>
                             {tenant.activa ? 'Desactivar empresa' : 'Activar empresa'}
                           </button>
-                          <button type="button" className="danger-option" onClick={() => requestTenantDelete(tenant)}>
+                          <button type="button" onClick={() => { toggleTenantNotifications(tenant); setOpenTenantMenu(null); }}>
+                            {tenant.notificaciones_activas !== false ? 'Desactivar notificaciones' : 'Activar notificaciones'}
+                          </button>
+                          <button type="button" className="danger-option" onClick={() => { requestTenantDelete(tenant); setOpenTenantMenu(null); }}>
                             Borrar empresa
                           </button>
                         </div>

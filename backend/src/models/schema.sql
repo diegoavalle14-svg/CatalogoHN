@@ -33,6 +33,8 @@ CREATE TABLE empresas (
     color_secundario VARCHAR(7) DEFAULT '#111111',
     fuente VARCHAR(50) DEFAULT 'Aptos',
     activa BOOLEAN DEFAULT TRUE,
+    email_notificaciones VARCHAR(255) DEFAULT '',
+    notificaciones_activas BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -53,11 +53,13 @@ router.get('/admin/summary', authenticate, requireRole('admin', 'superadmin'), a
 });
 
 router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
-  const { nombre, subnombre, subnombre_size, logo_url, color_primario, color_secundario, fuente } = req.body;
+  const { nombre, subnombre, subnombre_size, logo_url, color_primario, color_secundario, fuente, email_notificaciones } = req.body;
   try {
     if (!tenantProfileColumnsReady) {
       await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre VARCHAR(140) DEFAULT ''`);
       await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre_size INT DEFAULT 18`);
+      await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS email_notificaciones VARCHAR(255) DEFAULT ''`);
+      await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS notificaciones_activas BOOLEAN DEFAULT TRUE`);
       tenantProfileColumnsReady = true;
     }
     const result = await db.query(
@@ -69,8 +71,9 @@ router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), a
            color_secundario = COALESCE($5, color_secundario),
            fuente = COALESCE($6, fuente),
            subnombre_size = COALESCE($7, subnombre_size),
+           email_notificaciones = COALESCE($8, email_notificaciones),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $8
+       WHERE id = $9
        RETURNING *`,
       [
         nombre ? String(nombre).trim() : null,
@@ -80,6 +83,7 @@ router.patch('/admin/brand', authenticate, requireRole('admin', 'superadmin'), a
         color_secundario === undefined ? null : color_secundario,
         fuente === undefined ? null : fuente,
         subnombre_size === undefined ? null : parseInt(subnombre_size, 10),
+        email_notificaciones === undefined ? null : String(email_notificaciones || '').trim(),
         req.tenant.id
       ]
     );

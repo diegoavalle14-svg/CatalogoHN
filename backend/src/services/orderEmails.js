@@ -115,8 +115,54 @@ function buildClientStatusEmail({ tenantName, order, clientName, items }) {
   return { subject: title, html: baseEmail({ title, subtitle, contentHtml }) };
 }
 
+function buildAdminEditedOrderEmail({ tenantName, order, clientName, items }) {
+  const title = `Pedido editado ${order.numero || ''}`.trim();
+  const subtitle = tenantName ? `Pedido editado en ${tenantName}` : 'Pedido editado';
+
+  const contentHtml = `
+    <div style="display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:900;font-size:18px;">${escapeHtml(order.numero || 'Pedido')} (Editado)</div>
+        <div style="opacity:.85;margin-top:2px;">Cliente: <b>${escapeHtml(clientName || '')}</b></div>
+        <div style="opacity:.85;margin-top:2px;">Estado: <b>${escapeHtml(order.estado || 'pendiente')}</b></div>
+      </div>
+      <div style="text-align:right;">
+        <div style="opacity:.8;font-size:12px;">Nuevo Total</div>
+        <div style="font-weight:900;font-size:18px;">${formatMoneyHNL(order.total)}</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;">${itemsTable(items)}</div>
+  `;
+
+  return { subject: title, html: baseEmail({ title, subtitle, contentHtml }) };
+}
+
+function buildAdminDeletedOrderEmail({ tenantName, order, clientName, items }) {
+  const title = `Pedido eliminado ${order.numero || ''}`.trim();
+  const subtitle = tenantName ? `Pedido eliminado en ${tenantName}` : 'Pedido eliminado';
+
+  const contentHtml = `
+    <div style="display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:900;font-size:18px;color:#ef3d47;">${escapeHtml(order.numero || 'Pedido')} (Eliminado)</div>
+        <div style="opacity:.85;margin-top:2px;">Cliente: <b>${escapeHtml(clientName || '')}</b></div>
+        <div style="opacity:.85;margin-top:2px;">Estado que tenía: <b>${escapeHtml(order.estado || 'pendiente')}</b></div>
+      </div>
+      <div style="text-align:right;">
+        <div style="opacity:.8;font-size:12px;">Total que tenía</div>
+        <div style="font-weight:900;font-size:18px;">${formatMoneyHNL(order.total)}</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;">${itemsTable(items)}</div>
+  `;
+
+  return { subject: title, html: baseEmail({ title, subtitle, contentHtml }) };
+}
+
 module.exports = {
   buildAdminNewOrderEmail,
-  buildClientStatusEmail
+  buildClientStatusEmail,
+  buildAdminEditedOrderEmail,
+  buildAdminDeletedOrderEmail
 };
 

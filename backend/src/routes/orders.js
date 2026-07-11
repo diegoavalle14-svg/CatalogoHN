@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { sendMail } = require('../services/mailer');
-const { buildAdminNewOrderEmail, buildClientStatusEmail } = require('../services/orderEmails');
+const { buildAdminNewOrderEmail, buildClientStatusEmail, buildAdminEditedOrderEmail, buildAdminDeletedOrderEmail } = require('../services/orderEmails');
 const { ensureProductInventoryColumns, ensurePricePromoActiveColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
 const { enumValue, handleValidationError, positiveInt, validateOrderItems } = require('../services/validators');
 const { dispatchWebhookEvent } = require('../services/webhooks');
@@ -11,7 +11,7 @@ const router = express.Router();
 
 async function queryOrderEmailContext(tenantId, orderId) {
   const orderRes = await db.query(
-    `SELECT p.*, u.nombre AS cliente_nombre, u.email AS cliente_email, e.nombre AS tenant_nombre
+    `SELECT p.*, u.nombre AS cliente_nombre, u.email AS cliente_email, e.nombre AS tenant_nombre, e.email_notificaciones, e.notificaciones_activas
      FROM pedidos p
      JOIN clientes c ON c.id = p.cliente_id
      JOIN usuarios u ON u.id = c.usuario_id
@@ -283,7 +283,13 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
              ORDER BY id`,
             [req.tenant.id]
           );
-          const to = admins.rows.map((row) => row.email).filter(Boolean);
+          const to = Array.from(new Set([
+            ...admins.rows.map((row) => row.email).filter(Boolean),
+            (ctx.order.notificaciones_activas !== false && ctx.order.email_notificaciones) ? ctx.order.email_notificaciones : null
+          ].filter(Boolean)));
+
+          if (to.length === 0) return;
+
           const email = buildAdminNewOrderEmail({
             tenantName: ctx.order.tenant_nombre,
             order: ctx.order,
@@ -374,6 +380,37 @@ router.put('/orders/:id', authenticate, requireRole('cliente', 'admin', 'superad
 
       await client.query('COMMIT');
       res.json({ pedido: result.rows[0] });
+
+      // Notify admins asynchronously (do not block client UX)
+      (async () => {
+        try {
+          const ctx = await queryOrderEmailContext(req.tenant.id, order.id);
+          if (!ctx) return;
+          const admins = await db.query(
+            `SELECT email
+             FROM usuarios
+             WHERE empresa_id = $1 AND rol IN ('admin')
+             ORDER BY id`,
+            [req.tenant.id]
+          );
+          const to = Array.from(new Set([
+            ...admins.rows.map((row) => row.email).filter(Boolean),
+            (ctx.order.notificaciones_activas !== false && ctx.order.email_notificaciones) ? ctx.order.email_notificaciones : null
+          ].filter(Boolean)));
+          
+          if (to.length === 0) return;
+          
+          const email = buildAdminEditedOrderEmail({
+            tenantName: ctx.order.tenant_nombre,
+            order: ctx.order,
+            clientName: ctx.order.cliente_nombre,
+            items: ctx.items
+          });
+          await sendMail({ to, subject: email.subject, html: email.html });
+        } catch (err) {
+          console.warn('[orders] admin edit email failed:', err.message || err);
+        }
+      })();
     } catch (err) {
       await client.query('ROLLBACK');
       console.error('[DEBUG] DB transaction error:', err);
@@ -492,8 +529,46 @@ router.delete('/orders/:id', authenticate, requireRole('cliente', 'admin', 'supe
       }
     }
 
+    // Get context for notification email before deletion
+    let emailCtx = null;
+    try {
+      emailCtx = await queryOrderEmailContext(req.tenant.id, req.params.id);
+    } catch (e) {
+      console.warn('[orders] failed to query context for deletion notification:', e.message);
+    }
+
     await db.query('DELETE FROM pedidos WHERE id = $1 AND empresa_id = $2', [req.params.id, req.tenant.id]);
     res.status(204).send();
+
+    if (emailCtx) {
+      (async () => {
+        try {
+          const admins = await db.query(
+            `SELECT email
+             FROM usuarios
+             WHERE empresa_id = $1 AND rol IN ('admin')
+             ORDER BY id`,
+            [req.tenant.id]
+          );
+          const to = Array.from(new Set([
+            ...admins.rows.map((row) => row.email).filter(Boolean),
+            (emailCtx.order.notificaciones_activas !== false && emailCtx.order.email_notificaciones) ? emailCtx.order.email_notificaciones : null
+          ].filter(Boolean)));
+          
+          if (to.length === 0) return;
+          
+          const email = buildAdminDeletedOrderEmail({
+            tenantName: emailCtx.order.tenant_nombre,
+            order: emailCtx.order,
+            clientName: emailCtx.order.cliente_nombre,
+            items: emailCtx.items
+          });
+          await sendMail({ to, subject: email.subject, html: email.html });
+        } catch (err) {
+          console.warn('[orders] admin delete notification email failed:', err.message || err);
+        }
+      })();
+    }
   } catch (error) {
     res.status(500).json({ message: 'No se pudo eliminar el pedido' });
   }
