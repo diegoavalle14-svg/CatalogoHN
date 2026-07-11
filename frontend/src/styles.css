@@ -1193,7 +1193,7 @@ button {
   grid-column: 1 / -1;
 }
 
-.product-cart-control:not(:has(> .branch-code)) {
+.product-cart-control:not(:has(.branch-code)) {
   grid-template-columns: minmax(88px, 96px) minmax(0, 1fr);
 }
 
@@ -7932,7 +7932,7 @@ button {
     gap: 5px;
   }
 
-  .product-cart-control:not(:has(> .branch-code)) {
+  .product-cart-control:not(:has(.branch-code)) {
     grid-template-columns: 1fr;
   }
 
