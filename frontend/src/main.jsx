@@ -912,7 +912,6 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
       <div className="product-body">
         <div className="sku-stock-line">
           <span className="sku-code">{product.sku}</span>
-          <span className={`stock-pill ${stock.tone}`}>{stock.label}</span>
         </div>
         <span className="product-category-badge" style={categoryBadgeStyle(categoryMeta)}>{product.categoria || categoryMeta?.nombre || 'Sin categoría'}</span>
         {product.descripcion && (
@@ -929,6 +928,9 @@ function ProductCard({ product, categoryMeta, brandMeta, branches, quantities, o
         {product.specs?.medida && product.specs.medida.split(/\r?\n/).filter((line) => line.trim()).map((line, index) => <p key={index}>{line}</p>)}
       </div>
       <div className="branch-qty">
+        <div className="product-stock-row">
+          <span className={`stock-pill ${stock.tone}`}>{stock.label}</span>
+        </div>
         {availableBranches.length === 0 && (
           <div className="product-cart-control no-branches">
             <button className="add-to-cart-button" type="button" disabled>
