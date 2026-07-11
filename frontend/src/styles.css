@@ -1169,10 +1169,10 @@ button {
 }
 
 .branch-qty {
-  align-self: center;
   display: grid;
   gap: 6px;
   padding: 0 11px 11px;
+  width: 100%;
 }
 
 .product-cart-control {
