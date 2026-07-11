@@ -3819,15 +3819,6 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
             <div className="admin-form admin-site-form">
               <label>Nombre comercial<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
               <label>
-                Correo para notificaciones de pedidos (Opcional)
-                <input
-                  type="email"
-                  placeholder="ejemplo@correo.com"
-                  value={form.email_notificaciones || ''}
-                  onChange={(event) => update('email_notificaciones', event.target.value)}
-                />
-              </label>
-              <label>
                 Subnombre
                 <select
                   value={selectedSubname}
