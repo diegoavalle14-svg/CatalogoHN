@@ -9491,3 +9491,49 @@ button {
   }
 }
 
+.history-filter-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.history-filter-row button {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-color);
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-filter-row button.active {
+  background: var(--yellow);
+  color: #000;
+  border-color: var(--yellow);
+}
+
+@media (max-width: 560px) {
+  .history-filter-row {
+    gap: 4px;
+  }
+  .history-filter-row button {
+    padding: 6px 4px;
+    font-size: 9px;
+  }
+}
+
+

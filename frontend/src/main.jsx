@@ -1270,7 +1270,7 @@ function History({ session }) {
       <h1>Historial de pedidos</h1>
 
       {/* Filtros de Estado */}
-      <div className="admin-chip-row" style={{ marginBottom: '20px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <div className="history-filter-row">
         {[
           ['all', 'Todos'],
           ['pendiente', 'Pendientes'],
@@ -1282,18 +1282,6 @@ function History({ session }) {
             key={value} 
             className={statusFilter === value ? 'active' : ''} 
             onClick={() => setStatusFilter(value)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '20px',
-              border: '1px solid var(--border-color)',
-              background: statusFilter === value ? 'var(--yellow)' : 'var(--surface-color)',
-              color: statusFilter === value ? '#000' : 'var(--text-color)',
-              fontWeight: '800',
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              cursor: 'pointer'
-            }}
           >
             {label}
           </button>
