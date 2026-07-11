@@ -6,7 +6,7 @@ import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
 
-const money = (value) => `L. ${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2 })}`;
+const money = (value) => `L.\u00A0${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2 })}`;
 const THEME_STORAGE_KEY = 'catalogohn-theme';
 
 function getSystemTheme() {
