@@ -1035,7 +1035,9 @@ button {
 .product-stock-row {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   width: 100%;
+  margin-bottom: 3px;
 }
 
 .stock-pill {
