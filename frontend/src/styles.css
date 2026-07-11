@@ -1036,13 +1036,13 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 22px;
+  min-height: 26px;
   border: 1px solid rgba(17, 17, 17, .10);
   border-radius: 4px;
   background: #f3f5f8;
   color: #303743;
-  padding: 0 6px;
-  font-size: 9.5px;
+  padding: 0 7px;
+  font-size: 11.5px;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
@@ -1050,17 +1050,21 @@ button {
 
 @media (min-width: 1024px) {
   .stock-pill {
-    font-size: 14px;
-    min-height: 33px;
+    font-size: 17px;
+    min-height: 40px;
+    padding: 0 12px;
+  }
+  .stock-pill.low {
+    font-size: 16px;
     padding: 0 10px;
   }
 }
 
 .stock-pill::before {
   content: "";
-  width: 5px;
-  height: 5px;
-  margin-right: 4px;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
   border-radius: 50%;
   background: #20935f;
 }
@@ -1069,13 +1073,13 @@ button {
   border-color: rgba(245, 157, 28, .28);
   background: #fff7e8;
   color: #8a5611;
-  font-size: 9px;
-  padding: 0 4px;
+  font-size: 11px;
+  padding: 0 5px;
 }
 
 .stock-pill.low::before {
   background: #f59d1c;
-  margin-right: 3px;
+  margin-right: 4px;
 }
 
 .stock-pill.out {
@@ -1531,9 +1535,9 @@ button {
 .cart-stock-label {
   margin-right: auto;
   color: #888;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
-  padding: 2px 4px;
+  padding: 2px 5px;
   border-radius: 4px;
   background: #f4f4f4;
 }
@@ -7860,17 +7864,17 @@ button {
 
   .sku-stock-line {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 4px;
+    gap: 4px 6px;
     align-items: center;
     width: 100%;
   }
 
   .stock-pill {
-    padding: 0 5px;
-    font-size: 9px;
-    min-height: 18px;
+    padding: 0 6px;
+    font-size: 11px;
+    min-height: 22px;
   }
 
   .product-category-logo {
@@ -8682,8 +8686,8 @@ button {
     text-overflow: ellipsis;
   }
   .admin-product-top .admin-stock-badge {
-    font-size: 9px !important;
-    padding: 1px 4px !important;
+    font-size: 11px !important;
+    padding: 2px 5px !important;
     margin-inline: auto !important;
     display: inline-flex !important;
   }
