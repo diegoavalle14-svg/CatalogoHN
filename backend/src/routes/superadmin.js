@@ -293,7 +293,7 @@ router.post('/superadmin/tenants', authenticate, requireRole('superadmin'), asyn
 
 router.patch('/superadmin/tenants/:id', authenticate, requireRole('superadmin'), async (req, res) => {
   await ensureTenantColumns();
-  const { activa, notificaciones_activas } = req.body || {};
+  const { activa, notificaciones_activas, email_notificaciones } = req.body || {};
 
   const updates = [];
   const params = [];
@@ -315,8 +315,13 @@ router.patch('/superadmin/tenants/:id', authenticate, requireRole('superadmin'),
     params.push(notificaciones_activas);
   }
 
+  if (email_notificaciones !== undefined) {
+    updates.push(`email_notificaciones = $${paramIdx++}`);
+    params.push(email_notificaciones === null ? '' : String(email_notificaciones).trim());
+  }
+
   if (updates.length === 0) {
-    return res.status(400).json({ message: 'Se requiere al menos un campo para actualizar (activa o notificaciones_activas)' });
+    return res.status(400).json({ message: 'Se requiere al menos un campo para actualizar' });
   }
 
   params.push(req.params.id);
@@ -348,6 +353,15 @@ router.patch('/superadmin/tenants/:id', authenticate, requireRole('superadmin'),
       descripcion: `Notificaciones de la empresa ${result.rows[0].nombre} ${notificaciones_activas ? 'activadas' : 'desactivadas'}`,
       empresaId: result.rows[0].id,
       metadata: { slug: result.rows[0].slug }
+    });
+  }
+
+  if (email_notificaciones !== undefined) {
+    await logSuperadminEvent(req, {
+      tipo: 'config_correo_notificaciones',
+      descripcion: `Correo de notificaciones de la empresa ${result.rows[0].nombre} actualizado a: ${result.rows[0].email_notificaciones || 'vacío'}`,
+      empresaId: result.rows[0].id,
+      metadata: { slug: result.rows[0].slug, email: result.rows[0].email_notificaciones }
     });
   }
 

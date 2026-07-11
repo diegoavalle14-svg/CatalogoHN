@@ -5160,6 +5160,24 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
     }
   }
 
+  async function editTenantEmail(tenant) {
+    const input = window.prompt(
+      `Configurar correo de notificaciones para ${tenant.nombre}:`,
+      tenant.email_notificaciones || ''
+    );
+    if (input === null) return;
+    
+    setError('');
+    try {
+      const email = input.trim();
+      const updated = await api.superadminUpdateTenantEmail(token, tenant.id, email);
+      setTenants((current) => (current || []).map((item) => (item.id === tenant.id ? { ...item, ...updated.tenant } : item)));
+      showToast(`Correo de ${tenant.nombre} actualizado`);
+    } catch (err) {
+      setError(err.message || 'No se pudo actualizar el correo');
+    }
+  }
+
   function handleSubnombreChange(value) {
     setSubnombreSeleccionado(value);
     if (value === '__nuevo__') {
@@ -5564,12 +5582,15 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                   </div>
                   <p>{tenant.nombre}</p>
                   <small>{tenant.subnombre || 'Sin subnombre configurado'}</small>
-                  {tenant.email_notificaciones && (
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span>✉️ Notificar a:</span>
-                      <strong style={{ color: 'var(--text-color)' }}>{tenant.email_notificaciones}</strong>
-                    </div>
-                  )}
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>✉️ Notificar a:</span>
+                    <span 
+                      style={{ color: tenant.email_notificaciones ? 'var(--text-color)' : 'var(--text-muted)', cursor: 'pointer', fontStyle: tenant.email_notificaciones ? 'normal' : 'italic', textDecoration: 'underline', fontWeight: tenant.email_notificaciones ? 'bold' : 'normal' }} 
+                      onClick={() => editTenantEmail(tenant)}
+                    >
+                      {tenant.email_notificaciones || 'Configurar correo'}
+                    </span>
+                  </div>
                   <div className="tenant-card-stats">
                     <span><Users size={13} />{tenant.admin_count || 0} admins</span>
                     <span><Package size={13} />{tenant.product_count || 0} productos</span>
@@ -5616,6 +5637,9 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                           </button>
                           <button type="button" onClick={() => { toggleTenantNotifications(tenant); setOpenTenantMenu(null); }}>
                             {tenant.notificaciones_activas !== false ? 'Desactivar notificaciones' : 'Activar notificaciones'}
+                          </button>
+                          <button type="button" onClick={() => { editTenantEmail(tenant); setOpenTenantMenu(null); }}>
+                            Editar correo
                           </button>
                           <button type="button" className="danger-option" onClick={() => { requestTenantDelete(tenant); setOpenTenantMenu(null); }}>
                             Borrar empresa
