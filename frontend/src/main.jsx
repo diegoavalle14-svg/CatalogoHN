@@ -2823,7 +2823,7 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
               <button className="cart-close-button" onClick={() => setSelectedHistoryOrder(null)} aria-label="Cerrar"><X size={18} /></button>
             </div>
             <div style={{ padding: '16px', overflowY: 'auto' }}>
-              <div style={{ marginBottom: '16px', fontSize: '12px', background: '#f8f8f8', padding: '10px', borderRadius: '6px' }}>
+              <div style={{ marginBottom: '16px', fontSize: '12px', background: 'var(--mist)', padding: '10px', borderRadius: '6px' }}>
                 <p style={{ margin: '0 0 6px 0' }}><strong>Cliente:</strong> {selectedHistoryOrder.cliente_nombre}</p>
                 <p style={{ margin: '0 0 6px 0' }}><strong>Fecha:</strong> {new Date(selectedHistoryOrder.fecha).toLocaleString('es-HN')}</p>
                 <p style={{ margin: 0 }}><strong>Monto Total:</strong> {money(selectedHistoryOrder.total)}</p>
@@ -2834,24 +2834,24 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                   return (
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                       <thead>
-                        <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left', color: '#666', fontWeight: 'bold' }}>
-                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'sku' ? '#111' : '#666' }}>
+                        <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left', color: 'var(--muted)', fontWeight: 'bold' }}>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'sku')} style={{ padding: '6px 4px 6px 0', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'sku' ? 'var(--text)' : 'var(--muted)' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               Código <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'sku' ? 1 : 0.25 }}>{historySortInfo.key === 'sku' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
                             </span>
                           </th>
                           <th style={{ padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase' }}>Descripción</th>
-                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'sucursal' ? '#111' : '#666' }}>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'sucursal')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'sucursal' ? 'var(--text)' : 'var(--muted)' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
                               Sucursal <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'sucursal' ? 1 : 0.25 }}>{historySortInfo.key === 'sucursal' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
                             </span>
                           </th>
-                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'cantidad' ? '#111' : '#666' }}>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'cantidad')} style={{ padding: '6px 4px', textAlign: 'center', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'cantidad' ? 'var(--text)' : 'var(--muted)' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'center', width: '100%' }}>
                               Cantidad <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'cantidad' ? 1 : 0.25 }}>{historySortInfo.key === 'cantidad' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
                             </span>
                           </th>
-                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'precio_unitario' ? '#111' : '#666' }}>
+                          <th onClick={() => handleSort(selectedHistoryOrder.id, 'precio_unitario')} style={{ padding: '6px 0', textAlign: 'right', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none', color: historySortInfo.key === 'precio_unitario' ? 'var(--text)' : 'var(--muted)' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end', width: '100%' }}>
                               Precio <span style={{ fontSize: '8px', opacity: historySortInfo.key === 'precio_unitario' ? 1 : 0.25 }}>{historySortInfo.key === 'precio_unitario' ? (historySortInfo.asc ? '▲' : '▼') : '▲'}</span>
                             </span>
@@ -2878,9 +2878,9 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                           if (valA > valB) return historySortInfo.asc ? 1 : -1;
                           return 0;
                         }).map((item) => (
-                      <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <tr key={`${item.producto_id}-${item.sucursal_id}`} style={{ borderBottom: '1px solid var(--soft-line)' }}>
                         <td style={{ padding: '8px 4px 8px 0', fontWeight: '700' }}>{item.sku}</td>
-                        <td style={{ padding: '8px 4px', color: '#333' }}>{item.descripcion}</td>
+                        <td style={{ padding: '8px 4px' }}>{item.descripcion}</td>
                         <td style={{ padding: '8px 4px', textAlign: 'center' }}>{item.sucursal}</td>
                         <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700' }}>{item.cantidad}</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '500' }}>{money(Number(item.precio_unitario || 0))}</td>
