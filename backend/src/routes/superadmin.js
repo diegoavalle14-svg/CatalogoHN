@@ -116,7 +116,7 @@ async function logSuperadminEvent(req, { tipo, descripcion, empresaId = null, me
 }
 
 function normalizeUsername(value) {
-  return String(value || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 60);
+  return String(value || '').trim().replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 60);
 }
 
 function randomPassword() {
