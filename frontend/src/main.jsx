@@ -4761,7 +4761,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
   const [tempPassword, setTempPassword] = useState('');
   const [tempPasswordsByAdmin, setTempPasswordsByAdmin] = useState({});
   const [toast, setToast] = useState('');
-  const [openTenantMenu, setOpenTenantMenu] = useState(null);
+  const [selectedTenantOptions, setSelectedTenantOptions] = useState(null);
   const [tenantConfirm, setTenantConfirm] = useState(null);
   const [tenantDeleteInput, setTenantDeleteInput] = useState('');
   const [adminConfirm, setAdminConfirm] = useState(null);
@@ -5615,28 +5615,12 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                       <button
                         className="secondary-button tenant-options-button"
                         type="button"
-                        onClick={() => setOpenTenantMenu((current) => (current === tenant.id ? null : tenant.id))}
+                        onClick={() => setSelectedTenantOptions(tenant)}
                         aria-label={`Opciones de ${tenant.nombre}`}
                       >
                         <MoreVertical size={16} />
                         Opciones
                       </button>
-                      {openTenantMenu === tenant.id && (
-                        <div className="tenant-options-menu">
-                          <button type="button" onClick={() => { requestTenantStatusChange(tenant); setOpenTenantMenu(null); }}>
-                            {tenant.activa ? 'Desactivar empresa' : 'Activar empresa'}
-                          </button>
-                          <button type="button" onClick={() => { toggleTenantNotifications(tenant); setOpenTenantMenu(null); }}>
-                            {tenant.notificaciones_activas !== false ? 'Desactivar notificaciones' : 'Activar notificaciones'}
-                          </button>
-                          <button type="button" onClick={() => { editTenantEmail(tenant); setOpenTenantMenu(null); }}>
-                            Editar correo
-                          </button>
-                          <button type="button" className="danger-option" onClick={() => { requestTenantDelete(tenant); setOpenTenantMenu(null); }}>
-                            Borrar empresa
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </article>
@@ -5735,6 +5719,71 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 <button type="button" onClick={cancelEditAdmin}>Cancelar</button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+       {selectedTenantOptions && (
+        <div className="admin-modal-backdrop modal-centered" onClick={() => setSelectedTenantOptions(null)}>
+          <section className="admin-modal" style={{ maxWidth: '380px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <header>
+              <h2>Opciones de la empresa</h2>
+              <button onClick={() => setSelectedTenantOptions(null)}><X size={18} /></button>
+            </header>
+            <div style={{ display: 'grid', gap: '10px', padding: '15px 0' }}>
+              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                <strong style={{ fontSize: '15px', color: 'var(--text-color)' }}>{selectedTenantOptions.nombre}</strong>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{selectedTenantOptions.slug}.catalogohn.com</div>
+              </div>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px' }}
+                onClick={() => {
+                  requestTenantStatusChange(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                {selectedTenantOptions.activa ? '⏸️ Desactivar empresa' : '▶️ Activar empresa'}
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px' }}
+                onClick={() => {
+                  toggleTenantNotifications(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                {selectedTenantOptions.notificaciones_activas !== false ? '🔕 Desactivar notificaciones' : '🔔 Activar notificaciones'}
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px' }}
+                onClick={() => {
+                  editTenantEmail(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                ✉️ Configurar/Editar correo
+              </button>
+
+              <button
+                type="button"
+                className="primary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '10px' }}
+                onClick={() => {
+                  requestTenantDelete(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                🗑️ Borrar empresa
+              </button>
+            </div>
           </section>
         </div>
       )}
