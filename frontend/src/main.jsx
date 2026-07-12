@@ -3071,24 +3071,15 @@ function AdminClientsSection({ clients, onNew, onOptions }) {
         )}
         {filteredClients.map((client) => (
           <article className="admin-client-row" key={client.id}>
-            <div className="admin-client-row-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="admin-client-row-header">
+              <div className="admin-client-row-info">
                 <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
-                <span className="admin-client-main" style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                  <strong style={{ fontSize: '11.5px', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.2', display: 'block' }}>{client.nombre}</strong>
+                <span className="admin-client-main">
+                  <strong className="admin-client-name">{client.nombre}</strong>
                   <small>{client.usuario}</small>
                 </span>
               </div>
-              <span style={{ 
-                fontSize: '9px', 
-                fontWeight: 'bold', 
-                padding: '2px 6px', 
-                borderRadius: '4px',
-                background: client.activo ? '#eefbf3' : '#fcedf0', 
-                color: client.activo ? '#20935f' : '#ef3d47',
-                border: '1px solid currentColor',
-                whiteSpace: 'nowrap'
-              }}>
+              <span className={`client-status-badge ${client.activo ? 'active' : 'inactive'}`}>
                 {client.activo ? 'Activo' : 'Inactivo'}
               </span>
             </div>
