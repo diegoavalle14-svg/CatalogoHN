@@ -4062,7 +4062,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
         {editor.type === 'client' && (
           <div className="admin-form">
             <label>Nombre<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
-            <label>Usuario<input value={form.username || form.usuario || ''} onChange={(event) => update('username', event.target.value)} /></label>
+            <label>Usuario<input value={form.username ?? ''} onChange={(event) => update('username', event.target.value)} /></label>
             <label>
               {form.id ? 'Nueva contraseña' : 'Contraseña inicial'}
               <div className="password-input-wrapper">
@@ -4076,7 +4076,7 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
               <option value="">Sin lista</option>
               {priceLists.map((list) => <option value={list.id} key={list.id}>{list.nombre}</option>)}
             </select></label>
-            <label>Credito<input value={form.condicion_credito || form.credito || ''} onChange={(event) => update('condicion_credito', event.target.value)} /></label>
+            <label>Credito<input value={form.condicion_credito ?? ''} onChange={(event) => update('condicion_credito', event.target.value)} /></label>
             <label>Estado<select value={form.activo === false ? 'inactivo' : 'activo'} onChange={(event) => update('activo', event.target.value === 'activo')}>
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
@@ -4712,6 +4712,8 @@ function buildAdminEditorForm(editor, priceProducts = []) {
     }
   }
   if (editor.type === 'client') {
+    form.username = form.username || form.usuario || '';
+    form.condicion_credito = form.condicion_credito || form.credito || 'Contado';
     const clean = Array.isArray(form.sucursales) ? form.sucursales : [];
     const sorted = [...clean].sort((a, b) => {
       const idA = a.id ? Number(a.id) : 999999;
