@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const connectionString = process.env.DATABASE_URL;
 const password = process.env.SUPERADMIN_PASSWORD;
-const username = String(process.env.SUPERADMIN_USERNAME || 'superadmin').trim().toLowerCase();
+const username = String(process.env.SUPERADMIN_USERNAME || 'superadmin').trim();
 const email = String(process.env.SUPERADMIN_EMAIL || 'superadmin@catalogohn.com').trim().toLowerCase();
 const name = process.env.SUPERADMIN_NAME || 'Super Administrador';
 
@@ -38,7 +38,7 @@ async function run() {
           OR lower(COALESCE(username, '')) = $2
        ORDER BY CASE WHEN rol = 'superadmin' THEN 0 ELSE 1 END, id
        LIMIT 1`,
-      [email, username]
+      [email, username.toLowerCase()]
     );
 
     if (existing.rows[0]) {
