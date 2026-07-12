@@ -23,14 +23,7 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
   }
 
-  // Handle aliases in a case-insensitive way
-  const aliases = {
-    cliente1: 'cliente1@autorepuestos.com',
-    admin: 'admin@kolben.com',
-    superadmin: 'superadmin@catalogohn.com'
-  };
-  const resolvedLogin = aliases[rawLogin.toLowerCase()] || rawLogin;
-  const isEmail = resolvedLogin.includes('@');
+  const isEmail = rawLogin.includes('@');
 
   try {
     const superadminMode = Boolean(req.body.superadminMode);
@@ -49,7 +42,7 @@ router.post('/login', async (req, res) => {
           WHERE lower(u.email) = $1
             AND u.rol = 'superadmin'
           LIMIT 1`;
-        queryParams = [resolvedLogin.toLowerCase()];
+        queryParams = [rawLogin.toLowerCase()];
       } else {
         queryStr = `
           SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
@@ -58,7 +51,7 @@ router.post('/login', async (req, res) => {
           WHERE u.username = $1
             AND u.rol = 'superadmin'
           LIMIT 1`;
-        queryParams = [resolvedLogin];
+        queryParams = [rawLogin];
       }
     } else {
       if (isEmail) {
@@ -70,7 +63,7 @@ router.post('/login', async (req, res) => {
             AND u.empresa_id = $2
             AND u.rol != 'superadmin'
           LIMIT 1`;
-        queryParams = [resolvedLogin.toLowerCase(), tenantId];
+        queryParams = [rawLogin.toLowerCase(), tenantId];
       } else {
         queryStr = `
           SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
@@ -80,7 +73,7 @@ router.post('/login', async (req, res) => {
             AND u.empresa_id = $2
             AND u.rol != 'superadmin'
           LIMIT 1`;
-        queryParams = [resolvedLogin, tenantId];
+        queryParams = [rawLogin, tenantId];
       }
     }
 

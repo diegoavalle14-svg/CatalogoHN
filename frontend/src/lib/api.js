@@ -27,11 +27,6 @@ function storedTenantSlug() {
 }
 
 let activeTenantSlug = storedTenantSlug() || DEFAULT_TENANT_SLUG;
-const LOGIN_ALIASES = {
-  cliente1: 'cliente1@autorepuestos.com',
-  admin: 'admin@kolben.com',
-  superadmin: 'superadmin@catalogohn.com'
-};
 
 function currentTenantSlug() {
   const storedSlug = storedTenantSlug();
@@ -86,11 +81,9 @@ export const api = {
   },
   login: async (credentials) => {
     const rawLogin = String(credentials.username || credentials.email || '').trim();
-    const loginId = rawLogin.toLowerCase();
-    const email = LOGIN_ALIASES[loginId] || rawLogin;
     const loginTenantSlug = String(credentials.tenantSlug || '').trim() || currentTenantSlug();
     const payload = { 
-      email, 
+      email: rawLogin, 
       username: rawLogin, 
       password: credentials.password,
       superadminMode: Boolean(credentials.superadminMode)
