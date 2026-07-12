@@ -1468,6 +1468,8 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
+  const [selectedClientOptions, setSelectedClientOptions] = useState(null);
+
   function showToast(message, tone = '') {
     setToast({ message, tone });
     window.clearTimeout(toastTimer.current);
@@ -1873,6 +1875,15 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     }
   }
 
+  async function logoutClientSessions(client) {
+    try {
+      await api.adminClientLogout(session.token, client.id);
+      showToast(`Sesiones de ${client.nombre} cerradas`);
+    } catch (err) {
+      window.alert(err.message || 'No se pudo cerrar las sesiones del cliente');
+    }
+  }
+
   function updateOrderState(id, estado) {
     setConfirmAction({
       title: 'Cambiar estado de pedido',
@@ -2226,10 +2237,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
           <AdminClientsSection
             clients={clients}
             onNew={() => setEditor({ type: 'client', title: 'Nuevo cliente', value: {} })}
-            onEdit={(client) => setEditor({ type: 'client', title: 'Editar cliente', value: client })}
-            onViewDetail={(client) => setEditor({ type: 'client-detail', title: 'Detalle de Cliente', value: client })}
-            onToggle={toggleClient}
-            onDelete={deleteClient}
+            onOptions={setSelectedClientOptions}
           />
         )}
 
@@ -2261,6 +2269,83 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
       </main>
 
       <AdminBottomNav tab={tab} setTab={setTab} pending={pending} missingPrices={missingPriceCount} />
+
+      {selectedClientOptions && (
+        <div className="admin-modal-backdrop modal-centered" onClick={() => setSelectedClientOptions(null)}>
+          <section className="admin-modal" style={{ maxWidth: '380px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <header>
+              <h2>Opciones del cliente</h2>
+              <button onClick={() => setSelectedClientOptions(null)}><X size={18} /></button>
+            </header>
+            <div style={{ display: 'grid', gap: '10px', padding: '20px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                <strong style={{ fontSize: '15px', color: 'var(--text-color)' }}>{selectedClientOptions.nombre}</strong>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{selectedClientOptions.usuario}</div>
+              </div>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  setEditor({ type: 'client-detail', title: 'Detalle de Cliente', value: selectedClientOptions });
+                  setSelectedClientOptions(null);
+                }}
+              >
+                Ver detalle
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  setEditor({ type: 'client', title: 'Editar cliente', value: selectedClientOptions });
+                  setSelectedClientOptions(null);
+                }}
+              >
+                Editar cliente
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  toggleClient(selectedClientOptions);
+                  setSelectedClientOptions(null);
+                }}
+              >
+                {selectedClientOptions.activo ? 'Desactivar cliente' : 'Activar cliente'}
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  logoutClientSessions(selectedClientOptions);
+                  setSelectedClientOptions(null);
+                }}
+              >
+                Cerrar sesiones
+              </button>
+
+              <button
+                type="button"
+                className="primary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '10px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  deleteClient(selectedClientOptions);
+                  setSelectedClientOptions(null);
+                }}
+              >
+                Eliminar cliente
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {confirmAction && (
         <AdminConfirmModal
@@ -2941,7 +3026,7 @@ function AdminCatalogSection({ products, brands, categories, onNew, onProductEdi
   );
 }
 
-function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, onDelete }) {
+function AdminClientsSection({ clients, onNew, onOptions }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const filteredClients = useMemo(() => {
@@ -2993,12 +3078,15 @@ function AdminClientsSection({ clients, onNew, onEdit, onViewDetail, onToggle, o
               </span>
             </div>
             <span className="admin-client-actions">
-              <button type="button" className="client-row-button" onClick={() => onEdit(client)}>Editar</button>
-              <button type="button" className="client-row-button" onClick={() => onViewDetail(client)}>Ver detalle</button>
-              <button type="button" className="client-row-button" onClick={() => onToggle(client)}>
-                {client.activo ? 'Desactivar' : 'Activar'}
+              <button
+                type="button"
+                className="client-row-button"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%' }}
+                onClick={() => onOptions(client)}
+              >
+                <MoreVertical size={13} />
+                Opciones
               </button>
-              <button type="button" className="client-row-button danger" onClick={() => onDelete(client)}>Eliminar</button>
             </span>
           </article>
         ))}

@@ -134,6 +134,9 @@ export const api = {
   adminSetClientActive: async (token, id, activo) => {
     return request(`/admin/clients/${id}/status`, { method: 'PATCH', token, body: JSON.stringify({ activo }) });
   },
+  adminClientLogout: async (token, id) => {
+    return request(`/admin/clients/${id}/logout`, { method: 'POST', token });
+  },
   adminPriceLists: async (token) => {
     return request('/admin/price-lists', { token });
   },

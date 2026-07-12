@@ -48,6 +48,7 @@ CREATE TABLE usuarios (
     email VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     rol VARCHAR(20) NOT NULL CHECK (rol IN ('superadmin', 'admin', 'cliente')),
+    token_version INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_email_per_tenant UNIQUE (empresa_id, email),

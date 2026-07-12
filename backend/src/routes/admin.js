@@ -265,13 +265,43 @@ router.patch('/admin/clients/:id/status', authenticate, requireRole('admin', 'su
       `UPDATE clientes
        SET activo = $1, updated_at = CURRENT_TIMESTAMP
        WHERE id = $2 AND empresa_id = $3
-       RETURNING id`,
+       RETURNING id, usuario_id`,
       [Boolean(req.body.activo), req.params.id, req.tenant.id]
     );
     if (!result.rows[0]) return res.status(404).json({ message: 'Cliente no encontrado' });
+
+    if (!Boolean(req.body.activo)) {
+      await db.query(
+        'UPDATE usuarios SET token_version = COALESCE(token_version, 1) + 1 WHERE id = $1',
+        [result.rows[0].usuario_id]
+      );
+    }
+
     res.json({ cliente: await getAdminClient(req.tenant.id, req.params.id) });
   } catch (error) {
     res.status(500).json({ message: 'No se pudo cambiar el estado del cliente' });
+  }
+});
+
+router.post('/admin/clients/:id/logout', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const clientRes = await db.query(
+      'SELECT usuario_id FROM clientes WHERE id = $1 AND empresa_id = $2',
+      [req.params.id, req.tenant.id]
+    );
+    const client = clientRes.rows[0];
+    if (!client) {
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+
+    await db.query(
+      'UPDATE usuarios SET token_version = COALESCE(token_version, 1) + 1 WHERE id = $1',
+      [client.usuario_id]
+    );
+
+    res.json({ success: true, message: 'Sesiones del cliente cerradas exitosamente' });
+  } catch (error) {
+    res.status(500).json({ message: 'No se pudo cerrar las sesiones del cliente' });
   }
 });
 

@@ -56,6 +56,7 @@ async function ensureUserColumns() {
   if (userColumnsReady) return;
   await db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS username VARCHAR(60)`);
   await db.query(`CREATE UNIQUE INDEX IF NOT EXISTS unique_username_per_tenant ON usuarios(empresa_id, username) WHERE username IS NOT NULL`);
+  await db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS token_version INT DEFAULT 1`);
   userColumnsReady = true;
 }
 
