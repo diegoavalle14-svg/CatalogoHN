@@ -3075,7 +3075,7 @@ function AdminClientsSection({ clients, onNew, onOptions }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
                 <span className="admin-client-main" style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                  <strong style={{ whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.2', display: 'block' }}>{client.nombre}</strong>
+                  <strong style={{ fontSize: '11.5px', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.2', display: 'block' }}>{client.nombre}</strong>
                   <small>{client.usuario}</small>
                 </span>
               </div>
