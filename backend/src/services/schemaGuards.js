@@ -5,6 +5,7 @@ let categoryImageColumnReady = false;
 let priceVisibilityColumnReady = false;
 let branchActiveColumnReady = false;
 let pricePromoActiveColumnReady = false;
+let userTokenVersionColumnReady = false;
 
 async function ensureProductInventoryColumns(client = db) {
   if (productInventoryColumnsReady) return;
@@ -40,10 +41,17 @@ async function ensureBranchActiveColumn(client = db) {
   branchActiveColumnReady = true;
 }
 
+async function ensureUserTokenVersionColumn(client = db) {
+  if (userTokenVersionColumnReady) return;
+  await client.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS token_version INT DEFAULT 1`);
+  userTokenVersionColumnReady = true;
+}
+
 module.exports = {
   ensureProductInventoryColumns,
   ensureCategoryImageColumn,
   ensurePriceVisibilityColumn,
   ensurePricePromoActiveColumn,
-  ensureBranchActiveColumn
+  ensureBranchActiveColumn,
+  ensureUserTokenVersionColumn
 };

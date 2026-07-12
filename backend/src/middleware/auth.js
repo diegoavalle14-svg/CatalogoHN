@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
+const { ensureUserTokenVersionColumn } = require('../services/schemaGuards');
 
 function resolveJwtSecret() {
   const secret = process.env.JWT_SECRET || '';
@@ -44,6 +45,8 @@ async function authenticate(req, res, next) {
     ) {
       return res.status(403).json({ message: 'La sesión no pertenece a esta empresa' });
     }
+
+    await ensureUserTokenVersionColumn();
 
     const userRes = await db.query(
       `SELECT u.token_version, c.activo AS cliente_activo
