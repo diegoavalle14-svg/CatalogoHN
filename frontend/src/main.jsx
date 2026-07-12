@@ -4761,7 +4761,7 @@ function prepareClientPayload(client) {
   return {
     id: client.cliente_id || client.id,
     nombre: String(client.nombre || '').trim(),
-    username: String(client.username || client.usuario || client.email || '').trim().toLowerCase(),
+    username: String(client.username || client.usuario || client.email || '').trim(),
     email: client.email && !String(client.email).endsWith('@cliente.local') ? String(client.email).trim().toLowerCase() : undefined,
     password: String(client.password || '').trim() || undefined,
     condicion_credito: String(client.condicion_credito || client.credito || 'Contado').trim(),

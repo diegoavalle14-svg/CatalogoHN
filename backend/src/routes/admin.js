@@ -1042,9 +1042,9 @@ async function getAdminClient(tenantId, clientId) {
 
 function normalizeClientPayload(input, partial = false) {
   const rawUsername = input.username ?? input.usuario ?? input.email;
-  const username = rawUsername === undefined && partial ? null : String(rawUsername || '').trim().toLowerCase();
+  const username = rawUsername === undefined && partial ? null : String(rawUsername || '').trim();
   const rawEmail = input.email === undefined && partial ? null : String(input.email || '').trim().toLowerCase();
-  const email = rawEmail || (partial ? null : (username ? `${username}@cliente.local` : null));
+  const email = rawEmail || (partial ? null : (username ? `${username.toLowerCase()}@cliente.local` : null));
   const output = {
     nombre: input.nombre === undefined && partial ? null : String(input.nombre || '').trim(),
     username,
