@@ -3070,11 +3070,25 @@ function AdminClientsSection({ clients, onNew, onOptions }) {
         )}
         {filteredClients.map((client) => (
           <article className="admin-client-row" key={client.id}>
-            <div className="admin-client-row-header">
-              <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
-              <span className="admin-client-main">
-                <strong>{client.nombre}</strong>
-                <small>{client.usuario}</small>
+            <div className="admin-client-row-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
+                <span className="admin-client-main">
+                  <strong>{client.nombre}</strong>
+                  <small>{client.usuario}</small>
+                </span>
+              </div>
+              <span style={{ 
+                fontSize: '9px', 
+                fontWeight: 'bold', 
+                padding: '2px 6px', 
+                borderRadius: '4px',
+                background: client.activo ? '#eefbf3' : '#fcedf0', 
+                color: client.activo ? '#20935f' : '#ef3d47',
+                border: '1px solid currentColor',
+                whiteSpace: 'nowrap'
+              }}>
+                {client.activo ? 'Activo' : 'Inactivo'}
               </span>
             </div>
             <span className="admin-client-actions">
@@ -4463,7 +4477,19 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                 <span><b>Lista de Precios</b>{editor.value.lista || 'General'}</span>
                 <span><b>Términos de Crédito</b>{editor.value.credito || 'Contado'}</span>
                 <span><b>Aplica ISV</b>{editor.value.aplica_isv ? 'Sí' : 'No'}</span>
-                <span><b>Último Acceso</b>{editor.value.ultimo_acceso ? new Date(editor.value.ultimo_acceso).toLocaleString('es-HN') : 'Nunca'}</span>
+                <span className="full-width">
+                  <b>Último Acceso (Sesión más reciente)</b>
+                  {editor.value.ultimo_acceso ? (
+                    <div style={{ display: 'grid', gap: '6px', marginTop: '6px', fontSize: '12px', background: 'var(--card-bg, rgba(17, 17, 17, 0.03))', padding: '12px', borderRadius: '6px', border: '1px solid var(--line)' }}>
+                      <div><b>Fecha:</b> {new Date(editor.value.ultimo_acceso).toLocaleString('es-HN')}</div>
+                      <div><b>Ubicación:</b> {editor.value.ultimo_geolocalizacion || 'No disponible'}</div>
+                      <div><b>Dirección IP:</b> {editor.value.ultimo_ip || 'No disponible'}</div>
+                      <div><b>Dispositivo / Navegador:</b> {editor.value.ultimo_user_agent || 'No disponible'}</div>
+                    </div>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>Nunca se ha registrado un inicio de sesión</span>
+                  )}
+                </span>
               </div>
               {editor.value.sucursales && editor.value.sucursales.length > 0 ? (
                 <div className="client-detail-branches" style={{ marginTop: '14px' }}>
