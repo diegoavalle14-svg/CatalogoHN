@@ -5730,7 +5730,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               <h2>Opciones de la empresa</h2>
               <button onClick={() => setSelectedTenantOptions(null)}><X size={18} /></button>
             </header>
-            <div style={{ display: 'grid', gap: '10px', padding: '15px 0' }}>
+            <div style={{ display: 'grid', gap: '10px', padding: '20px' }}>
               <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                 <strong style={{ fontSize: '15px', color: 'var(--text-color)' }}>{selectedTenantOptions.nombre}</strong>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{selectedTenantOptions.slug}.catalogohn.com</div>
@@ -5739,49 +5739,49 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               <button
                 type="button"
                 className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px' }}
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
                 onClick={() => {
                   requestTenantStatusChange(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                {selectedTenantOptions.activa ? '⏸️ Desactivar empresa' : '▶️ Activar empresa'}
+                {selectedTenantOptions.activa ? 'Desactivar empresa' : 'Activar empresa'}
               </button>
 
               <button
                 type="button"
                 className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px' }}
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
                 onClick={() => {
                   toggleTenantNotifications(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                {selectedTenantOptions.notificaciones_activas !== false ? '🔕 Desactivar notificaciones' : '🔔 Activar notificaciones'}
+                {selectedTenantOptions.notificaciones_activas !== false ? 'Desactivar notificaciones' : 'Activar notificaciones'}
               </button>
 
               <button
                 type="button"
                 className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px' }}
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
                 onClick={() => {
                   editTenantEmail(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                ✉️ Configurar/Editar correo
+                Editar correo
               </button>
 
               <button
                 type="button"
                 className="primary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '10px' }}
+                style={{ width: '100%', justifyContent: 'center', height: '40px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '10px', fontSize: '13px', whiteSpace: 'nowrap' }}
                 onClick={() => {
                   requestTenantDelete(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                🗑️ Borrar empresa
+                Borrar empresa
               </button>
             </div>
           </section>
