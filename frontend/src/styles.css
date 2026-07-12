@@ -9282,11 +9282,11 @@ button {
   grid-column: 1 / -1 !important;
 }
 
-/* Mobile client list grid layout (2x2) */
+/* Mobile client list grid layout (1x1) */
 @media (max-width: 560px) {
   .admin-client-card {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
     padding: 4px 0 !important;
   }
 
