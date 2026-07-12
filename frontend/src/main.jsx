@@ -437,7 +437,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
     setLoading(true);
     setError('');
     try {
-      onLogin(await api.login({ username, password, tenantSlug: superadminMode ? 'kolben' : selectedTenant }));
+      onLogin(await api.login({ username, password, tenantSlug: superadminMode ? 'kolben' : selectedTenant, superadminMode }));
     } catch (err) {
       setError(err.message);
     } finally {

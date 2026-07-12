@@ -31,17 +31,37 @@ router.post('/login', async (req, res) => {
   }
 
   try {
+    const superadminMode = Boolean(req.body.superadminMode);
     await ensureUserProfileColumns();
     const tenantId = req.tenant?.id || null;
-    const result = await db.query(
-      `SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
-       FROM usuarios u
-       LEFT JOIN clientes c ON c.usuario_id = u.id
-       WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
-         AND (u.empresa_id = $2 OR u.rol = 'superadmin')
-       LIMIT 1`,
-      [lookupValues, tenantId]
-    );
+
+    let queryStr;
+    let queryParams;
+
+    if (superadminMode) {
+      // ONLY allow superadmin login from superadmin form
+      queryStr = `
+        SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
+        FROM usuarios u
+        LEFT JOIN clientes c ON c.usuario_id = u.id
+        WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
+          AND u.rol = 'superadmin'
+        LIMIT 1`;
+      queryParams = [lookupValues];
+    } else {
+      // Normal login: ONLY allow non-superadmin users belonging to the tenant!
+      queryStr = `
+        SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
+        FROM usuarios u
+        LEFT JOIN clientes c ON c.usuario_id = u.id
+        WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
+          AND u.empresa_id = $2
+          AND u.rol != 'superadmin'
+        LIMIT 1`;
+      queryParams = [lookupValues, tenantId];
+    }
+
+    const result = await db.query(queryStr, queryParams);
     const user = result.rows[0];
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ message: 'Credenciales inválidas' });

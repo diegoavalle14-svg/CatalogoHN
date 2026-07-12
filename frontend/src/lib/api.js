@@ -88,7 +88,12 @@ export const api = {
     const loginId = String(credentials.username || credentials.email || '').trim().toLowerCase();
     const email = LOGIN_ALIASES[loginId] || loginId;
     const loginTenantSlug = String(credentials.tenantSlug || '').trim() || currentTenantSlug();
-    const payload = { email, username: loginId, password: credentials.password };
+    const payload = { 
+      email, 
+      username: loginId, 
+      password: credentials.password,
+      superadminMode: Boolean(credentials.superadminMode)
+    };
     const result = await request('/auth/login', { method: 'POST', body: JSON.stringify(payload), headers: { 'x-tenant-slug': loginTenantSlug } });
     activeTenantSlug = result?.tenant?.slug || loginTenantSlug;
     return result;
