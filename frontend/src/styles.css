@@ -9541,4 +9541,54 @@ button {
   }
 }
 
+.admin-option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--mist);
+  border: 1px solid var(--soft-line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-option-item:hover {
+  background: var(--paper);
+  border-color: var(--yellow);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-soft);
+}
+
+.admin-option-item svg {
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.admin-option-item:hover svg {
+  color: var(--yellow);
+}
+
+.admin-option-item.danger {
+  background: rgba(239, 61, 71, 0.05);
+  border-color: rgba(239, 61, 71, 0.15);
+  color: var(--danger);
+}
+
+.admin-option-item.danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #ffffff;
+}
+
+.admin-option-item.danger:hover svg {
+  color: #ffffff;
+}
+
 

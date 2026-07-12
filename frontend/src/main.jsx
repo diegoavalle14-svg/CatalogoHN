@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
-import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Users, X } from 'lucide-react';
+import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Edit2, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Trash2, Users, UserX, UserCheck, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
@@ -2277,72 +2277,73 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
               <h2>Opciones del cliente</h2>
               <button onClick={() => setSelectedClientOptions(null)}><X size={18} /></button>
             </header>
-            <div style={{ display: 'grid', gap: '10px', padding: '20px' }}>
-              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                <strong style={{ fontSize: '15px', color: 'var(--text-color)' }}>{selectedClientOptions.nombre}</strong>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{selectedClientOptions.usuario}</div>
-              </div>
-
-              <button
-                type="button"
-                className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  setEditor({ type: 'client-detail', title: 'Detalle de Cliente', value: selectedClientOptions });
-                  setSelectedClientOptions(null);
-                }}
-              >
-                Ver detalle
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  setEditor({ type: 'client', title: 'Editar cliente', value: selectedClientOptions });
-                  setSelectedClientOptions(null);
-                }}
-              >
-                Editar cliente
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  toggleClient(selectedClientOptions);
-                  setSelectedClientOptions(null);
-                }}
-              >
-                {selectedClientOptions.activo ? 'Desactivar cliente' : 'Activar cliente'}
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  logoutClientSessions(selectedClientOptions);
-                  setSelectedClientOptions(null);
-                }}
-              >
-                Cerrar sesiones
-              </button>
-
-              <button
-                type="button"
-                className="primary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '10px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  deleteClient(selectedClientOptions);
-                  setSelectedClientOptions(null);
-                }}
-              >
-                Eliminar cliente
-              </button>
-            </div>
+             <div style={{ display: 'grid', gap: '8px', padding: '20px' }}>
+               <div style={{ textAlign: 'center', marginBottom: '15px', borderBottom: '1px solid var(--line)', paddingBottom: '15px' }}>
+                 <strong style={{ fontSize: '15px', color: 'var(--text)', display: 'block', marginBottom: '4px' }}>{selectedClientOptions.nombre}</strong>
+                 <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--mist)', padding: '3px 8px', borderRadius: '12px' }}>@{selectedClientOptions.usuario}</span>
+               </div>
+ 
+               <button
+                 type="button"
+                 className="admin-option-item"
+                 onClick={() => {
+                   setEditor({ type: 'client-detail', title: 'Detalle de Cliente', value: selectedClientOptions });
+                   setSelectedClientOptions(null);
+                 }}
+               >
+                 <Eye size={16} />
+                 <span>Ver detalle de cuenta</span>
+               </button>
+ 
+               <button
+                 type="button"
+                 className="admin-option-item"
+                 onClick={() => {
+                   setEditor({ type: 'client', title: 'Editar cliente', value: selectedClientOptions });
+                   setSelectedClientOptions(null);
+                 }}
+               >
+                 <Edit2 size={16} />
+                 <span>Editar información del cliente</span>
+               </button>
+ 
+               <button
+                 type="button"
+                 className="admin-option-item"
+                 onClick={() => {
+                   toggleClient(selectedClientOptions);
+                   setSelectedClientOptions(null);
+                 }}
+               >
+                 {selectedClientOptions.activo ? <UserX size={16} style={{ color: 'var(--danger)' }} /> : <UserCheck size={16} style={{ color: 'var(--yellow)' }} />}
+                 <span>{selectedClientOptions.activo ? 'Desactivar acceso' : 'Activar acceso'}</span>
+               </button>
+ 
+               <button
+                 type="button"
+                 className="admin-option-item"
+                 onClick={() => {
+                   logoutClientSessions(selectedClientOptions);
+                   setSelectedClientOptions(null);
+                 }}
+               >
+                 <LogOut size={16} />
+                 <span>Cerrar todas las sesiones</span>
+               </button>
+ 
+               <button
+                 type="button"
+                 className="admin-option-item danger"
+                 style={{ marginTop: '10px' }}
+                 onClick={() => {
+                   deleteClient(selectedClientOptions);
+                   setSelectedClientOptions(null);
+                 }}
+               >
+                 <Trash2 size={16} />
+                 <span>Eliminar cliente permanentemente</span>
+               </button>
+             </div>
           </section>
         </div>
       )}
