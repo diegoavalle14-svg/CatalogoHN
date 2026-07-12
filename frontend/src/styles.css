@@ -2624,6 +2624,10 @@ button {
   color: #9da5b2;
 }
 
+[data-theme="dark"] .admin-search-inline input {
+  color: #f1f2f4;
+}
+
 [data-theme="dark"] .admin-search-inline input::placeholder,
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder {
