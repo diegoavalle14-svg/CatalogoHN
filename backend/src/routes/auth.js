@@ -17,18 +17,20 @@ async function ensureUserProfileColumns() {
 
 router.post('/login', async (req, res) => {
   const { password } = req.body;
-  const login = String(req.body.username || req.body.email || '').trim().toLowerCase();
+  const rawLogin = String(req.body.username || req.body.email || '').trim();
+
+  if (!rawLogin || !password) {
+    return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
+  }
+
+  // Handle aliases in a case-insensitive way
   const aliases = {
     cliente1: 'cliente1@autorepuestos.com',
     admin: 'admin@kolben.com',
     superadmin: 'superadmin@catalogohn.com'
   };
-  const loginValue = aliases[login] || login;
-  const lookupValues = [...new Set([login, loginValue].filter(Boolean))];
-
-  if (!login || !password) {
-    return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
-  }
+  const resolvedLogin = aliases[rawLogin.toLowerCase()] || rawLogin;
+  const isEmail = resolvedLogin.includes('@');
 
   try {
     const superadminMode = Boolean(req.body.superadminMode);
@@ -39,26 +41,47 @@ router.post('/login', async (req, res) => {
     let queryParams;
 
     if (superadminMode) {
-      // ONLY allow superadmin login from superadmin form
-      queryStr = `
-        SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
-        FROM usuarios u
-        LEFT JOIN clientes c ON c.usuario_id = u.id
-        WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
-          AND u.rol = 'superadmin'
-        LIMIT 1`;
-      queryParams = [lookupValues];
+      if (isEmail) {
+        queryStr = `
+          SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
+          FROM usuarios u
+          LEFT JOIN clientes c ON c.usuario_id = u.id
+          WHERE lower(u.email) = $1
+            AND u.rol = 'superadmin'
+          LIMIT 1`;
+        queryParams = [resolvedLogin.toLowerCase()];
+      } else {
+        queryStr = `
+          SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
+          FROM usuarios u
+          LEFT JOIN clientes c ON c.usuario_id = u.id
+          WHERE u.username = $1
+            AND u.rol = 'superadmin'
+          LIMIT 1`;
+        queryParams = [resolvedLogin];
+      }
     } else {
-      // Normal login: ONLY allow non-superadmin users belonging to the tenant!
-      queryStr = `
-        SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
-        FROM usuarios u
-        LEFT JOIN clientes c ON c.usuario_id = u.id
-        WHERE (lower(u.email) = ANY($1::text[]) OR lower(COALESCE(u.username, '')) = ANY($1::text[]))
-          AND u.empresa_id = $2
-          AND u.rol != 'superadmin'
-        LIMIT 1`;
-      queryParams = [lookupValues, tenantId];
+      if (isEmail) {
+        queryStr = `
+          SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
+          FROM usuarios u
+          LEFT JOIN clientes c ON c.usuario_id = u.id
+          WHERE lower(u.email) = $1
+            AND u.empresa_id = $2
+            AND u.rol != 'superadmin'
+          LIMIT 1`;
+        queryParams = [resolvedLogin.toLowerCase(), tenantId];
+      } else {
+        queryStr = `
+          SELECT u.*, c.id AS cliente_id, c.condicion_credito, c.activo AS cliente_activo, c.aplica_isv
+          FROM usuarios u
+          LEFT JOIN clientes c ON c.usuario_id = u.id
+          WHERE u.username = $1
+            AND u.empresa_id = $2
+            AND u.rol != 'superadmin'
+          LIMIT 1`;
+        queryParams = [resolvedLogin, tenantId];
+      }
     }
 
     const result = await db.query(queryStr, queryParams);

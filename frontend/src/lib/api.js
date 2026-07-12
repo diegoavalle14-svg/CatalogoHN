@@ -85,12 +85,13 @@ export const api = {
     activeTenantSlug = String(slug || '').trim() || storedTenantSlug() || DEFAULT_TENANT_SLUG;
   },
   login: async (credentials) => {
-    const loginId = String(credentials.username || credentials.email || '').trim().toLowerCase();
-    const email = LOGIN_ALIASES[loginId] || loginId;
+    const rawLogin = String(credentials.username || credentials.email || '').trim();
+    const loginId = rawLogin.toLowerCase();
+    const email = LOGIN_ALIASES[loginId] || rawLogin;
     const loginTenantSlug = String(credentials.tenantSlug || '').trim() || currentTenantSlug();
     const payload = { 
       email, 
-      username: loginId, 
+      username: rawLogin, 
       password: credentials.password,
       superadminMode: Boolean(credentials.superadminMode)
     };
