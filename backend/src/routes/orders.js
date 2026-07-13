@@ -297,10 +297,17 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
             items: ctx.items
           });
 
+          const { generateOrderPDF } = require('../services/pdfGenerator');
+          const pdfBuffer = await generateOrderPDF(ctx.order, ctx.items);
+          const pdfAttachment = [{
+            filename: `pedido-${ctx.order.numero || 'nuevo'}.pdf`,
+            content: pdfBuffer
+          }];
+
           for (const recipient of to) {
             try {
-              await sendMail({ to: recipient, subject: email.subject, html: email.html });
-              console.log('[mailer] Sent new order email to:', recipient);
+              await sendMail({ to: recipient, subject: email.subject, html: email.html, attachments: pdfAttachment });
+              console.log('[mailer] Sent new order email with PDF to:', recipient);
             } catch (err) {
               console.warn('[mailer] Failed to send new order email to:', recipient, err.message || err);
             }
@@ -415,10 +422,17 @@ router.put('/orders/:id', authenticate, requireRole('cliente', 'admin', 'superad
             items: ctx.items
           });
 
+          const { generateOrderPDF } = require('../services/pdfGenerator');
+          const pdfBuffer = await generateOrderPDF(ctx.order, ctx.items);
+          const pdfAttachment = [{
+            filename: `pedido-${ctx.order.numero || 'editado'}.pdf`,
+            content: pdfBuffer
+          }];
+
           for (const recipient of to) {
             try {
-              await sendMail({ to: recipient, subject: email.subject, html: email.html });
-              console.log('[mailer] Sent edit order email to:', recipient);
+              await sendMail({ to: recipient, subject: email.subject, html: email.html, attachments: pdfAttachment });
+              console.log('[mailer] Sent edit order email with PDF to:', recipient);
             } catch (err) {
               console.warn('[mailer] Failed to send edit order email to:', recipient, err.message || err);
             }
@@ -513,7 +527,15 @@ router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmi
             clientName: ctx.order.cliente_nombre,
             items: ctx.items
           });
-          await sendMail({ to: ctx.order.cliente_email, subject: email.subject, html: email.html });
+
+          const { generateOrderPDF } = require('../services/pdfGenerator');
+          const pdfBuffer = await generateOrderPDF(ctx.order, ctx.items);
+          const pdfAttachment = [{
+            filename: `pedido-${ctx.order.numero || 'estado'}.pdf`,
+            content: pdfBuffer
+          }];
+
+          await sendMail({ to: ctx.order.cliente_email, subject: email.subject, html: email.html, attachments: pdfAttachment });
         } catch (err) {
           console.warn('[orders] client email failed:', err.message || err);
         }

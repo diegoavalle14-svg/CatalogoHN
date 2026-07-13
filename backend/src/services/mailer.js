@@ -20,7 +20,7 @@ function createTransporter(config) {
   });
 }
 
-async function sendMail({ to, subject, html, text }) {
+async function sendMail({ to, subject, html, text, attachments }) {
   const config = getMailerConfig();
   const recipients = Array.isArray(to) ? to.filter(Boolean) : [to].filter(Boolean);
 
@@ -40,7 +40,8 @@ async function sendMail({ to, subject, html, text }) {
     to: recipients.join(','),
     subject,
     html: html || undefined,
-    text: text || undefined
+    text: text || undefined,
+    attachments: attachments || undefined
   });
 
   return { ok: true, messageId: info.messageId };
