@@ -594,7 +594,8 @@ router.delete('/orders/:id', authenticate, requireRole('cliente', 'admin', 'supe
           const to = Array.from(new Set([
             ...admins.rows.map((row) => row.email).filter(Boolean),
             (emailCtx.order.notificaciones_activas !== false && emailCtx.order.email_notificaciones) ? emailCtx.order.email_notificaciones : null
-          ].filter(Boolean)));
+          ].filter(Boolean)))
+          .filter((email) => !email.endsWith('.local'));
           
           console.log('[DEBUG] [orders] Deleted Order - to:', to, 'notif_active:', emailCtx.order.notificaciones_activas, 'email_notif:', emailCtx.order.email_notificaciones);
           
