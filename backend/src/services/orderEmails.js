@@ -90,7 +90,9 @@ function buildAdminNewOrderEmail({ tenantName, order, clientName, items }) {
         <div style="font-weight:900;font-size:18px;">${formatMoneyHNL(order.total)}</div>
       </div>
     </div>
-    <div style="margin-top:14px;">${itemsTable(items)}</div>
+    <div style="margin-top:20px;padding:12px;background:#f9f9fb;border-radius:6px;font-size:13px;color:#555;border:1px dashed #dddeea;text-align:center;">
+      El detalle completo de los productos y cantidades se encuentra adjunto en el archivo PDF de este correo.
+    </div>
   `;
 
   return { subject: title, html: baseEmail({ title, subtitle, contentHtml }) };
@@ -104,11 +106,12 @@ function buildClientStatusEmail({ tenantName, order, clientName, items }) {
   const contentHtml = `
     <div style="font-weight:900;font-size:18px;">${escapeHtml(clientName || 'Cliente')}</div>
     <div style="margin-top:6px;opacity:.9;">El estado de tu pedido <b>${escapeHtml(order.numero || '')}</b> cambio a <b>${escapeHtml(pretty || '')}</b>.</div>
-    <div style="margin-top:14px;opacity:.8;font-size:12px;">Resumen</div>
-    <div style="margin-top:8px;">${itemsTable(items)}</div>
     <div style="margin-top:12px;text-align:right;">
       <div style="opacity:.8;font-size:12px;">Total</div>
       <div style="font-weight:900;font-size:18px;">${formatMoneyHNL(order.total)}</div>
+    </div>
+    <div style="margin-top:20px;padding:12px;background:#f9f9fb;border-radius:6px;font-size:13px;color:#555;border:1px dashed #dddeea;text-align:center;">
+      El detalle de los productos y cantidades se encuentra adjunto en el archivo PDF de este correo.
     </div>
   `;
 
@@ -131,7 +134,9 @@ function buildAdminEditedOrderEmail({ tenantName, order, clientName, items }) {
         <div style="font-weight:900;font-size:18px;">${formatMoneyHNL(order.total)}</div>
       </div>
     </div>
-    <div style="margin-top:14px;">${itemsTable(items)}</div>
+    <div style="margin-top:20px;padding:12px;background:#f9f9fb;border-radius:6px;font-size:13px;color:#555;border:1px dashed #dddeea;text-align:center;">
+      El detalle completo de los productos actualizados se encuentra adjunto en el archivo PDF de este correo.
+    </div>
   `;
 
   return { subject: title, html: baseEmail({ title, subtitle, contentHtml }) };
@@ -153,7 +158,6 @@ function buildAdminDeletedOrderEmail({ tenantName, order, clientName, items }) {
         <div style="font-weight:900;font-size:18px;">${formatMoneyHNL(order.total)}</div>
       </div>
     </div>
-    <div style="margin-top:14px;">${itemsTable(items)}</div>
   `;
 
   return { subject: title, html: baseEmail({ title, subtitle, contentHtml }) };

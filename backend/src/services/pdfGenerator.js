@@ -70,7 +70,7 @@ function generateOrderPDF(order, items) {
          .font('Helvetica-Bold')
          .text(formatMoneyHNL(order.total), 100, summaryY + 50);
 
-      doc.y = summaryY + 80;
+      doc.y = summaryY + 85;
 
       // Table section
       const startX = 40;
@@ -78,62 +78,136 @@ function generateOrderPDF(order, items) {
       
       const cols = {
         sku: { x: 40, width: 90, label: 'CÓDIGO', align: 'left' },
-        desc: { x: 130, width: 220, label: 'DESCRIPCIÓN', align: 'left' },
-        suc: { x: 350, width: 70, label: 'SUCURSAL', align: 'center' },
-        qty: { x: 420, width: 60, label: 'CANTIDAD', align: 'center' },
-        price: { x: 480, width: 75, label: 'PRECIO', align: 'right' }
+        desc: { x: 130, width: 230, label: 'DESCRIPCIÓN', align: 'left' },
+        suc: { x: 360, width: 40, label: 'SUC.', align: 'center' },
+        qty: { x: 400, width: 60, label: 'CANT.', align: 'center' },
+        price: { x: 460, width: 95, label: 'PRECIO', align: 'right' }
       };
 
-      // Draw table headers
+      // Draw table headers text
       doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#666666');
       for (const key in cols) {
         const col = cols[key];
-        doc.text(col.label, col.x, startY, { width: col.width, align: col.align });
+        // Vertical offset for header label
+        doc.text(col.label, col.x, startY + 6, { width: col.width, align: col.align });
       }
 
-      // Border bottom for headers
-      doc.moveTo(40, startY + 14)
-         .lineTo(555, startY + 14)
-         .strokeColor('#cccccc')
-         .lineWidth(1.5)
-         .stroke();
+      let currentY = startY + 20;
 
-      let currentY = startY + 22;
-
-      // Draw table rows
-      doc.fontSize(9).fillColor('#111111');
-      for (const item of items) {
-        // Page breaking logic: A4 page height is 842. Margin bottom is 40. Keep Y below 780.
-        if (currentY > 760) {
+      // Draw table rows text
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        
+        // Page breaking logic: A4 page height is 842. Margin bottom is 40. Keep Y below 740.
+        if (currentY > 740) {
           doc.addPage();
           currentY = 50;
         }
 
-        // Draw item data
+        // Draw SKU
         doc.font('Helvetica-Bold')
-           .text(item.sku || '', cols.sku.x, currentY, { width: cols.sku.width, align: cols.sku.align });
+           .fontSize(9)
+           .fillColor('#111111')
+           .text(item.sku || '', cols.sku.x + 6, currentY + 9, { width: cols.sku.width - 12, align: cols.sku.align });
         
+        // Draw Description
         doc.font('Helvetica')
-           .text(item.descripcion || '', cols.desc.x, currentY, { width: cols.desc.width, align: cols.desc.align });
+           .fontSize(8.5)
+           .fillColor('#333333')
+           .text(item.descripcion || '', cols.desc.x + 6, currentY + 9, { width: cols.desc.width - 12, align: cols.desc.align });
         
-        doc.text(item.sucursal || '', cols.suc.x, currentY, { width: cols.suc.width, align: cols.suc.align });
+        // Draw Sucursal
+        doc.fillColor('#111111')
+           .text(item.sucursal || '', cols.suc.x, currentY + 9, { width: cols.suc.width, align: cols.suc.align });
         
+        // Draw Quantity Box
+        const boxWidth = 28;
+        const boxHeight = 18;
+        const boxX = cols.qty.x + (cols.qty.width - boxWidth) / 2;
+        const boxY = currentY + (28 - boxHeight) / 2;
+        
+        // Save state, draw yellow border rect, restore state
+        doc.save()
+           .strokeColor('#F5C200')
+           .lineWidth(1.2)
+           .roundedRect(boxX, boxY, boxWidth, boxHeight, 3)
+           .stroke()
+           .restore();
+           
         doc.font('Helvetica-Bold')
-           .text(String(item.cantidad || 0), cols.qty.x, currentY, { width: cols.qty.width, align: cols.qty.align });
+           .fontSize(9)
+           .text(String(item.cantidad || 0), boxX, boxY + 4, { width: boxWidth, align: 'center' });
         
+        // Draw Price
         const priceStr = formatMoneyHNL(item.precio_unitario);
         doc.font('Helvetica')
-           .text(priceStr, cols.price.x, currentY, { width: cols.price.width, align: cols.price.align });
+           .text(priceStr, cols.price.x, currentY + 9, { width: cols.price.width - 6, align: cols.price.align });
 
-        // Border bottom for rows
-        doc.moveTo(40, currentY + 14)
-           .lineTo(555, currentY + 14)
-           .strokeColor('#eeeeee')
-           .lineWidth(0.5)
-           .stroke();
-
-        currentY += 22;
+        currentY += 28;
       }
+
+      // Calculations for footer
+      const total = Number(order.total || 0);
+      const subtotal = total / 1.15;
+      const isv = total - subtotal;
+      const totalQty = items.reduce((sum, item) => sum + Number(item.cantidad || 0), 0);
+
+      // Subtotal Row
+      doc.font('Helvetica-Bold')
+         .fontSize(9)
+         .fillColor('#333333')
+         .text('Subtotal:', 40, currentY + 6, { width: 410, align: 'right' });
+      doc.font('Helvetica')
+         .text(formatMoneyHNL(subtotal), cols.price.x, currentY + 6, { width: cols.price.width - 6, align: 'right' });
+      
+      currentY += 22;
+
+      // ISV Row
+      doc.font('Helvetica-Bold')
+         .text('ISV (15%):', 40, currentY + 6, { width: 410, align: 'right' });
+      doc.font('Helvetica')
+         .text(formatMoneyHNL(isv), cols.price.x, currentY + 6, { width: cols.price.width - 6, align: 'right' });
+      
+      currentY += 22;
+
+      // Total Row
+      doc.font('Helvetica-Bold')
+         .fillColor('#111111')
+         .text('Total:', 40, currentY + 6, { width: 350, align: 'right' });
+      doc.text(`${totalQty} uds.`, cols.qty.x, currentY + 6, { width: cols.qty.width, align: 'center' });
+      doc.text(formatMoneyHNL(total), cols.price.x, currentY + 6, { width: cols.price.width - 6, align: 'right' });
+
+      const tableBottomY = startY + 20 + items.length * 28;
+      const footerBottomY = tableBottomY + 66;
+
+      // Draw Grid Lines (borders and dividers)
+      doc.save()
+         .strokeColor('#cccccc')
+         .lineWidth(0.8);
+
+      // Horizontal grid lines
+      doc.moveTo(40, startY).lineTo(555, startY).stroke();
+      doc.moveTo(40, startY + 20).lineTo(555, startY + 20).stroke();
+      for (let i = 0; i < items.length; i++) {
+        const rowBottomY = startY + 20 + (i + 1) * 28;
+        doc.moveTo(40, rowBottomY).lineTo(555, rowBottomY).stroke();
+      }
+      doc.moveTo(40, tableBottomY + 22).lineTo(555, tableBottomY + 22).stroke();
+      doc.moveTo(40, tableBottomY + 44).lineTo(555, tableBottomY + 44).stroke();
+      doc.moveTo(40, footerBottomY).lineTo(555, footerBottomY).stroke();
+
+      // Vertical grid lines
+      // Outer borders
+      doc.moveTo(40, startY).lineTo(40, footerBottomY).stroke();
+      doc.moveTo(555, startY).lineTo(555, footerBottomY).stroke();
+      
+      // Internal dividers
+      doc.moveTo(130, startY).lineTo(130, tableBottomY).stroke();
+      doc.moveTo(360, startY).lineTo(360, tableBottomY + 44).stroke();
+      doc.moveTo(400, startY).lineTo(400, footerBottomY).stroke();
+      doc.moveTo(460, startY).lineTo(460, footerBottomY).stroke();
+
+      doc.restore();
 
       // Finish document
       doc.end();
