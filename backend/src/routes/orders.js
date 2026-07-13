@@ -283,10 +283,11 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
              ORDER BY id`,
             [req.tenant.id]
           );
-          const to = Array.from(new Set([
-            ...admins.rows.map((row) => row.email).filter(Boolean),
-            (ctx.order.notificaciones_activas !== false && ctx.order.email_notificaciones) ? ctx.order.email_notificaciones : null
-          ].filter(Boolean)));
+           const to = Array.from(new Set([
+             ...admins.rows.map((row) => row.email).filter(Boolean),
+             (ctx.order.notificaciones_activas !== false && ctx.order.email_notificaciones) ? ctx.order.email_notificaciones : null
+           ].filter(Boolean)))
+           .filter((email) => !email.endsWith('.local'));
 
           console.log('[DEBUG] [orders] New Order - to:', to, 'notif_active:', ctx.order.notificaciones_activas, 'email_notif:', ctx.order.email_notificaciones);
 
@@ -411,7 +412,8 @@ router.put('/orders/:id', authenticate, requireRole('cliente', 'admin', 'superad
           const to = Array.from(new Set([
             ...admins.rows.map((row) => row.email).filter(Boolean),
             (ctx.order.notificaciones_activas !== false && ctx.order.email_notificaciones) ? ctx.order.email_notificaciones : null
-          ].filter(Boolean)));
+          ].filter(Boolean)))
+          .filter((email) => !email.endsWith('.local'));
           
           console.log('[DEBUG] [orders] Edited Order - to:', to, 'notif_active:', ctx.order.notificaciones_activas, 'email_notif:', ctx.order.email_notificaciones);
           
@@ -521,6 +523,7 @@ router.patch('/orders/:id/status', authenticate, requireRole('admin', 'superadmi
           const ctx = await queryOrderEmailContext(req.tenant.id, pedido.id);
           if (!ctx) return;
           if (!ctx.order.cliente_email) return;
+          if (ctx.order.cliente_email.endsWith('.local')) return;
           const email = buildClientStatusEmail({
             tenantName: ctx.order.tenant_nombre,
             order: ctx.order,
