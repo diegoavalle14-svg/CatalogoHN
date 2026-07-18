@@ -85,4 +85,17 @@ app.use((error, req, res, next) => {
 app.listen(port, () => {
   console.log(`CatalogoHN API escuchando en http://localhost:${port}`);
   db.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS aplica_isv BOOLEAN DEFAULT TRUE;').catch(() => {});
+  db.query(`
+    CREATE TABLE IF NOT EXISTS carrito_items (
+      id SERIAL PRIMARY KEY,
+      cliente_id INT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+      producto_id INT NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
+      sucursal_id INT NOT NULL REFERENCES sucursales(id) ON DELETE CASCADE,
+      cantidad INT NOT NULL CHECK (cantidad > 0),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_carrito_item UNIQUE (cliente_id, producto_id, sucursal_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_carrito_items_cliente ON carrito_items(cliente_id);
+  `).catch(() => {});
 });

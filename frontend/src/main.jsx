@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
 import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Edit2, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Trash2, Users, UserX, UserCheck, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
-import { bootstrapSessionFromUrl, clearCart, clearSession, clearTemporarySession, clearUiState, loadCart, loadSession, loadUiState, saveCart, saveSession, updateUiState } from './lib/storage';
+import { bootstrapSessionFromUrl, clearSession, clearTemporarySession, clearUiState, loadSession, loadUiState, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
 
 const money = (value) => `L.\u00A0${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2 })}`;
@@ -595,7 +595,8 @@ function Catalog({ session, onSessionUpdated }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [brand, setBrand] = useState('all');
-  const [cart, setCart] = useState(() => loadCart(session?.user?.id));
+  const [cart, setCart] = useState({});
+  const cartLoadedRef = useRef(false);
   const userIdRef = useRef(session?.user?.id);
   const [cartOpen, setCartOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -630,18 +631,32 @@ function Catalog({ session, onSessionUpdated }) {
     };
   }, [session.token, session?.tenant?.slug]);
 
-  // Guardar carrito solo cuando cambia el contenido del carrito
-  useEffect(() => {
-    if (userIdRef.current != null) {
-      saveCart(userIdRef.current, cart);
-    }
-  }, [cart]);
-
-  // Recargar carrito cuando cambia el usuario de sesión
+  // Cargar carrito del servidor al montar o cambiar de usuario
   useEffect(() => {
     userIdRef.current = session?.user?.id;
-    setCart(loadCart(session?.user?.id));
-  }, [session?.user?.id]);
+    cartLoadedRef.current = false;
+    if (!session?.token) return;
+    let cancelled = false;
+    api.cartLoad(session.token)
+      .then((serverCart) => {
+        if (cancelled) return;
+        setCart(serverCart || {});
+        cartLoadedRef.current = true;
+      })
+      .catch(() => {
+        if (!cancelled) cartLoadedRef.current = true;
+      });
+    return () => { cancelled = true; };
+  }, [session?.user?.id, session?.token]);
+
+  // Guardar carrito en el servidor con debounce
+  useEffect(() => {
+    if (!cartLoadedRef.current || !session?.token) return;
+    const timer = window.setTimeout(() => {
+      api.cartSave(session.token, cart).catch(() => {});
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [cart, session?.token]);
 
   const products = useMemo(() => {
     if (!data) return [];
@@ -732,7 +747,7 @@ function Catalog({ session, onSessionUpdated }) {
       const validLines = lines.filter((line) => Number(line.cantidad) > 0);
       if (!validLines.length) throw new Error('El pedido no tiene productos con cantidades válidas.');
       const payload = await api.createOrder(session.token, validLines);
-      clearCart(session?.user?.id);
+      api.cartClear(session.token).catch(() => {});
       setCart({});
       setConfirming(false);
       setCartOpen(false);

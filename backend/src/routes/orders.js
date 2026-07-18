@@ -623,5 +623,72 @@ router.delete('/orders/:id', authenticate, requireRole('cliente', 'admin', 'supe
     res.status(500).json({ message: 'No se pudo eliminar el pedido' });
   }
 });
+// ─── Carrito sincronizado entre dispositivos ───
+
+router.get('/cart', authenticate, requireRole('cliente'), async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT producto_id, sucursal_id, cantidad
+       FROM carrito_items
+       WHERE cliente_id = $1`,
+      [req.user.cliente_id]
+    );
+
+    // Reconstruir formato { [producto_id]: { [sucursal_id]: cantidad } }
+    const cart = {};
+    for (const row of result.rows) {
+      const pid = String(row.producto_id);
+      if (!cart[pid]) cart[pid] = {};
+      cart[pid][String(row.sucursal_id)] = row.cantidad;
+    }
+
+    res.json(cart);
+  } catch (error) {
+    console.error('Error al cargar carrito:', error);
+    res.status(500).json({ message: 'No se pudo cargar el carrito' });
+  }
+});
+
+router.put('/cart', authenticate, requireRole('cliente'), async (req, res) => {
+  const cart = req.body || {};
+  const clienteId = req.user.cliente_id;
+  const client = await db.connect();
+
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM carrito_items WHERE cliente_id = $1', [clienteId]);
+
+    for (const [productoId, branches] of Object.entries(cart)) {
+      for (const [sucursalId, cantidad] of Object.entries(branches)) {
+        const qty = Number(cantidad);
+        if (!qty || qty <= 0) continue;
+        await client.query(
+          `INSERT INTO carrito_items (cliente_id, producto_id, sucursal_id, cantidad)
+           VALUES ($1, $2, $3, $4)`,
+          [clienteId, Number(productoId), Number(sucursalId), qty]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Error al guardar carrito:', error);
+    res.status(500).json({ message: 'No se pudo guardar el carrito' });
+  } finally {
+    client.release();
+  }
+});
+
+router.delete('/cart', authenticate, requireRole('cliente'), async (req, res) => {
+  try {
+    await db.query('DELETE FROM carrito_items WHERE cliente_id = $1', [req.user.cliente_id]);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Error al vaciar carrito:', error);
+    res.status(500).json({ message: 'No se pudo vaciar el carrito' });
+  }
+});
 
 module.exports = router;

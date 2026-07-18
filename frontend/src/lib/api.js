@@ -251,5 +251,14 @@ export const api = {
   },
   superadminDeleteAdmin: async (token, adminId) => {
     return request(`/superadmin/admins/${adminId}`, { method: 'DELETE', token });
+  },
+  cartLoad: async (token) => {
+    return request('/cart', { token });
+  },
+  cartSave: async (token, cart) => {
+    return request('/cart', { method: 'PUT', token, body: JSON.stringify(cart) });
+  },
+  cartClear: async (token) => {
+    return request('/cart', { method: 'DELETE', token });
   }
 };

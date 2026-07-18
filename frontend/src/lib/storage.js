@@ -82,30 +82,3 @@ export function clearUiState() {
   localStorage.removeItem(UI_STATE_KEY);
 }
 
-export function getCartKey(clientId) {
-  return `catalogohn.kolben.cart.${clientId}`;
-}
-
-export function loadCart(clientId) {
-  if (!clientId) return {};
-  try {
-    // Limpiar carrito genérico viejo si existe (migración)
-    const legacyKey = 'catalogohn.kolben.cart';
-    if (localStorage.getItem(legacyKey)) {
-      localStorage.removeItem(legacyKey);
-    }
-    return JSON.parse(localStorage.getItem(getCartKey(clientId))) || {};
-  } catch {
-    return {};
-  }
-}
-
-export function saveCart(clientId, cart) {
-  if (!clientId) return;
-  localStorage.setItem(getCartKey(clientId), JSON.stringify(cart));
-}
-
-export function clearCart(clientId) {
-  if (!clientId) return;
-  localStorage.removeItem(getCartKey(clientId));
-}

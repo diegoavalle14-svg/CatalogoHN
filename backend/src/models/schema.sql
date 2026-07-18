@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy resetting/seeding)
+DROP TABLE IF EXISTS carrito_items CASCADE;
 DROP TABLE IF EXISTS accesos_log CASCADE;
 DROP TABLE IF EXISTS webhook_deliveries CASCADE;
 DROP TABLE IF EXISTS webhook_endpoints CASCADE;
@@ -288,3 +289,17 @@ CREATE INDEX idx_api_request_logs_tenant_date ON api_request_logs(empresa_id, cr
 CREATE INDEX idx_api_request_logs_key_date ON api_request_logs(api_key_id, created_at DESC);
 CREATE INDEX idx_webhook_endpoints_tenant ON webhook_endpoints(empresa_id);
 CREATE INDEX idx_webhook_deliveries_tenant_date ON webhook_deliveries(empresa_id, created_at DESC);
+
+-- 20. Carrito sincronizado entre dispositivos
+CREATE TABLE carrito_items (
+    id SERIAL PRIMARY KEY,
+    cliente_id INT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+    producto_id INT NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
+    sucursal_id INT NOT NULL REFERENCES sucursales(id) ON DELETE CASCADE,
+    cantidad INT NOT NULL CHECK (cantidad > 0),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_carrito_item UNIQUE (cliente_id, producto_id, sucursal_id)
+);
+
+CREATE INDEX idx_carrito_items_cliente ON carrito_items(cliente_id);
