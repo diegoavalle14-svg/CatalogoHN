@@ -597,6 +597,7 @@ function Catalog({ session, onSessionUpdated }) {
   const [brand, setBrand] = useState('all');
   const [cart, setCart] = useState({});
   const cartLoadedRef = useRef(false);
+  const cartDirtyRef = useRef(false);
   const userIdRef = useRef(session?.user?.id);
   const [cartOpen, setCartOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -635,6 +636,7 @@ function Catalog({ session, onSessionUpdated }) {
   useEffect(() => {
     userIdRef.current = session?.user?.id;
     cartLoadedRef.current = false;
+    cartDirtyRef.current = false;
     if (!session?.token) return;
     let cancelled = false;
     api.cartLoad(session.token)
@@ -649,11 +651,30 @@ function Catalog({ session, onSessionUpdated }) {
     return () => { cancelled = true; };
   }, [session?.user?.id, session?.token]);
 
+  // Auto-sync: recargar carrito del servidor cada 10s (solo si no hay cambios locales pendientes)
+  useEffect(() => {
+    if (!session?.token) return;
+    const interval = window.setInterval(() => {
+      if (!cartLoadedRef.current || cartDirtyRef.current) return;
+      api.cartLoad(session.token)
+        .then((serverCart) => {
+          if (!cartDirtyRef.current) {
+            setCart(serverCart || {});
+          }
+        })
+        .catch(() => {});
+    }, 10000);
+    return () => window.clearInterval(interval);
+  }, [session?.token]);
+
   // Guardar carrito en el servidor con debounce
   useEffect(() => {
     if (!cartLoadedRef.current || !session?.token) return;
+    cartDirtyRef.current = true;
     const timer = window.setTimeout(() => {
-      api.cartSave(session.token, cart).catch(() => {});
+      api.cartSave(session.token, cart)
+        .then(() => { cartDirtyRef.current = false; })
+        .catch(() => { cartDirtyRef.current = false; });
     }, 1000);
     return () => window.clearTimeout(timer);
   }, [cart, session?.token]);
