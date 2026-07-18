@@ -652,7 +652,7 @@ router.get('/cart', authenticate, requireRole('cliente'), async (req, res) => {
 router.put('/cart', authenticate, requireRole('cliente'), async (req, res) => {
   const cart = req.body || {};
   const clienteId = req.user.cliente_id;
-  const client = await db.connect();
+  const client = await db.pool.connect();
 
   try {
     await client.query('BEGIN');
