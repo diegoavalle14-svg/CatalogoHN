@@ -16,7 +16,7 @@ async function nextOrderNumber(dbClient, empresaId) {
   );
   let maxNum = 0;
   for (const row of result.rows) {
-    const match = row.numero?.match(/^PED-(\d+)$/);
+    const match = row.numero?.match(/^PED-(\d{1,5})$/);
     if (match) {
       const n = parseInt(match[1], 10);
       if (n > maxNum) maxNum = n;
