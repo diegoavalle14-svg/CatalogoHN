@@ -4890,6 +4890,9 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
   const [editAdminNombre, setEditAdminNombre] = useState('');
   const [editAdminUsername, setEditAdminUsername] = useState('');
   const [editAdminPassword, setEditAdminPassword] = useState('');
+  const [editingTenant, setEditingTenant] = useState(null);
+  const [editTenantNombre, setEditTenantNombre] = useState('');
+  const [editTenantSubnombre, setEditTenantSubnombre] = useState('');
   const [tempPassword, setTempPassword] = useState('');
   const [tempPasswordsByAdmin, setTempPasswordsByAdmin] = useState({});
   const [toast, setToast] = useState('');
@@ -5299,28 +5302,42 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
     }
   }
 
-  async function editTenantName(tenant) {
-    const newName = window.prompt(`Editar nombre de "${tenant.nombre}":`, tenant.nombre || '');
-    if (newName === null) return;
-    const trimmed = newName.trim();
+  function editTenantName(tenant) {
+    setError('');
+    setEditingTenant(tenant);
+    setEditTenantNombre(tenant.nombre || '');
+    setEditTenantSubnombre(tenant.subnombre || '');
+  }
+
+  async function saveTenantNameChanges(event) {
+    event.preventDefault();
+    if (!editingTenant?.id) return;
+    const trimmed = editTenantNombre.trim();
     if (!trimmed) {
       setError('El nombre no puede estar vacío');
       return;
     }
-    const newSubnombre = window.prompt(`Editar subnombre de "${trimmed}":`, tenant.subnombre || '');
-    if (newSubnombre === null) return;
-
     setError('');
+    setSaving(true);
     try {
-      const updated = await api.superadminUpdateTenant(token, tenant.id, {
+      const updated = await api.superadminUpdateTenant(token, editingTenant.id, {
         nombre: trimmed,
-        subnombre: newSubnombre.trim()
+        subnombre: editTenantSubnombre.trim()
       });
-      setTenants((current) => (current || []).map((item) => (item.id === tenant.id ? { ...item, ...updated.tenant } : item)));
+      setTenants((current) => (current || []).map((item) => (item.id === editingTenant.id ? { ...item, ...updated.tenant } : item)));
       showToast(`Empresa actualizada: ${updated.tenant?.nombre || trimmed}`);
+      setEditingTenant(null);
     } catch (err) {
       setError(err.message || 'No se pudo actualizar la empresa');
+    } finally {
+      setSaving(false);
     }
+  }
+
+  function cancelEditTenant() {
+    setEditingTenant(null);
+    setEditTenantNombre('');
+    setEditTenantSubnombre('');
   }
 
   function handleSubnombreChange(value) {
@@ -5871,6 +5888,41 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 <button type="submit" disabled={!editAdminNombre || !editAdminUsername}>Guardar cambios</button>
                 <button type="button" onClick={() => generateAdminPassword(editingAdmin)}>Generar contraseña</button>
                 <button type="button" onClick={cancelEditAdmin}>Cancelar</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {editingTenant && (
+        <div className="superadmin-admins-backdrop superadmin-admin-editor-backdrop" onClick={cancelEditTenant}>
+          <section className="superadmin-admins-modal superadmin-admin-editor-modal" style={{ maxWidth: '400px' }} onClick={(event) => event.stopPropagation()}>
+            <header className="superadmin-admins-head">
+              <div>
+                <strong>Editar empresa</strong>
+                <small>{editingTenant.slug}.catalogohn.com</small>
+              </div>
+              <button className="icon-button" type="button" onClick={cancelEditTenant} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </header>
+            <form className="superadmin-admin-edit" onSubmit={saveTenantNameChanges}>
+              <label>
+                Nombre comercial
+                <input value={editTenantNombre} onChange={(e) => setEditTenantNombre(e.target.value)} required />
+              </label>
+              <label>
+                Subnombre
+                <input value={editTenantSubnombre} onChange={(e) => setEditTenantSubnombre(e.target.value)} placeholder="Subnombre o rubro" />
+              </label>
+              {error && <small className="form-error">{error}</small>}
+              <div className="superadmin-admin-edit-actions">
+                <button type="submit" className="primary-button" disabled={saving || !editTenantNombre.trim()}>
+                  {saving ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+                <button type="button" className="secondary-button" onClick={cancelEditTenant}>
+                  Cancelar
+                </button>
               </div>
             </form>
           </section>
