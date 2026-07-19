@@ -9,6 +9,23 @@ const router = express.Router();
 
 const ORDER_STATES = ['pendiente', 'preparando', 'enviado'];
 
+async function nextOrderNumber(dbClient, empresaId) {
+  const result = await dbClient.query(
+    `SELECT numero FROM pedidos WHERE empresa_id = $1 ORDER BY id DESC LIMIT 200`,
+    [empresaId]
+  );
+  let maxNum = 0;
+  for (const row of result.rows) {
+    const match = row.numero?.match(/^PED-(\d+)$/);
+    if (match) {
+      const n = parseInt(match[1], 10);
+      if (n > maxNum) maxNum = n;
+    }
+  }
+  const next = maxNum + 1;
+  return `PED-${String(next).padStart(4, '0')}`;
+}
+
 router.get('/v1/catalog', requireApiKey('catalog:read'), async (req, res) => {
   try {
     await ensureProductInventoryColumns();
@@ -172,7 +189,7 @@ router.post('/v1/orders', requireApiKey('orders:write'), async (req, res) => {
     const subtotal = validatedItems.reduce((sum, item) => sum + item.precio_unitario * item.cantidad, 0);
     const isv = aplicaIsv ? subtotal * 0.15 : 0;
     const total = subtotal + isv;
-    const numero = `PED-${Date.now().toString().slice(-6)}`;
+    const numero = await nextOrderNumber(client, req.tenant.id);
     const order = await client.query(
       `INSERT INTO pedidos (empresa_id, cliente_id, numero, estado, total, isv)
        VALUES ($1, $2, $3, 'pendiente', $4, $5)

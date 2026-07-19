@@ -9,6 +9,23 @@ const { dispatchWebhookEvent } = require('../services/webhooks');
 
 const router = express.Router();
 
+async function nextOrderNumber(dbClient, empresaId) {
+  const result = await dbClient.query(
+    `SELECT numero FROM pedidos WHERE empresa_id = $1 ORDER BY id DESC LIMIT 200`,
+    [empresaId]
+  );
+  let maxNum = 0;
+  for (const row of result.rows) {
+    const match = row.numero?.match(/^PED-(\d+)$/);
+    if (match) {
+      const n = parseInt(match[1], 10);
+      if (n > maxNum) maxNum = n;
+    }
+  }
+  const next = maxNum + 1;
+  return `PED-${String(next).padStart(4, '0')}`;
+}
+
 async function queryOrderEmailContext(tenantId, orderId) {
   const orderRes = await db.query(
     `SELECT p.*, u.nombre AS cliente_nombre, u.email AS cliente_email, e.nombre AS tenant_nombre, e.email_notificaciones, e.notificaciones_activas
@@ -243,7 +260,7 @@ router.post('/orders', authenticate, requireRole('cliente'), async (req, res) =>
       const subtotal = validatedItems.reduce((sum, item) => sum + item.precio_unitario * item.cantidad, 0);
       const isv = aplicaIsv ? subtotal * 0.15 : 0;
       const total = subtotal + isv;
-      const numero = `PED-${Date.now().toString().slice(-6)}`;
+      const numero = await nextOrderNumber(created, req.tenant.id);
       const order = await created.query(
         `INSERT INTO pedidos (empresa_id, cliente_id, numero, estado, total, isv)
          VALUES ($1, $2, $3, 'pendiente', $4, $5)
