@@ -225,6 +225,9 @@ export const api = {
   superadminSetTenantActive: async (token, id, activa) => {
     return request(`/superadmin/tenants/${id}`, { method: 'PATCH', token, body: JSON.stringify({ activa }) });
   },
+  superadminUpdateTenant: async (token, id, payload) => {
+    return request(`/superadmin/tenants/${id}`, { method: 'PATCH', token, body: JSON.stringify(payload) });
+  },
   superadminSetTenantNotifications: async (token, id, notificaciones_activas) => {
     return request(`/superadmin/tenants/${id}`, { method: 'PATCH', token, body: JSON.stringify({ notificaciones_activas }) });
   },

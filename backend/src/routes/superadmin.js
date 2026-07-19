@@ -296,11 +296,25 @@ router.post('/superadmin/tenants', authenticate, requireRole('superadmin'), asyn
 
 router.patch('/superadmin/tenants/:id', authenticate, requireRole('superadmin'), async (req, res) => {
   await ensureTenantColumns();
-  const { activa, notificaciones_activas, email_notificaciones } = req.body || {};
+  const { activa, notificaciones_activas, email_notificaciones, nombre, subnombre } = req.body || {};
 
   const updates = [];
   const params = [];
   let paramIdx = 1;
+
+  if (nombre !== undefined) {
+    const trimmed = normalizeName(nombre);
+    if (!trimmed) {
+      return res.status(400).json({ message: 'El nombre no puede estar vacío' });
+    }
+    updates.push(`nombre = $${paramIdx++}`);
+    params.push(trimmed);
+  }
+
+  if (subnombre !== undefined) {
+    updates.push(`subnombre = $${paramIdx++}`);
+    params.push(normalizeSubnombre(subnombre));
+  }
 
   if (activa !== undefined) {
     if (typeof activa !== 'boolean') {
@@ -365,6 +379,24 @@ router.patch('/superadmin/tenants/:id', authenticate, requireRole('superadmin'),
       descripcion: `Correo de notificaciones de la empresa ${result.rows[0].nombre} actualizado a: ${result.rows[0].email_notificaciones || 'vacío'}`,
       empresaId: result.rows[0].id,
       metadata: { slug: result.rows[0].slug, email: result.rows[0].email_notificaciones }
+    });
+  }
+
+  if (nombre !== undefined) {
+    await logSuperadminEvent(req, {
+      tipo: 'empresa_nombre_editado',
+      descripcion: `Nombre de empresa actualizado a: ${result.rows[0].nombre}`,
+      empresaId: result.rows[0].id,
+      metadata: { slug: result.rows[0].slug, nombre: result.rows[0].nombre }
+    });
+  }
+
+  if (subnombre !== undefined) {
+    await logSuperadminEvent(req, {
+      tipo: 'empresa_subnombre_editado',
+      descripcion: `Subnombre de empresa ${result.rows[0].nombre} actualizado a: ${result.rows[0].subnombre || 'vacío'}`,
+      empresaId: result.rows[0].id,
+      metadata: { slug: result.rows[0].slug, subnombre: result.rows[0].subnombre }
     });
   }
 

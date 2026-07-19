@@ -5213,7 +5213,6 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
 
   function requestTenantStatusChange(tenant) {
     const action = tenant.activa ? 'desactivar' : 'activar';
-    setOpenTenantMenu(null);
     setTenantConfirm({
       type: 'status',
       tenant,
@@ -5224,7 +5223,6 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
   }
 
   function requestTenantDelete(tenant) {
-    setOpenTenantMenu(null);
     setTenantDeleteInput('');
     setTenantConfirm({
       type: 'delete',
@@ -5298,6 +5296,30 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       showToast(`Correo de ${tenant.nombre} actualizado`);
     } catch (err) {
       setError(err.message || 'No se pudo actualizar el correo');
+    }
+  }
+
+  async function editTenantName(tenant) {
+    const newName = window.prompt(`Editar nombre de "${tenant.nombre}":`, tenant.nombre || '');
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      setError('El nombre no puede estar vacío');
+      return;
+    }
+    const newSubnombre = window.prompt(`Editar subnombre de "${trimmed}":`, tenant.subnombre || '');
+    if (newSubnombre === null) return;
+
+    setError('');
+    try {
+      const updated = await api.superadminUpdateTenant(token, tenant.id, {
+        nombre: trimmed,
+        subnombre: newSubnombre.trim()
+      });
+      setTenants((current) => (current || []).map((item) => (item.id === tenant.id ? { ...item, ...updated.tenant } : item)));
+      showToast(`Empresa actualizada: ${updated.tenant?.nombre || trimmed}`);
+    } catch (err) {
+      setError(err.message || 'No se pudo actualizar la empresa');
     }
   }
 
@@ -5867,6 +5889,18 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 <strong style={{ fontSize: '15px', color: 'var(--text-color)' }}>{selectedTenantOptions.nombre}</strong>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{selectedTenantOptions.slug}.catalogohn.com</div>
               </div>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  editTenantName(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                Editar nombre
+              </button>
 
               <button
                 type="button"
