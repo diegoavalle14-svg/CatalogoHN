@@ -5672,7 +5672,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             {filteredTenants.map((tenant) => {
               const readiness = tenantReadiness(tenant);
               return (
-                <article className="tenant-card" key={tenant.id} style={{ display: 'flex', flexDirection: 'column', padding: '16px', borderRadius: '12px', border: '1px solid rgba(17, 17, 17, 0.08)', background: '#fff', gap: '10px' }}>
+                <article className="tenant-card" key={tenant.id}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div style={{ 
                       width: '44px', 

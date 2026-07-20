@@ -3842,10 +3842,13 @@ button {
 
 .tenant-card {
   min-width: 0;
-  display: grid;
-  gap: 8px;
-  background: rgba(255, 255, 255, .64);
-  border-color: rgba(17, 17, 17, .10);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 17, 17, .10);
+  background: #fff;
   box-shadow: 0 14px 32px rgba(20, 24, 31, .08);
 }
 
