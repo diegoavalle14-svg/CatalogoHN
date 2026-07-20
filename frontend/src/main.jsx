@@ -479,7 +479,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
   }
 
   return (
-    <main className="login-screen">
+    <main className="login-screen landing-screen">
       <div className="login-screen-inner">
 
         {/* -- Logo -- */}

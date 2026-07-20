@@ -1727,13 +1727,27 @@ button {
 
 .login-screen {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1a1a1e;
-  color: #f1f1f1;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  gap: 18px;
+  padding: 24px clamp(16px, 4vw, 56px) 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .94), rgba(244, 246, 249, .72)),
+    repeating-linear-gradient(90deg, rgba(17, 17, 17, .022) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(0deg, rgba(17, 17, 17, .018) 0 1px, transparent 1px 22px);
+  color: #141414;
   font-family: "Open Sans", "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
-  overflow-y: auto;
+}
+
+.landing-screen {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #1a1a1e !important;
+  color: #f1f1f1 !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
 }
 
 .login-screen-inner {
@@ -1834,9 +1848,9 @@ button {
 .admin-order,
 .access-row,
 .tenant-card {
-  background: #1a1a1e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 .tenant-picker,
@@ -1845,13 +1859,13 @@ button {
   min-width: min(100%, 430px);
   margin: clamp(8px, 2vh, 18px) auto 0;
   padding: clamp(20px, 3vw, 34px);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .4);
+  box-shadow: 0 24px 70px rgba(20, 24, 31, .10);
 }
 
 .tenant-picker {
   text-align: left;
-  background: #1a1a1e;
-  border-color: rgba(255, 255, 255, .1);
+  background: #ffffff;
+  border-color: rgba(17, 17, 17, .08);
 }
 
 .public-hero {
@@ -2292,7 +2306,8 @@ button {
 }
 
 [data-theme="dark"] body,
-[data-theme="dark"] .admin-mobile-shell {
+[data-theme="dark"] .admin-mobile-shell,
+[data-theme="dark"] .login-screen {
   background: #101114;
   color: var(--text);
 }
