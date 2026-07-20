@@ -5716,13 +5716,37 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               const readiness = tenantReadiness(tenant);
               return (
                 <article className="tenant-card" key={tenant.id} style={{ display: 'flex', flexDirection: 'column', padding: '16px', borderRadius: '12px', border: '1px solid rgba(17, 17, 17, 0.08)', background: '#fff', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <strong style={{ fontSize: '15px', color: 'var(--text-color)', display: 'block' }}>{tenant.nombre}</strong>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>{tenant.subnombre || 'Sin subnombre'}</span>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ 
+                      width: '44px', 
+                      height: '44px', 
+                      borderRadius: '8px', 
+                      border: '1px solid rgba(17, 17, 17, 0.08)', 
+                      background: 'var(--bg-input, #f3f4f6)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      overflow: 'hidden',
+                      flexShrink: 0
+                    }}>
+                      {tenant.logo_url ? (
+                        <img 
+                          src={resolveMediaUrl(tenant.logo_url)} 
+                          alt={tenant.nombre} 
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                        />
+                      ) : (
+                        <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--text-muted, #6b7280)', textTransform: 'uppercase' }}>
+                          {initials(tenant.nombre)}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ fontSize: '15px', color: 'var(--text-color)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tenant.nombre}</strong>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tenant.subnombre || 'Sin subnombre'}</span>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px', fontFamily: 'monospace' }}>{tenant.slug}.catalogohn.com</span>
                     </div>
-                    <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                    <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>
                       {tenant.activa ? 'Activa' : 'Suspendida'}
                     </b>
                   </div>
