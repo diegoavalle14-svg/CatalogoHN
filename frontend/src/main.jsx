@@ -386,6 +386,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
   const [forgotError, setForgotError] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState('kolben');
   const [selectedTenantName, setSelectedTenantName] = useState('');
   const [superadminMode, setSuperadminMode] = useState(false);
@@ -550,7 +551,15 @@ function Login({ onLogin, theme, onThemeToggle }) {
             <p>{superadminMode ? 'Acceso exclusivo de plataforma' : `Acceso privado de ${selectedTenantName}`}</p>
             <form onSubmit={submit} className="login-modal-form">
               <label>Usuario<input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label>
-              <label>Contraseña<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" /></label>
+              <label>
+                Contraseña
+                <div className="password-input-wrapper">
+                  <input value={password} onChange={(event) => setPassword(event.target.value)} type={showLoginPassword ? "text" : "password"} autoComplete="current-password" />
+                  <button type="button" className="password-toggle-btn" onClick={() => setShowLoginPassword(!showLoginPassword)} tabIndex="-1" aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                    {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
               {error && <small className="form-error">{error}</small>}
               <button className="forgot-password-button" type="button" onClick={() => {
                 setForgotOpen((current) => !current);
@@ -4907,6 +4916,10 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
   const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', confirm_password: '' });
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState('');
+  const [showSuperadminCurrentPassword, setShowSuperadminCurrentPassword] = useState(false);
+  const [showSuperadminNewPassword, setShowSuperadminNewPassword] = useState(false);
+  const [showSuperadminConfirmPassword, setShowSuperadminConfirmPassword] = useState(false);
+  const [showEditAdminPassword, setShowEditAdminPassword] = useState(false);
   const toastTimer = useRef(null);
   const subdominioPreview = useMemo(() => slugifyValue(nombre) || 'empresa', [nombre]);
   const filteredTenants = useMemo(() => {
@@ -5598,30 +5611,45 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             <form className="superadmin-form superadmin-password-form" onSubmit={changeSuperadminPassword}>
               <label>
                 Contraseña actual
-                <input
-                  type="password"
-                  value={passwordForm.current_password}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, current_password: event.target.value }))}
-                  autoComplete="current-password"
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showSuperadminCurrentPassword ? "text" : "password"}
+                    value={passwordForm.current_password}
+                    onChange={(event) => setPasswordForm((current) => ({ ...current, current_password: event.target.value }))}
+                    autoComplete="current-password"
+                  />
+                  <button type="button" className="password-toggle-btn" onClick={() => setShowSuperadminCurrentPassword(!showSuperadminCurrentPassword)} tabIndex="-1" aria-label={showSuperadminCurrentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                    {showSuperadminCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </label>
               <label>
                 Nueva contraseña
-                <input
-                  type="password"
-                  value={passwordForm.new_password}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, new_password: event.target.value }))}
-                  autoComplete="new-password"
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showSuperadminNewPassword ? "text" : "password"}
+                    value={passwordForm.new_password}
+                    onChange={(event) => setPasswordForm((current) => ({ ...current, new_password: event.target.value }))}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="password-toggle-btn" onClick={() => setShowSuperadminNewPassword(!showSuperadminNewPassword)} tabIndex="-1" aria-label={showSuperadminNewPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                    {showSuperadminNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </label>
               <label>
                 Confirmar nueva contraseña
-                <input
-                  type="password"
-                  value={passwordForm.confirm_password}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, confirm_password: event.target.value }))}
-                  autoComplete="new-password"
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showSuperadminConfirmPassword ? "text" : "password"}
+                    value={passwordForm.confirm_password}
+                    onChange={(event) => setPasswordForm((current) => ({ ...current, confirm_password: event.target.value }))}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="password-toggle-btn" onClick={() => setShowSuperadminConfirmPassword(!showSuperadminConfirmPassword)} tabIndex="-1" aria-label={showSuperadminConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                    {showSuperadminConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </label>
               {passwordMessage && <small className="temp-password">{passwordMessage}</small>}
               <button className="primary-button" type="submit" disabled={passwordSaving}>
@@ -5848,7 +5876,15 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             }}>
               <label>Nombre<input value={editAdminNombre} onChange={(e) => setEditAdminNombre(e.target.value)} /></label>
               <label>Usuario<input value={editAdminUsername} onChange={(e) => setEditAdminUsername(e.target.value)} /></label>
-              <label>Nueva contraseña<input type="password" value={editAdminPassword} onChange={(e) => setEditAdminPassword(e.target.value)} placeholder="Opcional" /></label>
+              <label>
+                Nueva contraseña
+                <div className="password-input-wrapper">
+                  <input type={showEditAdminPassword ? "text" : "password"} value={editAdminPassword} onChange={(e) => setEditAdminPassword(e.target.value)} placeholder="Opcional" />
+                  <button type="button" className="password-toggle-btn" onClick={() => setShowEditAdminPassword(!showEditAdminPassword)} tabIndex="-1" aria-label={showEditAdminPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                    {showEditAdminPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
               {tempPasswordsByAdmin[editingAdmin.id] && (
                 <small className="temp-password">Contraseña temporal: <b>{tempPasswordsByAdmin[editingAdmin.id]}</b></small>
               )}
