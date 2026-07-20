@@ -6039,7 +6039,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                   type="button" 
                   className="primary-button" 
                   onClick={() => editTenantEmailDirect(selectedTenantOptions.id, configEmail)}
-                  style={{ height: '36px', padding: '0 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                  style={{ height: '36px', minHeight: '36px', padding: '0 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                 >
                   Guardar
                 </button>
