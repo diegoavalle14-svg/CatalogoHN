@@ -148,8 +148,9 @@ function generateOrderPDF(order, items) {
 
       // Calculations for footer
       const total = Number(order.total || 0);
-      const subtotal = total / 1.15;
-      const isv = total - subtotal;
+      const isv = Number(order.isv || 0);
+      const subtotal = total - isv;
+      const isvLabel = isv > 0 ? 'ISV (15%):' : 'ISV (0%):';
       const totalQty = items.reduce((sum, item) => sum + Number(item.cantidad || 0), 0);
 
       // Subtotal Row
@@ -164,7 +165,7 @@ function generateOrderPDF(order, items) {
 
       // ISV Row
       doc.font('Helvetica-Bold')
-         .text('ISV (15%):', 40, currentY + 6, { width: 410, align: 'right' });
+         .text(isvLabel, 40, currentY + 6, { width: 410, align: 'right' });
       doc.font('Helvetica')
          .text(formatMoneyHNL(isv), cols.price.x, currentY + 6, { width: cols.price.width - 6, align: 'right' });
       
