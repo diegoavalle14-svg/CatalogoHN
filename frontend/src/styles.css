@@ -7279,7 +7279,8 @@ html:has(.landing-screen) {
   }
 
   .login-screen-inner {
-    padding: 28px 16px 32px;
+    padding: 16px 14px;
+    gap: 16px;
   }
 
   .tenant-grid {
@@ -7581,25 +7582,29 @@ html:has(.landing-screen) {
   }
 
   .tenant-tile {
-    min-height: 132px;
-    gap: 5px;
-    padding: 9px;
+    min-height: 98px;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .tenant-tile-logo-badge {
+    width: 40px;
+    height: 40px;
+    padding: 4px;
+  }
+
+  .tenant-tile .tenant-tile-name {
     font-size: 13px;
   }
 
-  .tenant-tile-status {
-    padding: 3px 7px;
-    font-size: 9px;
+  .landing-bottom-block strong {
+    min-height: 32px;
+    font-size: 13px;
   }
 
-  .tenant-tile .tenant-logo-mark {
-    width: 30px;
-    height: 30px;
-  }
-
-  .tenant-tile-name {
-    font-size: 14px;
-    line-height: 1.08;
+  .landing-outline-btn {
+    height: 40px;
+    font-size: 11px;
   }
 
   .tenant-tile-meta {
