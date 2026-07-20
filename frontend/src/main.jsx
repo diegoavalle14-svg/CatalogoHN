@@ -5874,7 +5874,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                 <input value={editTenantSubnombre} onChange={(e) => setEditTenantSubnombre(e.target.value)} placeholder="Subnombre o rubro" />
               </label>
               {error && <small className="form-error">{error}</small>}
-              <div className="superadmin-admin-edit-actions">
+              <div className="superadmin-admin-edit-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button type="submit" className="primary-button" disabled={saving || !editTenantNombre.trim()}>
                   {saving ? 'Guardando...' : 'Guardar cambios'}
                 </button>
@@ -5902,7 +5902,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             <form className="superadmin-admin-edit" onSubmit={createTenant}>
               <label>
                 Nombre comercial
-                <input value={nombre} onChange={(e) => setNombre(e.target.value)} required placeholder="Ej. Kolben Repuestos" />
+                <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
               </label>
               
               <section className="superadmin-subname-picker" style={{ border: '1px solid rgba(17, 17, 17, 0.08)', borderRadius: '9px', padding: '12px', background: 'rgba(0, 0, 0, 0.01)', margin: '15px 0' }}>
@@ -5950,8 +5950,8 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
 
               <small className="superadmin-hint">Subdominio: <b>{subdominioPreview}.catalogohn.com</b></small>
               {error && <small className="form-error">{error}</small>}
-              <div className="superadmin-admin-edit-actions" style={{ marginTop: '16px' }}>
-                <button className="primary-button" type="submit" disabled={saving || !nombre}>
+              <div className="superadmin-admin-edit-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '16px' }}>
+                <button className="primary-button" type="submit" disabled={saving || !nombre} style={{ whiteSpace: 'nowrap' }}>
                   {saving ? 'Creando...' : 'Crear empresa'}
                 </button>
                 <button className="secondary-button" type="button" onClick={() => setIsCreateModalOpen(false)}>
