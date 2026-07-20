@@ -3702,7 +3702,7 @@ button {
 .superadmin-filter-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   justify-content: flex-end;
   min-width: 0;
 }
@@ -3784,9 +3784,22 @@ button {
 }
 
 .superadmin-head h1 {
-  font-size: 30px;
+  font-size: 22px;
   letter-spacing: 0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.superadmin-head {
+  margin-bottom: 20px;
+}
+
+.superadmin-head .primary-button {
+  min-height: 36px;
+  font-size: 12px;
+  padding: 0 14px;
+  font-weight: 800;
+  border-radius: 8px;
+  box-shadow: none;
 }
 
 .admin-actions {
@@ -4572,13 +4585,13 @@ button {
   }
 
   .superadmin-head h1 {
-    font-size: 36px;
+    font-size: 20px;
     margin-bottom: 4px;
   }
 
   .superadmin-head .status-pill {
     font-size: 11px;
-    padding: 4px 10px;
+    padding: 3px 8px;
   }
 
   .superadmin-top-header {
