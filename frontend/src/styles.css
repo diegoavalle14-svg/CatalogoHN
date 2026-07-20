@@ -2809,9 +2809,9 @@ button {
   color: #aab2bf;
 }
 
-[data-theme="dark"] .admin-priority-strip.warning {
-  border-color: #6a4b19;
-  background: #2a2113;
+[data-theme="dark"] .admin-priority-strip svg {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f3f4f6;
 }
 
 [data-theme="dark"] .admin-ticket {
@@ -2854,10 +2854,7 @@ button {
   background: #5c141d;
 }
 
-[data-theme="dark"] .admin-priority-strip.historic {
-  border-color: #303640;
-  background: #181d25;
-}
+
 
 [data-theme="dark"] .admin-state.pendiente {
   background: #3a2812;
@@ -4903,8 +4900,10 @@ button {
 .admin-priority-strip svg {
   width: 24px;
   height: 24px;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 5px;
+  background: rgba(17, 17, 17, 0.05);
+  color: #111111;
 }
 
 .admin-priority-strip span {
@@ -4920,36 +4919,6 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.admin-priority-strip.warning {
-  border-color: #f3cf8f;
-  background: #fff8ea;
-}
-
-.admin-priority-strip.warning svg {
-  background: #f5a623;
-  color: #111111;
-}
-
-.admin-priority-strip.active svg {
-  background: #dcecff;
-  color: #1267a8;
-}
-
-.admin-priority-strip.clear svg {
-  background: #daf5e8;
-  color: #16724a;
-}
-
-.admin-priority-strip.historic {
-  border-color: #dcdfe6;
-  background: #f4f4f5;
-}
-
-.admin-priority-strip.historic svg {
-  background: #909399;
-  color: #ffffff;
 }
 
 .admin-filter-bar {
