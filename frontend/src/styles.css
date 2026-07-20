@@ -2017,6 +2017,7 @@ html:has(.landing-screen) {
   padding: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .tenant-tile.coming-soon .tenant-tile-logo-badge {
