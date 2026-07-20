@@ -5502,8 +5502,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             {[
               ['companies', 'Empresas'],
               ['stats', 'Estadísticas'],
-              ['history', 'Historiales'],
-              ['subnames', 'Subnombres']
+              ['history', 'Historiales']
             ].map(([id, label]) => (
               <button key={id} type="button" className={superadminSection === id ? 'active' : ''} onClick={() => { setSuperadminSection(id); setSidebarOpen(false); }}>
                 {label}
@@ -5632,49 +5631,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
           </div>
         )}
 
-        {superadminSection === 'subnames' && (
-          <div className="superadmin-section-view">
-            <div className="superadmin-head">
-              <h1>Subnombres</h1>
-              <span className="status-pill">{subnombreOptions.length} opciones</span>
-            </div>
-            <div className="superadmin-subnames-panel">
-              <div className="superadmin-subname-add">
-                <input value={nuevoSubnombre} onChange={(e) => setNuevoSubnombre(e.target.value)} placeholder="Nuevo subnombre" />
-                <button type="button" className="secondary-button" onClick={agregarSubnombre} disabled={!nuevoSubnombre.trim()}>
-                  Agregar
-                </button>
-              </div>
-              <div className="superadmin-subname-list">
-                {subnombreOptions.map((option) => (
-                  <div className="superadmin-subname-row" key={option}>
-                    {editingSubnombre === option ? (
-                      <>
-                        <input value={editSubnombreValue} onChange={(event) => setEditSubnombreValue(event.target.value)} />
-                        <button type="button" onClick={saveSubnombreEdit} disabled={!editSubnombreValue.trim()}>
-                          Guardar
-                        </button>
-                        <button type="button" onClick={cancelSubnombreEdit}>
-                          Cancelar
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span>{option}</span>
-                        <button type="button" onClick={() => startEditSubnombre(option)}>
-                          Editar
-                        </button>
-                        <button type="button" className="danger-subname-button" onClick={() => deleteSubnombre(option)}>
-                          Eliminar
-                        </button>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {superadminSection === 'companies' && (
           <>
