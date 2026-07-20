@@ -1727,134 +1727,102 @@ button {
 
 .login-screen {
   min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  align-content: start;
-  gap: 18px;
-  padding: 24px clamp(16px, 4vw, 56px) 18px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, .94), rgba(244, 246, 249, .72)),
-    repeating-linear-gradient(90deg, rgba(17, 17, 17, .022) 0 1px, transparent 1px 22px),
-    repeating-linear-gradient(0deg, rgba(17, 17, 17, .018) 0 1px, transparent 1px 22px);
-  color: #141414;
-  font-family: "Open Sans", "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
-}
-
-.welcome-float {
-  width: fit-content;
-  margin: 0 auto;
-  width: max-content;
-  max-width: min(440px, calc(100vw - 32px));
-  border: 1px solid rgba(17, 17, 17, .08);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .82);
-  box-shadow: 0 10px 26px rgba(20, 24, 31, .08);
-  color: #636b76;
-  padding: 8px 14px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.login-header,
-.login-page-footer {
-  width: min(940px, 100%);
-  min-width: min(100%, 430px);
-  margin: 0 auto;
-  color: #59606a;
-}
-
-.login-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  min-height: 34px;
-  font-size: 12px;
+  justify-content: center;
+  background: #1a1a1e;
+  color: #f1f1f1;
+  font-family: "Open Sans", "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
+  overflow-y: auto;
 }
 
-.login-header strong {
-  color: #151515;
-  font-size: 24px;
+.login-screen-inner {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Landing logo ── */
+.landing-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.landing-logo {
+  display: block;
+  font-size: clamp(38px, 8vw, 52px);
   font-weight: 900;
-  letter-spacing: 0;
+  letter-spacing: -1px;
+  line-height: 1;
+  color: #ffffff;
 }
 
-.login-header-actions {
+.landing-logo-hn {
+  color: #ff6820;
+}
+
+.landing-subtitle {
+  margin: 0;
+  color: #a0a0a8;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  max-width: 340px;
+}
+
+/* ── Landing bottom CTA ── */
+.landing-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.landing-bottom-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.landing-bottom-block strong {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+  min-height: 42px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.landing-outline-btn {
+  margin-top: auto;
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.login-header-actions .theme-toggle-button {
-  width: 36px;
-  height: 36px;
-  border-color: rgba(17, 17, 17, .12);
-  background: rgba(255, 255, 255, .72);
-  color: #151515;
-  box-shadow: 0 10px 22px rgba(20, 24, 31, .08);
-}
-
-.login-header span,
-.login-page-footer span,
-.login-page-footer a {
-  color: #7b838f;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.login-page-footer a {
-  color: #151515;
-  text-decoration: none;
-  font-weight: 900;
-}
-
-.login-page-footer {
-  align-self: end;
-  display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 10px;
-  width: min(940px, 100%);
-  min-height: 42px;
-  padding: 10px 14px;
-  border: 1px solid rgba(17, 17, 17, .08);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .58);
-  box-shadow: 0 12px 30px rgba(20, 24, 31, .06);
-  text-align: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  height: 46px;
+  padding: 0 18px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: #ff6820;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
-.login-page-footer span,
-.login-page-footer a {
-  line-height: 1.2;
+.landing-outline-btn:hover {
+  border-color: #ff6820;
+  background: rgba(255, 104, 32, 0.08);
 }
 
-.login-page-footer span + a,
-.login-page-footer a + span {
-  position: relative;
-  padding-left: 10px;
-}
-
-.login-page-footer span + a::before,
-.login-page-footer a + span::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #aeb5bf;
-  transform: translateY(-50%);
-}
-
+/* ── Tenant Picker section wrapper ── */
 .tenant-picker,
 .login-panel,
 .login-modal,
@@ -1866,9 +1834,9 @@ button {
 .admin-order,
 .access-row,
 .tenant-card {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  background: #1a1a1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }
 
 .tenant-picker,
@@ -1877,238 +1845,212 @@ button {
   min-width: min(100%, 430px);
   margin: clamp(8px, 2vh, 18px) auto 0;
   padding: clamp(20px, 3vw, 34px);
-  box-shadow: 0 24px 70px rgba(20, 24, 31, .10);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .4);
 }
 
 .tenant-picker {
   text-align: left;
-  background: #ffffff;
-  border-color: rgba(17, 17, 17, .08);
+  background: #1a1a1e;
+  border-color: rgba(255, 255, 255, .1);
 }
 
 .public-hero {
   display: grid;
-  margin-bottom: 18px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(17, 17, 17, .08);
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
 }
 
 .hero-kicker {
   display: inline-flex;
   width: max-content;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   border-radius: 999px;
-  background: #111;
+  background: #ff6820;
   color: #fff;
-  padding: 6px 9px;
-  font-size: 11px;
+  padding: 4px 10px;
+  font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .public-hero h1 {
   max-width: 600px;
-  margin: 0 0 6px;
-  color: #111;
+  margin: 0 0 8px;
+  color: #fff;
   font-size: clamp(30px, 4vw, 46px);
   font-weight: 900;
-  letter-spacing: 0;
   line-height: 1;
 }
 
 .public-hero p {
   max-width: 570px;
-  color: #59606a;
+  color: #a0a0a8;
   font-size: 14px;
-  line-height: 1.45;
 }
 
 .public-section-head {
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .public-section-head h2 {
-  margin: 0 0 4px;
-  color: #111;
+  margin: 0;
+  color: #fff;
   font-size: 20px;
 }
 
 .public-section-head p {
-  color: #6a7079;
+  color: #a0a0a8;
   font-size: 13px;
 }
 
-.tenant-picker h1,
-.catalog-hero h1,
-.list-page h1,
-.admin-page h1 {
-  margin: 0 0 8px;
-  color: #111;
-}
-
 .tenant-picker h1 {
+  margin: 0 0 12px;
+  color: #fff;
   font-size: clamp(34px, 5vw, 58px);
   font-weight: 900;
-  letter-spacing: 0;
-  line-height: .95;
 }
 
 .tenant-picker p,
-.login-panel p,
-.catalog-hero p {
-  color: #6a7079;
-  margin: 0;
+.login-panel p {
+  color: #a0a0a8;
 }
 
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin: 0;
-  min-height: 42px;
-  padding: 8px 13px 8px 10px;
+  padding: 8px 12px;
   border-radius: 8px;
-  background: #f7f8fa;
-  border: 1px solid rgba(17, 17, 17, .10);
-  color: #343a43;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72);
-  font-family: 'Open Sans', 'Montserrat', sans-serif;
+  background: #25252a;
+  border: 1px solid rgba(255, 255, 255, .05);
+  color: #e1e1e6;
   font-weight: 900;
   font-size: 12px;
-  line-height: 1;
-  white-space: nowrap;
 }
 
 .status-pill::before {
   content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: #18a26d;
-  box-shadow: 0 0 0 4px rgba(24, 162, 109, .12);
-}
-
-.status-pill strong,
-.status-pill span {
-  display: block;
-}
-
-.status-pill strong {
-  color: #111;
-  font-size: 20px;
-  letter-spacing: 0;
-}
-
-.status-pill span {
-  color: #59606a;
-  font-size: 11px;
-  letter-spacing: 0;
-  text-transform: uppercase;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff6820;
 }
 
 .tenant-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 
 .tenant-tile {
-  min-height: 158px;
-  display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: 7px;
-  border: 1px solid rgba(17, 17, 17, .10);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, .52);
-  color: #b4bac3;
-  padding: 14px;
-  text-align: left;
-  font-weight: 900;
-  font-size: 17px;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
-}
-
-.tenant-tile.active {
-  color: #111;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .62)),
-    radial-gradient(circle at 90% 12%, rgba(250, 196, 0, .22), transparent 32%);
-  border: 1px solid rgba(17, 17, 17, .18);
-  box-shadow: 0 18px 40px rgba(20, 24, 31, .10);
-}
-
-.tenant-tile.disabled {
-  cursor: not-allowed;
-  color: #9ba2ad;
-}
-
-.tenant-tile:hover {
-  transform: translateY(-2px);
-  border-color: rgba(17, 17, 17, .18);
-  box-shadow: 0 16px 34px rgba(20, 24, 31, .08);
-}
-
-.tenant-tile-status {
-  display: inline-flex;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  width: max-content;
-  margin: 0;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: rgba(24, 162, 109, .10);
-  color: #137b55;
-  font-size: 11px;
+  justify-content: center;
+  gap: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  background: #25252a;
+  color: #5a5a64;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Active company tile — orange fill */
+.tenant-tile.active {
+  background: #ff6820;
+  border-color: #ff6820;
+  color: #ffffff;
+  box-shadow: 0 8px 28px rgba(255, 104, 32, 0.35);
+}
+
+.tenant-tile.active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(255, 104, 32, 0.45);
+}
+
+/* Coming-soon placeholder tiles */
+.tenant-tile.coming-soon {
+  cursor: default;
+  background: #202025;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.tenant-tile-logo-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.tenant-tile.coming-soon .tenant-tile-logo-badge {
+  background: #1a1a1e;
+  box-shadow: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
+}
+
+.tenant-tile-placeholder-icon {
+  color: #ff6820;
+}
+
+.tenant-tile.coming-soon .tenant-tile-placeholder-icon {
+  color: #40404a;
+}
+
+/* Tile content */
+.tenant-tile-logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.tenant-tile .tenant-tile-name {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tenant-tile.coming-soon .tenant-tile-name {
+  color: #50505a;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Backward-compat — old tile elements hidden in new design */
+.tenant-tile-status,
+.tenant-tile-meta,
+.tenant-tile-domain {
+  display: none;
 }
 
 .tenant-tile .tenant-logo-mark {
   width: 38px;
   height: 38px;
-}
-
-.tenant-tile.disabled .tenant-tile-status {
-  background: rgba(17, 17, 17, .045);
-  color: #59606a;
-}
-
-.tenant-tile-name {
-  max-width: 100%;
-  overflow: hidden;
-  color: currentColor;
-  font-size: 18px;
-  line-height: 1.05;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tenant-tile.disabled .tenant-tile-name {
-  color: #b1b7c1;
-  font-size: 16px;
-}
-
-.tenant-tile-meta,
-.tenant-tile-domain {
-  max-width: 100%;
-  overflow: hidden;
-  color: #777f8d;
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 800;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tenant-tile-domain {
-  align-self: end;
-  margin-top: 4px;
-  color: #a1a8b3;
-  font-size: 10px;
 }
 
 .login-start-button {
@@ -2235,10 +2177,12 @@ button {
 
 .login-modal {
   width: min(420px, 100%);
-  padding: 18px 16px 16px;
-  background: #ffffff;
-  border-color: rgba(17, 17, 17, .10);
-  box-shadow: 0 24px 70px rgba(20, 24, 31, .18);
+  padding: 24px 20px 20px;
+  background: #25252a;
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  color: #f1f1f1;
 }
 
 .login-modal-head,
@@ -2256,6 +2200,7 @@ button {
 .login-modal h2 {
   margin: 0;
   font-size: 18px;
+  color: #ffffff;
 }
 
 .login-modal p {
@@ -2272,7 +2217,14 @@ button {
   gap: 12px;
 }
 
-.login-modal-form label,
+.login-modal-form label {
+  display: grid;
+  gap: 6px;
+  color: #a0a0a8;
+  font-weight: 800;
+  font-size: 13px;
+}
+
 .login-panel label,
 .superadmin-form label {
   display: grid;
@@ -2282,7 +2234,15 @@ button {
   font-size: 13px;
 }
 
-.login-modal-form input,
+.login-modal-form input {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #1a1a1e;
+  color: #f1f1f1;
+}
+
 .login-panel input,
 .superadmin-form input,
 .superadmin-form select {
@@ -2292,6 +2252,34 @@ button {
   padding: 0 12px;
   background: #fff;
   color: var(--text);
+}
+
+.login-modal .primary-button {
+  background: #ff6820;
+  color: #fff;
+  border: none;
+  box-shadow: 0 6px 20px rgba(255, 104, 32, 0.30);
+}
+
+.login-modal .primary-button:hover {
+  background: #e85c18;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(255, 104, 32, 0.40);
+}
+
+.login-modal .icon-button {
+  color: #a0a0a8;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: transparent;
+}
+
+.login-modal .icon-button:hover {
+  color: #f1f1f1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.login-modal .forgot-password-button {
+  color: #ff6820;
 }
 
 .form-error {
@@ -2304,8 +2292,7 @@ button {
 }
 
 [data-theme="dark"] body,
-[data-theme="dark"] .admin-mobile-shell,
-[data-theme="dark"] .login-screen {
+[data-theme="dark"] .admin-mobile-shell {
   background: #101114;
   color: var(--text);
 }
@@ -7270,65 +7257,16 @@ button {
     background: #151a22;
   }
 
-  .login-screen {
-    padding-top: 16px;
-    gap: 12px;
+  .login-screen-inner {
+    padding: 28px 16px 32px;
   }
 
-  .login-header,
-  .login-page-footer {
-    width: min(100%, 430px);
-  }
-
-  .login-header {
-    min-height: 28px;
-  }
-
-  .login-header-actions > span {
-    display: none;
-  }
-
-  .superadmin-insights,
-  .superadmin-controls {
-    grid-template-columns: 1fr;
-  }
-
-  .public-section-head {
-    align-items: start;
-  }
-
-  .registration-request-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .superadmin-dashboard {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .superadmin-filter-tabs {
-    justify-content: flex-start;
-  }
-
-  .tenant-card-actions {
+  .tenant-grid {
     grid-template-columns: 1fr 1fr;
   }
 
-  .login-page-footer {
-    display: grid;
-    gap: 6px;
-    justify-items: center;
-    padding: 10px 12px;
-    text-align: center;
-  }
-
-  .login-page-footer span + a,
-  .login-page-footer a + span {
-    padding-left: 0;
-  }
-
-  .login-page-footer span + a::before,
-  .login-page-footer a + span::before {
-    display: none;
+  .landing-bottom {
+    grid-template-columns: 1fr 1fr;
   }
 
   .app-shell {
@@ -7510,34 +7448,10 @@ button {
     right: -5px;
   }
 
-  .login-screen {
-    padding: 12px clamp(10px, 4vw, 16px) 14px;
-    gap: 8px;
-  }
+  .price-line b { font-size: 14px !important; }
+  .price-line span { font-size: 11px !important; }
+  .branch-price-row { grid-template-columns: 24px 1fr; gap: 5px; }
 
-  .welcome-float {
-    max-width: calc(100vw - 22px);
-    padding: 7px 11px;
-    font-size: 10px;
-  }
-
-  .price-line b {
-    font-size: 14px !important;
-  }
-
-  .price-line span {
-    font-size: 11px !important;
-  }
-
-  .branch-price-row {
-    grid-template-columns: 24px 1fr;
-    gap: 5px;
-  }
-
-  .login-header {
-    display: flex;
-    min-height: 32px;
-  }
 
   .superadmin-top-header {
     display: grid;

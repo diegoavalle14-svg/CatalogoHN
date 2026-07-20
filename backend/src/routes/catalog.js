@@ -10,6 +10,7 @@ let registrationRequestsReady = false;
 async function ensureTenantProfileColumns() {
   if (tenantProfileColumnsReady) return;
   await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre VARCHAR(140) DEFAULT ''`);
+  await db.query(`ALTER TABLE empresas ADD COLUMN IF NOT EXISTS subnombre_size INT DEFAULT 18`);
   tenantProfileColumnsReady = true;
 }
 

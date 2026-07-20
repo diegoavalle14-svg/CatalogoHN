@@ -480,40 +480,22 @@ function Login({ onLogin, theme, onThemeToggle }) {
 
   return (
     <main className="login-screen">
-      <div className="welcome-float" aria-live="polite">Bienvenido. Tu acceso sigue siendo privado para cada empresa.</div>
-      <header className="login-header">
-        <strong>CatálogoHN</strong>
-        <div className="login-header-actions">
-          <span>Catálogos mayoristas privados</span>
-          <ThemeToggle theme={theme} onToggle={onThemeToggle} />
-        </div>
-      </header>
+      <div className="login-screen-inner">
 
-      <section className="tenant-picker">
-        <div className="public-hero">
-          <div>
-            <span className="hero-kicker">Acceso privado para empresas</span>
-            <h1>CatálogoHN</h1>
-            <p>Selecciona la empresa con la que trabajas para entrar a su catálogo y realizar pedidos.</p>
-          </div>
-        </div>
-
-        <div className="public-section-head">
-          <div>
-            <h2>Empresas activas</h2>
-            <p>Selecciona una empresa para ingresar a su catálogo privado.</p>
-          </div>
-          <span className="status-pill">
-            <strong>{tenantTiles.length}</strong>
-            <span>activas</span>
+        {/* -- Logo -- */}
+        <div className="landing-logo-wrap">
+          <span className="landing-logo">
+            Catalogo<span className="landing-logo-hn">HN</span>
           </span>
+          <p className="landing-subtitle">Pedidos digitales con precios personalizados para cada cliente.</p>
         </div>
+
+        {/* -- Grid de empresas -- */}
         <div className="tenant-grid">
           {tenantTiles.map((tenant) => (
             <button
-              className={`tenant-tile ${tenant.available ? 'active' : 'disabled'}`}
+              className="tenant-tile active"
               key={tenant.slug}
-              style={tenantBrandStyle(tenant)}
               onClick={() => {
                 setSelectedTenant(tenant.slug);
                 setSelectedTenantName(tenant.name);
@@ -526,19 +508,41 @@ function Login({ onLogin, theme, onThemeToggle }) {
               }}
               aria-label={`Seleccionar ${tenant.name}`}
             >
-              <span className="tenant-tile-status">{tenant.status}</span>
-              <TenantLogoMark tenant={{ nombre: tenant.name, logo_url: tenant.logo_url }} size="small" />
-              <strong className="tenant-tile-name">{tenant.name}</strong>
-              {tenant.sector && <small className="tenant-tile-meta">{tenant.sector}</small>}
-              <em className="tenant-tile-domain">{tenant.domain}</em>
+              <div className="tenant-tile-logo-badge">
+                {tenant.logo_url ? (
+                  <img className="tenant-tile-logo" src={resolveMediaUrl(tenant.logo_url)} alt={tenant.name} />
+                ) : (
+                  <Building2 size={24} className="tenant-tile-placeholder-icon" />
+                )}
+              </div>
+              <span className="tenant-tile-name">{tenant.name}</span>
             </button>
+          ))}
+          {Array.from({ length: Math.max(0, 6 - tenantTiles.length) }).map((_, i) => (
+            <div className="tenant-tile coming-soon" key={`soon-${i}`}>
+              <div className="tenant-tile-logo-badge soon-badge">
+                <Building2 size={24} className="tenant-tile-placeholder-icon" />
+              </div>
+              <span className="tenant-tile-name">próximamente</span>
+            </div>
           ))}
         </div>
 
+        {/* -- Sección inferior -- */}
+        <div className="landing-bottom">
+          <div className="landing-bottom-block">
+            <strong>Regístrate</strong>
+            <button className="landing-outline-btn" type="button">SOLICITAR ACCESO</button>
+          </div>
+          <div className="landing-bottom-block">
+            <strong>¿Problemas para<br />ingresar a tu cuenta?</strong>
+            <button className="landing-outline-btn" type="button">CONTACTAR SOPORTE</button>
+          </div>
+        </div>
 
+      </div>
 
-      </section>
-
+      {/* -- Modal de login -- */}
       {loginOpen && (
         <div className="login-modal-backdrop" onClick={closeLoginModal}>
           <section className="login-modal" onClick={(e) => e.stopPropagation()}>
@@ -589,12 +593,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
           </section>
         </div>
       )}
-
-      <footer className="login-page-footer">
-        <span>Honduras</span>
-        <a href="mailto:contacto@catalogohn.com">contacto@catalogohn.com</a>
-        <span>Soporte y registro de empresas</span>
-      </footer>
     </main>
   );
 }
