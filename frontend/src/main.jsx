@@ -6014,7 +6014,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               <button
                 type="button"
                 className="secondary-button"
-                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   openTenantAdmin(selectedTenantOptions);
                   setSelectedTenantOptions(null);
@@ -6026,7 +6026,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               <button
                 type="button"
                 className="secondary-button"
-                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   copyTenantLink(selectedTenantOptions);
                   setSelectedTenantOptions(null);
@@ -6038,19 +6038,19 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               <button
                 type="button"
                 className="secondary-button"
-                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   openAdmins(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                <Users size={14} /> Administradores
+                <Users size={14} /> Admins
               </button>
 
               <button
                 type="button"
                 className="secondary-button"
-                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   editTenantName(selectedTenantOptions);
                   setSelectedTenantOptions(null);
@@ -6062,7 +6062,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               <button
                 type="button"
                 className="secondary-button"
-                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   toggleTenantNotifications(selectedTenantOptions);
                   setSelectedTenantOptions(null);
@@ -6075,20 +6075,20 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
               <button
                 type="button"
                 className="secondary-button"
-                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   requestTenantStatusChange(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
                 {selectedTenantOptions.activa ? <UserX size={14} /> : <UserCheck size={14} />}
-                {selectedTenantOptions.activa ? 'Desactivar Empresa' : 'Activar Empresa'}
+                {selectedTenantOptions.activa ? 'Desactivar' : 'Activar'}
               </button>
 
               <button
                 type="button"
                 className="primary-button"
-                style={{ gridColumn: 'span 2', justifyContent: 'center', height: '38px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '8px', fontSize: '12px', fontWeight: '800', gap: '6px' }}
+                style={{ gridColumn: 'span 2', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '38px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '8px', fontSize: '12px', fontWeight: '800', gap: '6px' }}
                 onClick={() => {
                   requestTenantDelete(selectedTenantOptions);
                   setSelectedTenantOptions(null);
