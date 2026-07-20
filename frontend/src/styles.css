@@ -8815,6 +8815,8 @@ button {
 }
 
 .password-input-wrapper input {
+  width: 100% !important;
+  box-sizing: border-box !important;
   padding-right: 40px !important;
 }
 
