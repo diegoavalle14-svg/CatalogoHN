@@ -565,27 +565,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
                 </div>
               </label>
               {error && <small className="form-error">{error}</small>}
-              <button className="forgot-password-button" type="button" onClick={() => {
-                setForgotOpen((current) => !current);
-                setForgotError('');
-                setForgotMessage('');
-                setForgotValue(username);
-              }}>
-                ¿Olvidaste la contraseña?
-              </button>
-              {forgotOpen && (
-                <div className="forgot-password-panel">
-                  <label>
-                    Usuario o correo
-                    <input value={forgotValue} onChange={(event) => setForgotValue(event.target.value)} autoComplete="username" />
-                  </label>
-                  {forgotError && <small className="form-error">{forgotError}</small>}
-                  {forgotMessage && <small className="form-success">{forgotMessage}</small>}
-                  <button className="secondary-button" type="button" onClick={submitForgotPassword} disabled={forgotLoading}>
-                    {forgotLoading ? 'Enviando...' : 'Enviar recuperación'}
-                  </button>
-                </div>
-              )}
+
               <button className="primary-button" disabled={loading}>
                 {loading ? 'Validando...' : 'Ingresar'}
               </button>
