@@ -393,6 +393,18 @@ function Login({ onLogin, theme, onThemeToggle }) {
   const [tenantTiles, setTenantTiles] = useState([]);
 
   useEffect(() => {
+    document.documentElement.classList.add('landing-html');
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const originalColor = meta ? meta.getAttribute('content') : '#F5C200';
+    if (meta) meta.setAttribute('content', '#1a1a1e');
+
+    return () => {
+      document.documentElement.classList.remove('landing-html');
+      if (meta) meta.setAttribute('content', originalColor);
+    };
+  }, []);
+
+  useEffect(() => {
     api.publicTenants()
       .then((payload) => {
         const params = new URLSearchParams(window.location.search);

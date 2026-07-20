@@ -1740,6 +1740,12 @@ button {
   font-family: "Open Sans", "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
 }
 
+html.landing-html,
+html:has(.landing-screen) {
+  background: #1a1a1e !important;
+  background-image: none !important;
+}
+
 .landing-screen {
   display: flex !important;
   align-items: center !important;
