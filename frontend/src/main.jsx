@@ -4893,6 +4893,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
   const [editingTenant, setEditingTenant] = useState(null);
   const [editTenantNombre, setEditTenantNombre] = useState('');
   const [editTenantSubnombre, setEditTenantSubnombre] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [tempPassword, setTempPassword] = useState('');
   const [tempPasswordsByAdmin, setTempPasswordsByAdmin] = useState({});
   const [toast, setToast] = useState('');
@@ -5206,6 +5207,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       setSubnombre('');
       setSubnombreSeleccionado('');
       setNuevoSubnombre('');
+      setIsCreateModalOpen(false);
       showToast(`Empresa ${created.tenant?.nombre || nombre} creada correctamente`);
     } catch (err) {
       setError(err.message);
@@ -5656,9 +5658,14 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
 
         {superadminSection === 'companies' && (
           <>
-        <div className="superadmin-head">
-          <h1>Empresas</h1>
-          <span className="status-pill">{(tenants || []).filter((item) => item.activa).length} activas</span>
+        <div className="superadmin-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>Empresas</h1>
+            <span className="status-pill">{(tenants || []).filter((item) => item.activa).length} activas</span>
+          </div>
+          <button className="primary-button" type="button" onClick={() => setIsCreateModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+            <Plus size={16} /> Crear empresa
+          </button>
         </div>
 
         <div className="superadmin-controls">
@@ -5680,55 +5687,6 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             ))}
           </div>
         </div>
-
-        <form className="superadmin-form superadmin-create-form" onSubmit={createTenant}>
-          <label>Nombre comercial<input value={nombre} onChange={(e) => setNombre(e.target.value)} /></label>
-          <section className="superadmin-subname-picker">
-            <div className="superadmin-subname-picker-head">
-              <span>
-                <strong>Subnombre</strong>
-                <small>{subnombre || 'Selecciona una opción para la empresa'}</small>
-              </span>
-              {subnombre && (
-                <button type="button" onClick={() => handleSubnombreChange('')}>
-                  Limpiar
-                </button>
-              )}
-            </div>
-
-            <div className="superadmin-subname-options">
-              {subnombreOptions.map((option) => (
-                <div className={`${editingSubnombre === option ? 'superadmin-subname-option editing' : 'superadmin-subname-option'} ${subnombreSeleccionado === option ? 'active' : ''}`.trim()} key={option}>
-                  {editingSubnombre === option ? (
-                    <>
-                      <input value={editSubnombreValue} onChange={(event) => setEditSubnombreValue(event.target.value)} />
-                      <button type="button" onClick={saveSubnombreEdit} disabled={!editSubnombreValue.trim()}>Guardar</button>
-                      <button type="button" onClick={cancelSubnombreEdit}>Cancelar</button>
-                    </>
-                  ) : (
-                    <>
-                      <button type="button" className="subname-select-button" onClick={() => handleSubnombreChange(option)}>
-                        {option}
-                      </button>
-                      <button type="button" onClick={() => startEditSubnombre(option)}>Editar</button>
-                      <button type="button" className="danger-subname-button" onClick={() => deleteSubnombre(option)}>Eliminar</button>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="superadmin-subname-add">
-              <input value={nuevoSubnombre} onChange={(e) => setNuevoSubnombre(e.target.value)} placeholder="Agregar nuevo subnombre" />
-              <button type="button" className="secondary-button" onClick={agregarSubnombre} disabled={!nuevoSubnombre.trim()}>
-                Agregar
-              </button>
-            </div>
-          </section>
-          <small className="superadmin-hint">Subdominio: <b>{subdominioPreview}.catalogohn.com</b></small>
-          {error && <small className="form-error">{error}</small>}
-          <button className="primary-button" disabled={saving || !nombre}>{saving ? 'Creando...' : 'Crear empresa'}</button>
-        </form>
 
         {!tenants && <Loading label="Cargando empresas" />}
 
@@ -5921,6 +5879,82 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                   {saving ? 'Guardando...' : 'Guardar cambios'}
                 </button>
                 <button type="button" className="secondary-button" onClick={cancelEditTenant}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {isCreateModalOpen && (
+        <div className="superadmin-admins-backdrop" onClick={() => setIsCreateModalOpen(false)}>
+          <section className="superadmin-admins-modal" style={{ maxWidth: '450px', width: '90%' }} onClick={(event) => event.stopPropagation()}>
+            <header className="superadmin-admins-head">
+              <div>
+                <strong>Crear nueva empresa</strong>
+                <small>Registrar inquilino</small>
+              </div>
+              <button className="icon-button" type="button" onClick={() => setIsCreateModalOpen(false)} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </header>
+            <form className="superadmin-admin-edit" onSubmit={createTenant}>
+              <label>
+                Nombre comercial
+                <input value={nombre} onChange={(e) => setNombre(e.target.value)} required placeholder="Ej. Kolben Repuestos" />
+              </label>
+              
+              <section className="superadmin-subname-picker" style={{ border: '1px solid rgba(17, 17, 17, 0.08)', borderRadius: '9px', padding: '12px', background: 'rgba(0, 0, 0, 0.01)', margin: '15px 0' }}>
+                <div className="superadmin-subname-picker-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span>
+                    <strong>Subnombre</strong>
+                    <small style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>{subnombre || 'Selecciona una opción para la empresa'}</small>
+                  </span>
+                  {subnombre && (
+                    <button type="button" className="secondary-button" style={{ height: '24px', padding: '0 8px', fontSize: '11px' }} onClick={() => handleSubnombreChange('')}>
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+
+                <div className="superadmin-subname-options" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px', paddingRight: '4px' }}>
+                  {subnombreOptions.map((option) => (
+                    <div className={`${editingSubnombre === option ? 'superadmin-subname-option editing' : 'superadmin-subname-option'} ${subnombreSeleccionado === option ? 'active' : ''}`.trim()} key={option}>
+                      {editingSubnombre === option ? (
+                        <>
+                          <input value={editSubnombreValue} onChange={(event) => setEditSubnombreValue(event.target.value)} style={{ padding: '2px', fontSize: '11px' }} />
+                          <button type="button" onClick={saveSubnombreEdit}>Guardar</button>
+                          <button type="button" onClick={cancelSubnombreEdit}>Cancelar</button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" className="subname-select-button" onClick={() => handleSubnombreChange(option)}>
+                            {option}
+                          </button>
+                          <button type="button" onClick={() => startEditSubnombre(option)}>Editar</button>
+                          <button type="button" className="danger-subname-button" onClick={() => deleteSubnombre(option)}>Eliminar</button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="superadmin-subname-add">
+                  <input value={nuevoSubnombre} onChange={(e) => setNuevoSubnombre(e.target.value)} placeholder="Agregar nuevo subnombre" />
+                  <button type="button" className="secondary-button" onClick={agregarSubnombre} disabled={!nuevoSubnombre.trim()}>
+                    Agregar
+                  </button>
+                </div>
+              </section>
+
+              <small className="superadmin-hint">Subdominio: <b>{subdominioPreview}.catalogohn.com</b></small>
+              {error && <small className="form-error">{error}</small>}
+              <div className="superadmin-admin-edit-actions" style={{ marginTop: '16px' }}>
+                <button className="primary-button" type="submit" disabled={saving || !nombre}>
+                  {saving ? 'Creando...' : 'Crear empresa'}
+                </button>
+                <button className="secondary-button" type="button" onClick={() => setIsCreateModalOpen(false)}>
                   Cancelar
                 </button>
               </div>
