@@ -268,6 +268,7 @@ router.delete('/superadmin/subnames/:id', authenticate, requireRole('superadmin'
 router.post('/superadmin/tenants', authenticate, requireRole('superadmin'), async (req, res) => {
   await ensureTenantColumns();
   const { nombre, subnombre } = req.body || {};
+  console.log('[DEBUG] [superadmin] Creating tenant with body:', req.body);
 
   if (!nombre) {
     return res.status(400).json({ message: 'Nombre es requerido' });
