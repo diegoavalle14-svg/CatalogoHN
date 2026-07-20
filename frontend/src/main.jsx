@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
-import { Activity, BadgeCheck, BadgeDollarSign, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Edit2, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Trash2, Users, UserX, UserCheck, X } from 'lucide-react';
+import { Activity, BadgeCheck, BadgeDollarSign, Bell, BellOff, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Edit2, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Trash2, Users, UserX, UserCheck, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearSession, clearTemporarySession, clearUiState, loadSession, loadUiState, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
@@ -4898,6 +4898,7 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
   const [tempPasswordsByAdmin, setTempPasswordsByAdmin] = useState({});
   const [toast, setToast] = useState('');
   const [selectedTenantOptions, setSelectedTenantOptions] = useState(null);
+  const [configEmail, setConfigEmail] = useState('');
   const [tenantConfirm, setTenantConfirm] = useState(null);
   const [tenantDeleteInput, setTenantDeleteInput] = useState('');
   const [adminConfirm, setAdminConfirm] = useState(null);
@@ -5283,6 +5284,25 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
       showToast(`Notificaciones de ${tenant.nombre} ${nextValue ? 'activadas' : 'desactivadas'}`);
     } catch (err) {
       setError(err.message || 'No se pudo cambiar el estado de las notificaciones');
+    }
+  }
+
+  function openConfig(tenant) {
+    setError('');
+    setSelectedTenantOptions(tenant);
+    setConfigEmail(tenant.email_notificaciones || '');
+  }
+
+  async function editTenantEmailDirect(tenantId, emailValue) {
+    setError('');
+    try {
+      const email = String(emailValue || '').trim();
+      const updated = await api.superadminUpdateTenantEmail(token, tenantId, email);
+      setTenants((current) => (current || []).map((item) => (item.id === tenantId ? { ...item, ...updated.tenant } : item)));
+      setSelectedTenantOptions((current) => current && current.id === tenantId ? { ...current, ...updated.tenant } : current);
+      showToast(`Correo de notificación actualizado`);
+    } catch (err) {
+      setError(err.message || 'No se pudo actualizar el correo');
     }
   }
 
@@ -5695,62 +5715,72 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
             {filteredTenants.map((tenant) => {
               const readiness = tenantReadiness(tenant);
               return (
-                <article className="tenant-card" key={tenant.id}>
-                  <div className="tenant-card-head">
-                    <strong>{tenant.slug}.catalogohn.com</strong>
-                    <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'}>{tenant.activa ? 'Activa' : 'Suspendida'}</b>
-                  </div>
-                  <p>{tenant.nombre}</p>
-                  <small>{tenant.subnombre || 'Sin subnombre configurado'}</small>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span>✉️ Notificar a:</span>
-                    <span 
-                      style={{ color: tenant.email_notificaciones ? 'var(--text-color)' : 'var(--text-muted)', cursor: 'pointer', fontStyle: tenant.email_notificaciones ? 'normal' : 'italic', textDecoration: 'underline', fontWeight: tenant.email_notificaciones ? 'bold' : 'normal' }} 
-                      onClick={() => editTenantEmail(tenant)}
-                    >
-                      {tenant.email_notificaciones || 'Configurar correo'}
-                    </span>
-                  </div>
-                  <div className="tenant-card-stats">
-                    <span><Users size={13} />{tenant.admin_count || 0} admins</span>
-                    <span><Package size={13} />{tenant.product_count || 0} productos</span>
-                    <span><ClipboardList size={13} />{tenant.order_count || 0} pedidos</span>
-                    <span style={{
-                      background: tenant.notificaciones_activas !== false ? 'rgba(32, 147, 95, 0.08)' : 'rgba(239, 61, 71, 0.08)',
-                      color: tenant.notificaciones_activas !== false ? '#20935f' : '#ef3d47'
-                    }}>
-                      {tenant.notificaciones_activas !== false ? '🔔 Notificaciones' : '🔕 Inactivas'}
-                    </span>
-                  </div>
-                  <div className="tenant-readiness">
-                    <strong>{readiness.label}</strong>
+                <article className="tenant-card" key={tenant.id} style={{ display: 'flex', flexDirection: 'column', padding: '16px', borderRadius: '12px', border: '1px solid rgba(17, 17, 17, 0.08)', background: '#fff', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
+                      <strong style={{ fontSize: '15px', color: 'var(--text-color)', display: 'block' }}>{tenant.nombre}</strong>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>{tenant.subnombre || 'Sin subnombre'}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px', fontFamily: 'monospace' }}>{tenant.slug}.catalogohn.com</span>
+                    </div>
+                    <b className={tenant.activa ? 'tenant-state on' : 'tenant-state off'} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                      {tenant.activa ? 'Activa' : 'Suspendida'}
+                    </b>
+                  </div>
+
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>✉️ Correo:</span>
+                    <span style={{ color: tenant.email_notificaciones ? 'var(--text-color)' : 'var(--text-muted)', fontStyle: tenant.email_notificaciones ? 'normal' : 'italic' }}>
+                      {tenant.email_notificaciones || 'No configurado'}
+                    </span>
+                  </div>
+
+                  <div className="tenant-card-stats" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '11px', padding: '6px 0', borderTop: '1px dashed rgba(0,0,0,0.06)', borderBottom: '1px dashed rgba(0,0,0,0.06)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={12} /> {tenant.admin_count || 0} admins</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Package size={12} /> {tenant.product_count || 0} prod.</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ClipboardList size={12} /> {tenant.order_count || 0} ped.</span>
+                    <span style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      background: tenant.notificaciones_activas !== false ? 'rgba(32, 147, 95, 0.06)' : 'rgba(239, 61, 71, 0.06)',
+                      color: tenant.notificaciones_activas !== false ? '#20935f' : '#ef3d47',
+                      padding: '2px 6px',
+                      borderRadius: '4px'
+                    }}>
+                      {tenant.notificaciones_activas !== false ? '🔔 Notif.' : '🔕 Inact.'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <strong>⚠️ {readiness.label}:</strong>
+                    <div style={{ display: 'flex', gap: '4px' }}>
                       {readiness.checks.map((item) => (
-                        <span className={item.ready ? 'ready' : ''} key={item.key}>{item.label}</span>
+                        <span 
+                          key={item.key} 
+                          style={{ 
+                            padding: '2px 6px', 
+                            borderRadius: '4px', 
+                            fontSize: '10px',
+                            background: item.ready ? 'rgba(32, 147, 95, 0.06)' : 'rgba(239, 61, 71, 0.06)',
+                            color: item.ready ? '#20935f' : '#ef3d47',
+                            textDecoration: item.ready ? 'none' : 'line-through'
+                          }}
+                        >
+                          {item.label}
+                        </span>
                       ))}
                     </div>
                   </div>
-                  <div className="tenant-card-actions">
-                    <button className="secondary-button" type="button" onClick={() => openAdmins(tenant)}>
-                      <Users size={14} /> Admins
+
+                  <div style={{ marginTop: 'auto', paddingTop: '6px' }}>
+                    <button 
+                      className="secondary-button" 
+                      type="button" 
+                      onClick={() => openConfig(tenant)}
+                      style={{ width: '100%', justifyContent: 'center', height: '34px', gap: '6px', fontSize: '12px', fontWeight: '800' }}
+                    >
+                      <Settings2 size={14} /> Configuración
                     </button>
-                    <button className="secondary-button" type="button" onClick={() => copyTenantLink(tenant)}>
-                      <Copy size={14} /> Link
-                    </button>
-                    <button className="secondary-button" type="button" onClick={() => openTenantAdmin(tenant)}>
-                      <ExternalLink size={14} /> Abrir
-                    </button>
-                    <div className="tenant-options">
-                      <button
-                        className="secondary-button tenant-options-button"
-                        type="button"
-                        onClick={() => setSelectedTenantOptions(tenant)}
-                        aria-label={`Opciones de ${tenant.nombre}`}
-                      >
-                        <MoreVertical size={16} />
-                        Opciones
-                      </button>
-                    </div>
                   </div>
                 </article>
               );
@@ -5963,77 +5993,127 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
         </div>
       )}
 
-       {selectedTenantOptions && (
+      {selectedTenantOptions && (
         <div className="admin-modal-backdrop modal-centered" onClick={() => setSelectedTenantOptions(null)}>
-          <section className="admin-modal" style={{ maxWidth: '380px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
-            <header>
-              <h2>Opciones de la empresa</h2>
-              <button onClick={() => setSelectedTenantOptions(null)}><X size={18} /></button>
+          <section className="admin-modal" style={{ maxWidth: '460px', width: '95%', borderRadius: '12px', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+            <header style={{ padding: '16px 20px', borderBottom: '1px solid rgba(17,17,17,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>Configuración de la empresa</h2>
+              <button onClick={() => setSelectedTenantOptions(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}><X size={18} /></button>
             </header>
-            <div style={{ display: 'grid', gap: '10px', padding: '20px' }}>
-              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                <strong style={{ fontSize: '15px', color: 'var(--text-color)' }}>{selectedTenantOptions.nombre}</strong>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{selectedTenantOptions.slug}.catalogohn.com</div>
+
+            <div style={{ textAlign: 'center', margin: '14px 0', borderBottom: '1px dashed rgba(17,17,17,0.08)', paddingBottom: '12px' }}>
+              <strong style={{ fontSize: '16px', color: 'var(--text-color)' }}>{selectedTenantOptions.nombre}</strong>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '2px' }}>{selectedTenantOptions.slug}.catalogohn.com</div>
+            </div>
+
+            <div style={{ padding: '0 20px 14px', borderBottom: '1px solid rgba(17,17,17,0.08)', marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                ✉️ Correo de notificaciones
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input 
+                  type="email" 
+                  value={configEmail} 
+                  onChange={(e) => setConfigEmail(e.target.value)} 
+                  placeholder="Ej. correo@empresa.com" 
+                  style={{ flex: 1, height: '36px', padding: '0 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid rgba(17,17,17,0.1)', background: 'var(--bg-input)' }} 
+                />
+                <button 
+                  type="button" 
+                  className="primary-button" 
+                  onClick={() => editTenantEmailDirect(selectedTenantOptions.id, configEmail)}
+                  style={{ height: '36px', padding: '0 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Guardar
+                </button>
               </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '0 20px 20px' }}>
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                onClick={() => {
+                  openTenantAdmin(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                <ExternalLink size={14} /> Abrir Portal
+              </button>
 
               <button
                 type="button"
                 className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                onClick={() => {
+                  copyTenantLink(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                <Copy size={14} /> Copiar Link
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
+                onClick={() => {
+                  openAdmins(selectedTenantOptions);
+                  setSelectedTenantOptions(null);
+                }}
+              >
+                <Users size={14} /> Administradores
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   editTenantName(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                Editar nombre
+                <Edit2 size={14} /> Editar Nombre
               </button>
 
               <button
                 type="button"
                 className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  requestTenantStatusChange(selectedTenantOptions);
-                  setSelectedTenantOptions(null);
-                }}
-              >
-                {selectedTenantOptions.activa ? 'Desactivar empresa' : 'Activar empresa'}
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
                   toggleTenantNotifications(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                {selectedTenantOptions.notificaciones_activas !== false ? 'Desactivar notificaciones' : 'Activar notificaciones'}
+                {selectedTenantOptions.notificaciones_activas !== false ? <BellOff size={14} /> : <Bell size={14} />}
+                {selectedTenantOptions.notificaciones_activas !== false ? 'Silenciar Notif.' : 'Activar Notif.'}
               </button>
 
               <button
                 type="button"
                 className="secondary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                style={{ height: '38px', fontSize: '12px', fontWeight: '800', justifyContent: 'flex-start', gap: '8px', padding: '0 12px' }}
                 onClick={() => {
-                  editTenantEmail(selectedTenantOptions);
+                  requestTenantStatusChange(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                Editar correo
+                {selectedTenantOptions.activa ? <UserX size={14} /> : <UserCheck size={14} />}
+                {selectedTenantOptions.activa ? 'Desactivar Empresa' : 'Activar Empresa'}
               </button>
 
               <button
                 type="button"
                 className="primary-button"
-                style={{ width: '100%', justifyContent: 'center', height: '40px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '10px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                style={{ gridColumn: 'span 2', justifyContent: 'center', height: '38px', background: 'var(--danger)', color: '#fff', borderColor: 'var(--danger)', marginTop: '8px', fontSize: '12px', fontWeight: '800', gap: '6px' }}
                 onClick={() => {
                   requestTenantDelete(selectedTenantOptions);
                   setSelectedTenantOptions(null);
                 }}
               >
-                Borrar empresa
+                <Trash2 size={14} /> Borrar Empresa
               </button>
             </div>
           </section>
