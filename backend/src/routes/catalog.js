@@ -95,30 +95,60 @@ router.post('/registration-requests', async (req, res) => {
 
     const newRequest = result.rows[0];
 
-    // Enviar notificación por correo
-    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER;
-    if (notifyEmail) {
-      sendMail({
-        to: notifyEmail,
-        subject: `📋 Nueva Solicitud de Acceso: ${empresaNombre}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
-            <h2 style="color: #ff6820;">Nueva Solicitud de Acceso a CatalogoHN</h2>
-            <p><strong>Empresa:</strong> ${empresaNombre}</p>
-            <p><strong>Contacto:</strong> ${contacto}</p>
-            <p><strong>Correo:</strong> ${email || 'N/A'}</p>
-            <p><strong>Teléfono:</strong> ${telefono || 'N/A'}</p>
-            <p><strong>Rubro:</strong> ${rubro || 'N/A'}</p>
-            <p><strong>Mensaje:</strong></p>
-            <blockquote style="background: #f4f5f8; padding: 12px; border-left: 4px solid #ff6820; margin: 0;">
-              ${(mensaje || 'Sin mensaje adicional').replace(/\n/g, '<br/>')}
-            </blockquote>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
-            <small style="color: #666;">Enviado automáticamente desde CatalogoHN</small>
+    // Enviar notificación por correo a catalogohn.sistema@gmail.com
+    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER || 'catalogohn.sistema@gmail.com';
+    sendMail({
+      to: notifyEmail,
+      subject: `📋 Nueva Solicitud de Acceso: ${empresaNombre}`,
+      html: `
+        <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <div style="background-color: #1a1a1e; padding: 24px; text-align: center; border-bottom: 3px solid #ff6820;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
+              Catalogo<span style="color: #ff6820;">HN</span>
+            </h1>
+            <p style="color: #a0a0a8; margin: 6px 0 0; font-size: 14px;">Nueva Solicitud de Registro de Empresa</p>
           </div>
-        `
-      }).catch(err => console.error('[Registration Mail Error]:', err));
-    }
+          
+          <div style="padding: 24px; color: #1f2937;">
+            <p style="font-size: 16px; margin-top: 0; font-weight: 600;">Se ha recibido una nueva solicitud de acceso con los siguientes datos:</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563; width: 140px;">Empresa:</td>
+                <td style="padding: 10px 0; color: #111827; font-size: 15px; font-weight: 600;">${empresaNombre}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563;">Contacto:</td>
+                <td style="padding: 10px 0; color: #111827;">${contacto}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563;">Correo:</td>
+                <td style="padding: 10px 0; color: #ff6820; font-weight: 600;"><a href="mailto:${email}" style="color: #ff6820; text-decoration: none;">${email || 'No proporcionado'}</a></td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563;">Teléfono:</td>
+                <td style="padding: 10px 0; color: #111827;">${telefono || 'No proporcionado'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563;">Rubro:</td>
+                <td style="padding: 10px 0; color: #111827;">${rubro || 'No especificado'}</td>
+              </tr>
+            </table>
+
+            <div style="margin-top: 20px;">
+              <p style="font-weight: bold; color: #4b5563; margin-bottom: 6px;">Mensaje / Notas:</p>
+              <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-left: 4px solid #ff6820; padding: 14px; border-radius: 6px; color: #374151; font-size: 14px; line-height: 1.5;">
+                ${(mensaje || 'Sin mensaje adicional').replace(/\n/g, '<br/>')}
+              </div>
+            </div>
+          </div>
+          
+          <div style="background-color: #f9fafb; padding: 14px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb;">
+            CatalogoHN &bull; Sistema Automático de Notificaciones
+          </div>
+        </div>
+      `
+    }).catch(err => console.error('[Registration Mail Error]:', err));
 
     res.status(201).json({ request: newRequest });
   } catch (error) {
@@ -152,28 +182,52 @@ router.post('/support-requests', async (req, res) => {
 
     const newRequest = result.rows[0];
 
-    // Enviar notificación por correo
-    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER;
-    if (notifyEmail) {
-      sendMail({
-        to: notifyEmail,
-        subject: `🆘 Nueva Solicitud de Soporte: ${nombre}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
-            <h2 style="color: #ff6820;">Nueva Solicitud de Soporte Técnico</h2>
-            <p><strong>Nombre / Empresa:</strong> ${nombre}</p>
-            <p><strong>Contacto (Correo/Tel):</strong> ${contacto}</p>
-            <p><strong>Tipo de Problema:</strong> ${tipoProblema}</p>
-            <p><strong>Descripción del Problema:</strong></p>
-            <blockquote style="background: #f4f5f8; padding: 12px; border-left: 4px solid #ff6820; margin: 0;">
-              ${descripcion.replace(/\n/g, '<br/>')}
-            </blockquote>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
-            <small style="color: #666;">Enviado automáticamente desde CatalogoHN</small>
+    // Enviar notificación por correo a catalogohn.sistema@gmail.com
+    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER || 'catalogohn.sistema@gmail.com';
+    sendMail({
+      to: notifyEmail,
+      subject: `🆘 Nueva Solicitud de Soporte: ${nombre}`,
+      html: `
+        <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <div style="background-color: #1a1a1e; padding: 24px; text-align: center; border-bottom: 3px solid #ef4444;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
+              Catalogo<span style="color: #ff6820;">HN</span>
+            </h1>
+            <p style="color: #fca5a5; margin: 6px 0 0; font-size: 14px; font-weight: 600;">🆘 Nuevo Reporte de Soporte Técnico</p>
           </div>
-        `
-      }).catch(err => console.error('[Support Mail Error]:', err));
-    }
+          
+          <div style="padding: 24px; color: #1f2937;">
+            <p style="font-size: 16px; margin-top: 0; font-weight: 600;">Se ha registrado un reporte de soporte técnico:</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563; width: 140px;">Cliente / Empresa:</td>
+                <td style="padding: 10px 0; color: #111827; font-size: 15px; font-weight: 600;">${nombre}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563;">Contacto:</td>
+                <td style="padding: 10px 0; color: #111827; font-weight: 600;">${contacto}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 10px 0; font-weight: bold; color: #4b5563;">Tipo de Consulta:</td>
+                <td style="padding: 10px 0; color: #ef4444; font-weight: 700;">${tipoProblema}</td>
+              </tr>
+            </table>
+
+            <div style="margin-top: 20px;">
+              <p style="font-weight: bold; color: #4b5563; margin-bottom: 6px;">Descripción del Problema:</p>
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 14px; border-radius: 6px; color: #991b1b; font-size: 14px; line-height: 1.5;">
+                ${descripcion.replace(/\n/g, '<br/>')}
+              </div>
+            </div>
+          </div>
+          
+          <div style="background-color: #f9fafb; padding: 14px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb;">
+            CatalogoHN &bull; Sistema Automático de Notificaciones
+          </div>
+        </div>
+      `
+    }).catch(err => console.error('[Support Mail Error]:', err));
 
     res.status(201).json({ request: newRequest });
   } catch (error) {
