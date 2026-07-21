@@ -675,7 +675,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                   <label>
                     Nombre de la Empresa *
                     <input
-                      placeholder="Ej: Repuestos El Zapote"
                       value={requestAccessForm.empresa_nombre}
                       onChange={(e) => setRequestAccessForm({ ...requestAccessForm, empresa_nombre: e.target.value })}
                       className={requestAccessErrors.empresa_nombre ? 'input-error' : ''}
@@ -685,7 +684,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                   <label>
                     Nombre de Contacto *
                     <input
-                      placeholder="Ej: Carlos Mendoza"
                       value={requestAccessForm.contacto}
                       onChange={(e) => setRequestAccessForm({ ...requestAccessForm, contacto: e.target.value })}
                       className={requestAccessErrors.contacto ? 'input-error' : ''}
@@ -697,7 +695,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                       Correo Electrónico
                       <input
                         type="email"
-                        placeholder="correo@empresa.com"
                         value={requestAccessForm.email}
                         onChange={(e) => setRequestAccessForm({ ...requestAccessForm, email: e.target.value })}
                         className={requestAccessErrors.email || requestAccessErrors.contacto_info ? 'input-error' : ''}
@@ -708,7 +705,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                       Teléfono / WhatsApp
                       <input
                         type="tel"
-                        placeholder="+504 9999-9999"
                         value={requestAccessForm.telefono}
                         onChange={(e) => setRequestAccessForm({ ...requestAccessForm, telefono: e.target.value })}
                         className={requestAccessErrors.contacto_info ? 'input-error' : ''}
@@ -719,7 +715,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                   <label>
                     Rubro / Categoría
                     <input
-                      placeholder="Ej: Auto Repuestos, Ferretería, Comercio"
                       value={requestAccessForm.rubro}
                       onChange={(e) => setRequestAccessForm({ ...requestAccessForm, rubro: e.target.value })}
                     />
@@ -728,7 +723,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                     Mensaje adicional (opcional)
                     <textarea
                       rows={3}
-                      placeholder="Cuéntanos un poco sobre tu negocio..."
                       value={requestAccessForm.mensaje}
                       onChange={(e) => setRequestAccessForm({ ...requestAccessForm, mensaje: e.target.value })}
                     />
@@ -772,7 +766,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                   <label>
                     Tu Nombre o Nombre de Empresa *
                     <input
-                      placeholder="Ej: Juan Pérez - Kolben"
                       value={supportForm.nombre}
                       onChange={(e) => setSupportForm({ ...supportForm, nombre: e.target.value })}
                       className={supportErrors.nombre ? 'input-error' : ''}
@@ -782,7 +775,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                   <label>
                     Correo o Número de Teléfono / WhatsApp *
                     <input
-                      placeholder="Ej: juan@empresa.com o 9999-8888"
                       value={supportForm.contacto}
                       onChange={(e) => setSupportForm({ ...supportForm, contacto: e.target.value })}
                       className={supportErrors.contacto ? 'input-error' : ''}
@@ -805,7 +797,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
                     Descripción del Problema *
                     <textarea
                       rows={3}
-                      placeholder="Detalla lo que sucede para poder ayudarte más rápido..."
                       value={supportForm.descripcion}
                       onChange={(e) => setSupportForm({ ...supportForm, descripcion: e.target.value })}
                       className={supportErrors.descripcion ? 'input-error' : ''}
