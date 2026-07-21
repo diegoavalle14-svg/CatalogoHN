@@ -1741,9 +1741,12 @@ button {
 }
 
 html.landing-html,
-html:has(.landing-screen) {
+html:has(.landing-screen),
+html:has(.landing-screen) body {
   background: #1a1a1e !important;
   background-image: none !important;
+  overflow: hidden !important;
+  height: 100% !important;
 }
 
 .landing-screen {
@@ -1752,8 +1755,78 @@ html:has(.landing-screen) {
   justify-content: center !important;
   background: #1a1a1e !important;
   color: #f1f1f1 !important;
-  overflow-y: auto !important;
+  overflow: hidden !important;
   padding: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+}
+
+/* Optimize spacing on short screens to avoid vertical overflow/scroll */
+@media (max-height: 740px) {
+  .landing-screen .login-screen-inner {
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+  .landing-screen .landing-logo-wrap {
+    gap: 4px !important;
+  }
+  .landing-screen .landing-logo {
+    font-size: 32px !important;
+  }
+  .landing-screen .landing-subtitle {
+    font-size: 12px !important;
+  }
+  .landing-screen .tenant-grid {
+    gap: 8px !important;
+    margin-bottom: 4px !important;
+  }
+  .landing-screen .tenant-tile {
+    min-height: 82px !important;
+    gap: 6px !important;
+    padding: 6px !important;
+    border-radius: 10px !important;
+  }
+  .landing-screen .tenant-tile-logo-badge {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 4px !important;
+  }
+  .landing-screen .tenant-tile .tenant-tile-name {
+    font-size: 12px !important;
+  }
+  .landing-screen .landing-bottom {
+    gap: 10px !important;
+    margin-top: 0 !important;
+  }
+  .landing-screen .landing-bottom-block strong {
+    min-height: 20px !important;
+    font-size: 11px !important;
+  }
+  .landing-screen .landing-outline-btn {
+    height: 34px !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (max-height: 600px) {
+  .landing-screen .tenant-tile {
+    min-height: 64px !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    padding: 6px 12px !important;
+    gap: 10px !important;
+  }
+  .landing-screen .tenant-tile-logo-badge {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .landing-screen .landing-logo-wrap {
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .landing-screen .landing-subtitle {
+    display: none !important;
+  }
 }
 
 .login-screen-inner {
