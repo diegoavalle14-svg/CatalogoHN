@@ -2,10 +2,12 @@ const express = require('express');
 const db = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { ensureProductInventoryColumns, ensureCategoryImageColumn, ensurePriceVisibilityColumn, ensurePricePromoActiveColumn, ensureBranchActiveColumn } = require('../services/schemaGuards');
+const { sendMail } = require('../services/mailer');
 
 const router = express.Router();
 let tenantProfileColumnsReady = false;
 let registrationRequestsReady = false;
+let supportRequestsReady = false;
 
 async function ensureTenantProfileColumns() {
   if (tenantProfileColumnsReady) return;
@@ -30,6 +32,22 @@ async function ensureRegistrationRequestsTable() {
     )
   `);
   registrationRequestsReady = true;
+}
+
+async function ensureSupportRequestsTable() {
+  if (supportRequestsReady) return;
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS solicitudes_soporte (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(140) NOT NULL,
+      contacto VARCHAR(140) NOT NULL,
+      tipo_problema VARCHAR(100) DEFAULT 'Acceso / Contraseña',
+      descripcion TEXT NOT NULL,
+      estado VARCHAR(30) DEFAULT 'pendiente',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  supportRequestsReady = true;
 }
 
 router.get('/tenants/public', async (req, res) => {
@@ -75,9 +93,92 @@ router.post('/registration-requests', async (req, res) => {
       ]
     );
 
-    res.status(201).json({ request: result.rows[0] });
+    const newRequest = result.rows[0];
+
+    // Enviar notificación por correo
+    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER;
+    if (notifyEmail) {
+      sendMail({
+        to: notifyEmail,
+        subject: `📋 Nueva Solicitud de Acceso: ${empresaNombre}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
+            <h2 style="color: #ff6820;">Nueva Solicitud de Acceso a CatalogoHN</h2>
+            <p><strong>Empresa:</strong> ${empresaNombre}</p>
+            <p><strong>Contacto:</strong> ${contacto}</p>
+            <p><strong>Correo:</strong> ${email || 'N/A'}</p>
+            <p><strong>Teléfono:</strong> ${telefono || 'N/A'}</p>
+            <p><strong>Rubro:</strong> ${rubro || 'N/A'}</p>
+            <p><strong>Mensaje:</strong></p>
+            <blockquote style="background: #f4f5f8; padding: 12px; border-left: 4px solid #ff6820; margin: 0;">
+              ${(mensaje || 'Sin mensaje adicional').replace(/\n/g, '<br/>')}
+            </blockquote>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+            <small style="color: #666;">Enviado automáticamente desde CatalogoHN</small>
+          </div>
+        `
+      }).catch(err => console.error('[Registration Mail Error]:', err));
+    }
+
+    res.status(201).json({ request: newRequest });
   } catch (error) {
     res.status(500).json({ message: 'No se pudo registrar la solicitud' });
+  }
+});
+
+router.post('/support-requests', async (req, res) => {
+  try {
+    await ensureSupportRequestsTable();
+    const nombre = String(req.body?.nombre || '').trim();
+    const contacto = String(req.body?.contacto || '').trim();
+    const tipoProblema = String(req.body?.tipo_problema || 'Acceso / Contraseña').trim();
+    const descripcion = String(req.body?.descripcion || '').trim();
+
+    if (!nombre || !contacto || !descripcion) {
+      return res.status(400).json({ message: 'Nombre, contacto (correo/teléfono) y descripción son requeridos' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO solicitudes_soporte (nombre, contacto, tipo_problema, descripcion)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, nombre, contacto, tipo_problema, descripcion, estado, created_at`,
+      [
+        nombre.slice(0, 140),
+        contacto.slice(0, 140),
+        tipoProblema.slice(0, 100),
+        descripcion.slice(0, 1000)
+      ]
+    );
+
+    const newRequest = result.rows[0];
+
+    // Enviar notificación por correo
+    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER;
+    if (notifyEmail) {
+      sendMail({
+        to: notifyEmail,
+        subject: `🆘 Nueva Solicitud de Soporte: ${nombre}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
+            <h2 style="color: #ff6820;">Nueva Solicitud de Soporte Técnico</h2>
+            <p><strong>Nombre / Empresa:</strong> ${nombre}</p>
+            <p><strong>Contacto (Correo/Tel):</strong> ${contacto}</p>
+            <p><strong>Tipo de Problema:</strong> ${tipoProblema}</p>
+            <p><strong>Descripción del Problema:</strong></p>
+            <blockquote style="background: #f4f5f8; padding: 12px; border-left: 4px solid #ff6820; margin: 0;">
+              ${descripcion.replace(/\n/g, '<br/>')}
+            </blockquote>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+            <small style="color: #666;">Enviado automáticamente desde CatalogoHN</small>
+          </div>
+        `
+      }).catch(err => console.error('[Support Mail Error]:', err));
+    }
+
+    res.status(201).json({ request: newRequest });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'No se pudo registrar la solicitud de soporte' });
   }
 });
 

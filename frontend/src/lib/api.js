@@ -104,6 +104,9 @@ export const api = {
   createRegistrationRequest: async (payload) => {
     return request('/registration-requests', { method: 'POST', body: JSON.stringify(payload) });
   },
+  createSupportRequest: async (payload) => {
+    return request('/support-requests', { method: 'POST', body: JSON.stringify(payload) });
+  },
   catalog: async (token) => {
     return request('/catalog', { token });
   },

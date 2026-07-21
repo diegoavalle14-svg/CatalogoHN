@@ -392,6 +392,72 @@ function Login({ onLogin, theme, onThemeToggle }) {
   const [superadminMode, setSuperadminMode] = useState(false);
   const [tenantTiles, setTenantTiles] = useState([]);
 
+  // Estados para Modal Solicitar Acceso
+  const [requestAccessOpen, setRequestAccessOpen] = useState(false);
+  const [requestAccessForm, setRequestAccessForm] = useState({ empresa_nombre: '', contacto: '', email: '', telefono: '', rubro: '', mensaje: '' });
+  const [requestAccessErrors, setRequestAccessErrors] = useState({});
+  const [requestAccessLoading, setRequestAccessLoading] = useState(false);
+  const [requestAccessSuccess, setRequestAccessSuccess] = useState(false);
+
+  // Estados para Modal Soporte Técnico
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportForm, setSupportForm] = useState({ nombre: '', contacto: '', tipo_problema: 'Acceso / Contraseña', descripcion: '' });
+  const [supportErrors, setSupportErrors] = useState({});
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportSuccess, setSupportSuccess] = useState(false);
+
+  async function submitRequestAccess(e) {
+    e.preventDefault();
+    const errors = {};
+    if (!requestAccessForm.empresa_nombre.trim()) errors.empresa_nombre = 'El nombre de la empresa es obligatorio';
+    if (!requestAccessForm.contacto.trim()) errors.contacto = 'El nombre de contacto es obligatorio';
+    if (!requestAccessForm.email.trim() && !requestAccessForm.telefono.trim()) {
+      errors.contacto_info = 'Ingresa un correo o un teléfono';
+    } else if (requestAccessForm.email.trim() && !/\S+@\S+\.\S+/.test(requestAccessForm.email.trim())) {
+      errors.email = 'Correo electrónico inválido';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setRequestAccessErrors(errors);
+      return;
+    }
+
+    setRequestAccessLoading(true);
+    setRequestAccessErrors({});
+    try {
+      await api.createRegistrationRequest(requestAccessForm);
+      setRequestAccessSuccess(true);
+    } catch (err) {
+      setRequestAccessErrors({ submit: err.message || 'No se pudo enviar la solicitud' });
+    } finally {
+      setRequestAccessLoading(false);
+    }
+  }
+
+  async function submitSupportRequest(e) {
+    e.preventDefault();
+    const errors = {};
+    if (!supportForm.nombre.trim()) errors.nombre = 'Tu nombre o empresa es obligatorio';
+    if (!supportForm.contacto.trim()) errors.contacto = 'Tu contacto (correo o celular) es obligatorio';
+    if (!supportForm.descripcion.trim()) errors.descripcion = 'Describe brevemente el problema';
+
+    if (Object.keys(errors).length > 0) {
+      setSupportErrors(errors);
+      return;
+    }
+
+    setSupportLoading(true);
+    setSupportErrors({});
+    try {
+      await api.createSupportRequest(supportForm);
+      setSupportSuccess(true);
+    } catch (err) {
+      setSupportErrors({ submit: err.message || 'No se pudo enviar la solicitud de soporte' });
+    } finally {
+      setSupportLoading(false);
+    }
+  }
+
   useEffect(() => {
     document.documentElement.classList.add('landing-html');
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -494,13 +560,15 @@ function Login({ onLogin, theme, onThemeToggle }) {
     <main className="login-screen landing-screen">
       <div className="login-screen-inner">
 
-        {/* -- Logo -- */}
+        {/* -- Encabezado principal -- */}
         <div className="landing-logo-wrap">
           <span className="landing-logo">
             Catalogo<span className="landing-logo-hn">HN</span>
           </span>
           <p className="landing-subtitle">Pedidos digitales con precios personalizados para cada cliente.</p>
         </div>
+
+        <div className="landing-divider" />
 
         {/* -- Grid de empresas -- */}
         <div className="tenant-grid">
@@ -540,19 +608,219 @@ function Login({ onLogin, theme, onThemeToggle }) {
           ))}
         </div>
 
+        <div className="landing-divider" />
+
         {/* -- Sección inferior -- */}
         <div className="landing-bottom">
           <div className="landing-bottom-block">
             <strong>Regístrate</strong>
-            <button className="landing-outline-btn" type="button">SOLICITAR ACCESO</button>
+            <button
+              className="landing-outline-btn"
+              type="button"
+              onClick={() => {
+                setRequestAccessForm({ empresa_nombre: '', contacto: '', email: '', telefono: '', rubro: '', mensaje: '' });
+                setRequestAccessErrors({});
+                setRequestAccessSuccess(false);
+                setRequestAccessOpen(true);
+              }}
+            >
+              SOLICITAR ACCESO
+            </button>
           </div>
           <div className="landing-bottom-block">
             <strong>¿Problemas para<br />ingresar a tu cuenta?</strong>
-            <button className="landing-outline-btn" type="button">CONTACTAR SOPORTE</button>
+            <button
+              className="landing-outline-btn"
+              type="button"
+              onClick={() => {
+                setSupportForm({ nombre: '', contacto: '', tipo_problema: 'Acceso / Contraseña', descripcion: '' });
+                setSupportErrors({});
+                setSupportSuccess(false);
+                setSupportOpen(true);
+              }}
+            >
+              CONTACTAR SOPORTE
+            </button>
           </div>
         </div>
 
       </div>
+
+      {/* -- Modal Solicitar Acceso -- */}
+      {requestAccessOpen && (
+        <div className="login-modal-backdrop" onClick={() => !requestAccessLoading && setRequestAccessOpen(false)}>
+          <section className="login-modal modal-form-custom" onClick={(e) => e.stopPropagation()}>
+            <div className="login-modal-head">
+              <h2>Solicitar Acceso a CatalogoHN</h2>
+              <button className="icon-button" onClick={() => setRequestAccessOpen(false)} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </div>
+            {requestAccessSuccess ? (
+              <div className="modal-success-state">
+                <div className="success-icon-badge">
+                  <Check size={32} />
+                </div>
+                <h3>¡Solicitud Enviada!</h3>
+                <p>Hemos recibido tu información. Nuestro equipo se pondrá en contacto contigo muy pronto para brindarte acceso.</p>
+                <button type="button" className="landing-outline-btn primary-btn" onClick={() => setRequestAccessOpen(false)}>
+                  Entendido
+                </button>
+              </div>
+            ) : (
+              <>
+                <p>Llena tus datos para registrar tu empresa en la plataforma:</p>
+                {requestAccessErrors.submit && <div className="form-error-alert">{requestAccessErrors.submit}</div>}
+                <form onSubmit={submitRequestAccess} className="login-modal-form custom-form-grid">
+                  <label>
+                    Nombre de la Empresa *
+                    <input
+                      placeholder="Ej: Repuestos El Zapote"
+                      value={requestAccessForm.empresa_nombre}
+                      onChange={(e) => setRequestAccessForm({ ...requestAccessForm, empresa_nombre: e.target.value })}
+                      className={requestAccessErrors.empresa_nombre ? 'input-error' : ''}
+                    />
+                    {requestAccessErrors.empresa_nombre && <span className="field-error">{requestAccessErrors.empresa_nombre}</span>}
+                  </label>
+                  <label>
+                    Nombre de Contacto *
+                    <input
+                      placeholder="Ej: Carlos Mendoza"
+                      value={requestAccessForm.contacto}
+                      onChange={(e) => setRequestAccessForm({ ...requestAccessForm, contacto: e.target.value })}
+                      className={requestAccessErrors.contacto ? 'input-error' : ''}
+                    />
+                    {requestAccessErrors.contacto && <span className="field-error">{requestAccessErrors.contacto}</span>}
+                  </label>
+                  <div className="form-row-2">
+                    <label>
+                      Correo Electrónico
+                      <input
+                        type="email"
+                        placeholder="correo@empresa.com"
+                        value={requestAccessForm.email}
+                        onChange={(e) => setRequestAccessForm({ ...requestAccessForm, email: e.target.value })}
+                        className={requestAccessErrors.email || requestAccessErrors.contacto_info ? 'input-error' : ''}
+                      />
+                      {requestAccessErrors.email && <span className="field-error">{requestAccessErrors.email}</span>}
+                    </label>
+                    <label>
+                      Teléfono / WhatsApp
+                      <input
+                        type="tel"
+                        placeholder="+504 9999-9999"
+                        value={requestAccessForm.telefono}
+                        onChange={(e) => setRequestAccessForm({ ...requestAccessForm, telefono: e.target.value })}
+                        className={requestAccessErrors.contacto_info ? 'input-error' : ''}
+                      />
+                    </label>
+                  </div>
+                  {requestAccessErrors.contacto_info && <span className="field-error block-error">{requestAccessErrors.contacto_info}</span>}
+                  <label>
+                    Rubro / Categoría
+                    <input
+                      placeholder="Ej: Auto Repuestos, Ferretería, Comercio"
+                      value={requestAccessForm.rubro}
+                      onChange={(e) => setRequestAccessForm({ ...requestAccessForm, rubro: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    Mensaje adicional (opcional)
+                    <textarea
+                      rows={3}
+                      placeholder="Cuéntanos un poco sobre tu negocio..."
+                      value={requestAccessForm.mensaje}
+                      onChange={(e) => setRequestAccessForm({ ...requestAccessForm, mensaje: e.target.value })}
+                    />
+                  </label>
+                  <button type="submit" className="login-submit-button" disabled={requestAccessLoading}>
+                    {requestAccessLoading ? 'Enviando...' : 'ENVIAR SOLICITUD'}
+                  </button>
+                </form>
+              </>
+            )}
+          </section>
+        </div>
+      )}
+
+      {/* -- Modal Contactar Soporte -- */}
+      {supportOpen && (
+        <div className="login-modal-backdrop" onClick={() => !supportLoading && setSupportOpen(false)}>
+          <section className="login-modal modal-form-custom" onClick={(e) => e.stopPropagation()}>
+            <div className="login-modal-head">
+              <h2>Soporte Técnico CatalogoHN</h2>
+              <button className="icon-button" onClick={() => setSupportOpen(false)} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </div>
+            {supportSuccess ? (
+              <div className="modal-success-state">
+                <div className="success-icon-badge">
+                  <Check size={32} />
+                </div>
+                <h3>¡Reporte Enviado!</h3>
+                <p>Tu solicitud de soporte técnico fue registrada. Nos comunicaremos contigo a la brevedad para ayudarte.</p>
+                <button type="button" className="landing-outline-btn primary-btn" onClick={() => setSupportOpen(false)}>
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <>
+                <p>¿Tienes problemas para ingresar o dudas sobre tu cuenta?</p>
+                {supportErrors.submit && <div className="form-error-alert">{supportErrors.submit}</div>}
+                <form onSubmit={submitSupportRequest} className="login-modal-form custom-form-grid">
+                  <label>
+                    Tu Nombre o Nombre de Empresa *
+                    <input
+                      placeholder="Ej: Juan Pérez - Kolben"
+                      value={supportForm.nombre}
+                      onChange={(e) => setSupportForm({ ...supportForm, nombre: e.target.value })}
+                      className={supportErrors.nombre ? 'input-error' : ''}
+                    />
+                    {supportErrors.nombre && <span className="field-error">{supportErrors.nombre}</span>}
+                  </label>
+                  <label>
+                    Correo o Número de Teléfono / WhatsApp *
+                    <input
+                      placeholder="Ej: juan@empresa.com o 9999-8888"
+                      value={supportForm.contacto}
+                      onChange={(e) => setSupportForm({ ...supportForm, contacto: e.target.value })}
+                      className={supportErrors.contacto ? 'input-error' : ''}
+                    />
+                    {supportErrors.contacto && <span className="field-error">{supportErrors.contacto}</span>}
+                  </label>
+                  <label>
+                    Tipo de Consulta o Inconveniente
+                    <select
+                      value={supportForm.tipo_problema}
+                      onChange={(e) => setSupportForm({ ...supportForm, tipo_problema: e.target.value })}
+                    >
+                      <option value="Acceso / Contraseña">Olvido o restablecimiento de contraseña</option>
+                      <option value="Usuario Bloqueado">Usuario o cuenta bloqueada</option>
+                      <option value="Problema en Catálogo">Inconveniente con productos o precios</option>
+                      <option value="Otro">Otro problema técnico</option>
+                    </select>
+                  </label>
+                  <label>
+                    Descripción del Problema *
+                    <textarea
+                      rows={3}
+                      placeholder="Detalla lo que sucede para poder ayudarte más rápido..."
+                      value={supportForm.descripcion}
+                      onChange={(e) => setSupportForm({ ...supportForm, descripcion: e.target.value })}
+                      className={supportErrors.descripcion ? 'input-error' : ''}
+                    />
+                    {supportErrors.descripcion && <span className="field-error">{supportErrors.descripcion}</span>}
+                  </label>
+                  <button type="submit" className="login-submit-button" disabled={supportLoading}>
+                    {supportLoading ? 'Enviando reporte...' : 'ENVIAR MENSAJE DE SOPORTE'}
+                  </button>
+                </form>
+              </>
+            )}
+          </section>
+        </div>
+      )}
 
       {/* -- Modal de login -- */}
       {loginOpen && (
