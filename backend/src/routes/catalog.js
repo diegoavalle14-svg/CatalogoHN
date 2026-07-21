@@ -95,8 +95,8 @@ router.post('/registration-requests', async (req, res) => {
 
     const newRequest = result.rows[0];
 
-    // Enviar notificación por correo a catalogohn.sistema@gmail.com
-    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER || 'catalogohn.sistema@gmail.com';
+    // Enviar notificación por correo a diego.avalle14@gmail.com
+    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER || 'diego.avalle14@gmail.com';
     sendMail({
       to: notifyEmail,
       subject: `📋 Nueva Solicitud de Acceso: ${empresaNombre}`,
@@ -182,8 +182,8 @@ router.post('/support-requests', async (req, res) => {
 
     const newRequest = result.rows[0];
 
-    // Enviar notificación por correo a catalogohn.sistema@gmail.com
-    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER || 'catalogohn.sistema@gmail.com';
+    // Enviar notificación por correo a diego.avalle14@gmail.com
+    const notifyEmail = process.env.EMAIL_ADMIN_NOTIFY || process.env.SMTP_USER || 'diego.avalle14@gmail.com';
     sendMail({
       to: notifyEmail,
       subject: `🆘 Nueva Solicitud de Soporte: ${nombre}`,
