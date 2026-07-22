@@ -1294,9 +1294,10 @@ function ClearableSearchInput({ className, iconSize = 16, placeholder, value, on
 
 function BrandImageBadge({ brand, label }) {
   const image = brand?.logo_url || brand?.marca_logo_url ? resolveMediaUrl(brand.logo_url || brand.marca_logo_url) : '';
+  const fallback = <BadgeCheck size={16} strokeWidth={2.4} />;
   return (
     <span className="product-category-logo" title={label} aria-label={label}>
-      {image ? <img src={image} alt="" /> : <BadgeCheck size={16} strokeWidth={2.4} />}
+      <SafeImage src={image} fallback={fallback} alt="" />
     </span>
   );
 }
@@ -2348,7 +2349,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function saveBrand(payload) {
-    let logoUrl = payload.logo_url || '';
+    let logoUrl = payload.logo_url;
     if (payload.logoFile) {
       try {
         const upload = await api.adminUploadImage(session.token, payload.logoFile, 'brand');
@@ -2358,7 +2359,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         return;
       }
     }
-    const nextPayload = { ...payload, logoFile: undefined, logo_url: logoUrl };
+    const nextPayload = { ...payload, logoFile: undefined, ...(logoUrl !== undefined ? { logo_url: logoUrl } : {}) };
     try {
       const saved = await api.adminSaveBrand(session.token, nextPayload);
       setBrands((current) => (nextPayload.id ? current.map((item) => (item.id === nextPayload.id ? saved.marca : item)) : [saved.marca, ...current]));
@@ -2392,7 +2393,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
   }
 
   async function saveCategory(payload) {
-    let imageUrl = payload.imagen_url || '';
+    let imageUrl = payload.imagen_url;
     if (payload.imageFile) {
       try {
         const upload = await api.adminUploadImage(session.token, payload.imageFile, 'category');
@@ -2402,7 +2403,7 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
         return;
       }
     }
-    const nextPayload = { ...payload, imageFile: undefined, imagen_url: imageUrl };
+    const nextPayload = { ...payload, imageFile: undefined, ...(imageUrl !== undefined ? { imagen_url: imageUrl } : {}) };
     try {
       const saved = await api.adminSaveCategory(session.token, nextPayload);
       setCategories((current) => (

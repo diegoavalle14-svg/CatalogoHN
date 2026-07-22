@@ -556,14 +556,15 @@ router.post('/admin/brands', authenticate, requireRole('admin', 'superadmin'), a
 router.patch('/admin/brands/:id', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
   const { nombre, logo_url, posicion } = req.body || {};
   try {
+    const logoValue = logo_url === undefined ? null : String(logo_url || '');
     const result = await db.query(
       `UPDATE marcas
        SET nombre = COALESCE($1, nombre),
-           logo_url = COALESCE($2, logo_url),
+           logo_url = CASE WHEN $2::text IS NULL THEN logo_url ELSE $2::text END,
            posicion = COALESCE($3, posicion)
        WHERE id = $4 AND empresa_id = $5
        RETURNING *`,
-      [nombre ? String(nombre).trim() : null, logo_url ?? null, Number.isFinite(Number(posicion)) ? Number(posicion) : null, req.params.id, req.tenant.id]
+      [nombre ? String(nombre).trim() : null, logo_url === undefined ? null : logoValue, Number.isFinite(Number(posicion)) ? Number(posicion) : null, req.params.id, req.tenant.id]
     );
     if (!result.rows[0]) return res.status(404).json({ message: 'Marca no encontrada' });
     res.json({ marca: result.rows[0] });
@@ -603,15 +604,16 @@ router.patch('/admin/categories/:id', authenticate, requireRole('admin', 'supera
   const { nombre, color, imagen_url, posicion } = req.body || {};
   try {
     await ensureCategoryImageColumn();
+    const imageValue = imagen_url === undefined ? null : String(imagen_url || '');
     const result = await db.query(
       `UPDATE categorias
        SET nombre = COALESCE($1, nombre),
            color = COALESCE($2, color),
-           imagen_url = COALESCE($3, imagen_url),
+           imagen_url = CASE WHEN $3::text IS NULL THEN imagen_url ELSE $3::text END,
            posicion = COALESCE($4, posicion)
        WHERE id = $5 AND empresa_id = $6
        RETURNING *`,
-      [nombre ? String(nombre).trim() : null, color ?? null, imagen_url ?? null, Number.isFinite(Number(posicion)) ? Number(posicion) : null, req.params.id, req.tenant.id]
+      [nombre ? String(nombre).trim() : null, color ?? null, imagen_url === undefined ? null : imageValue, Number.isFinite(Number(posicion)) ? Number(posicion) : null, req.params.id, req.tenant.id]
     );
     if (!result.rows[0]) return res.status(404).json({ message: 'Categoría no encontrada' });
     res.json({ categoria: result.rows[0] });
