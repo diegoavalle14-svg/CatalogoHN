@@ -565,7 +565,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
           <span className="landing-logo">
             Catalogo<span className="landing-logo-hn">HN</span>
           </span>
-          <p className="landing-subtitle">Pedidos digitales con precios personalizados para cada cliente.</p>
+          <p className="landing-subtitle">Crea tu catálogo digital con precios personalizados para cada cliente.</p>
         </div>
 
         <div className="landing-divider" />
@@ -613,7 +613,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
         {/* -- Sección inferior -- */}
         <div className="landing-bottom">
           <div className="landing-bottom-block">
-            <strong>Regístrate</strong>
+            <strong>Registra tu<br />empresa</strong>
             <button
               className="landing-outline-btn"
               type="button"
