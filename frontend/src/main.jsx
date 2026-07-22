@@ -563,7 +563,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
         {/* -- Encabezado principal -- */}
         <div className="landing-logo-wrap">
           <span className="landing-logo">
-            Catalogo<span className="landing-logo-hn">HN</span>
+            Catálogo<span className="landing-logo-hn">HN</span>
           </span>
           <p className="landing-subtitle">Crea tu catálogo digital con precios personalizados para cada cliente.</p>
         </div>
@@ -651,7 +651,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
         <div className="login-modal-backdrop" onClick={() => !requestAccessLoading && setRequestAccessOpen(false)}>
           <section className="login-modal modal-form-custom" onClick={(e) => e.stopPropagation()}>
             <div className="login-modal-head">
-              <h2>Solicitar Acceso a CatalogoHN</h2>
+              <h2>Solicitar Acceso a CatálogoHN</h2>
               <button className="icon-button" onClick={() => setRequestAccessOpen(false)} aria-label="Cerrar">
                 <X size={18} />
               </button>
@@ -742,7 +742,7 @@ function Login({ onLogin, theme, onThemeToggle }) {
         <div className="login-modal-backdrop" onClick={() => !supportLoading && setSupportOpen(false)}>
           <section className="login-modal modal-form-custom" onClick={(e) => e.stopPropagation()}>
             <div className="login-modal-head">
-              <h2>Soporte Técnico CatalogoHN</h2>
+              <h2>Soporte Técnico CatálogoHN</h2>
               <button className="icon-button" onClick={() => setSupportOpen(false)} aria-label="Cerrar">
                 <X size={18} />
               </button>
