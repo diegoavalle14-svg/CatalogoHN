@@ -4196,65 +4196,93 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
     }
   }
 
-  const isCenteredModal = editor.type === 'brands' || editor.type === 'categories' || editor.type === 'account-password' || editor.type === 'price-list' || editor.type === 'price' || editor.type === 'client-detail' || editor.type === 'product' || editor.type === 'client';
   const isPasswordModal = editor.type === 'account-password';
   const isClientModal = editor.type === 'client';
+  const isCenteredModal = isPasswordModal || isClientModal || editor.type === 'site';
+
   return (
     <div className={`admin-modal-backdrop ${isCenteredModal ? 'modal-centered' : ''}`}>
-      <section className={`admin-modal ${isPasswordModal ? 'admin-password-modal' : ''} ${isClientModal ? 'admin-client-modal' : ''}`}>
+      <section className={`admin-modal ${isPasswordModal ? 'admin-password-modal' : ''} ${isClientModal ? 'admin-client-modal' : ''} ${editor.type === 'site' ? 'admin-site-modal' : ''}`}>
         <header><h2>{editor.title}</h2><button onClick={onClose}><X size={18} /></button></header>
 
         {editor.type === 'site' && (
           <>
             <AdminSitePreview tenant={sitePreviewTenant} />
-            <div className="admin-form admin-site-form">
-              <label>Nombre comercial<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
-              <label>
-                Subnombre
-                <select
-                  value={selectedSubname}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setCustomSubnameMode(value === '__custom__');
-                    update('subnombre', value === '__custom__' ? '' : value);
-                  }}
-                >
-                  <option value="">Seleccionar subnombre</option>
-                  {SITE_SUBNAME_OPTIONS.map((option) => <option value={option} key={option}>{option}</option>)}
-                  <option value="__custom__">Agregar otro</option>
-                </select>
-              </label>
+            <div className="admin-site-form">
+              <div className="admin-site-form-row">
+                <label>Nombre comercial<input value={form.nombre || ''} onChange={(event) => update('nombre', event.target.value)} /></label>
+                <label>
+                  Fuente
+                  <select value={form.fuente || 'Aptos'} onChange={(event) => update('fuente', event.target.value)}>
+                    {SITE_FONT_OPTIONS.map((font) => <option value={font.value} key={font.value}>{font.label}</option>)}
+                  </select>
+                </label>
+              </div>
+
+              <div className="admin-site-form-row">
+                <label>
+                  Subnombre
+                  <select
+                    value={selectedSubname}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setCustomSubnameMode(value === '__custom__');
+                      update('subnombre', value === '__custom__' ? '' : value);
+                    }}
+                  >
+                    <option value="">Seleccionar subnombre</option>
+                    {SITE_SUBNAME_OPTIONS.map((option) => <option value={option} key={option}>{option}</option>)}
+                    <option value="__custom__">Agregar otro</option>
+                  </select>
+                </label>
+
+                <label className="admin-subname-size-label">
+                  <div className="label-with-value">
+                    <span>Tamaño subnombre</span>
+                    <code>{form.subnombre_size || 18}px</code>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="10" 
+                    max="40" 
+                    step="1" 
+                    value={form.subnombre_size || 18} 
+                    onChange={(event) => update('subnombre_size', parseInt(event.target.value, 10))} 
+                  />
+                </label>
+              </div>
+
               {customSubnameMode && (
                 <label>Nuevo subnombre<input value={form.subnombre || ''} onChange={(event) => update('subnombre', event.target.value)} /></label>
               )}
-              <label>
-                Tamaño del Subnombre ({form.subnombre_size || 18}px)
-                <input 
-                  type="range" 
-                  min="10" 
-                  max="40" 
-                  step="1" 
-                  value={form.subnombre_size || 18} 
-                  onChange={(event) => update('subnombre_size', parseInt(event.target.value, 10))} 
-                />
-              </label>
-              <label>
-                Fuente
-                <select value={form.fuente || 'Aptos'} onChange={(event) => update('fuente', event.target.value)}>
-                  {SITE_FONT_OPTIONS.map((font) => <option value={font.value} key={font.value}>{font.label}</option>)}
-                </select>
-              </label>
-              <label className="admin-logo-upload">
-                Logo de la empresa
-                <span>
+
+              <label className="admin-logo-upload-card">
+                <span>Logo de la empresa</span>
+                <div className="admin-logo-upload-inner">
                   <TenantLogoMark tenant={sitePreviewTenant} />
-                  <em>{sitePreviewTenant.logo_url ? 'Cambiar logo' : 'Logo'}</em>
-                </span>
-                <input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} />
+                  <div className="admin-logo-upload-text">
+                    <strong>{sitePreviewTenant.logo_url ? 'Cambiar logo de la empresa' : 'Subir imagen del logo'}</strong>
+                    <small>Formato recomendado PNG o SVG sin fondo</small>
+                  </div>
+                  <input type="file" accept="image/*" onChange={(event) => update('logoFile', event.target.files?.[0])} />
+                </div>
               </label>
+
               <div className="admin-color-grid">
-                <label>Color primario<input type="color" value={form.color_primario || '#F5C200'} onChange={(event) => update('color_primario', event.target.value)} /></label>
-                <label>Color secundario<input type="color" value={form.color_secundario || '#111111'} onChange={(event) => update('color_secundario', event.target.value)} /></label>
+                <label className="admin-color-item">
+                  <span>Color primario</span>
+                  <div className="admin-color-input-wrapper">
+                    <input type="color" value={form.color_primario || '#F5C200'} onChange={(event) => update('color_primario', event.target.value)} />
+                    <code>{form.color_primario || '#F5C200'}</code>
+                  </div>
+                </label>
+                <label className="admin-color-item">
+                  <span>Color secundario</span>
+                  <div className="admin-color-input-wrapper">
+                    <input type="color" value={form.color_secundario || '#111111'} onChange={(event) => update('color_secundario', event.target.value)} />
+                    <code>{form.color_secundario || '#111111'}</code>
+                  </div>
+                </label>
               </div>
             </div>
           </>
