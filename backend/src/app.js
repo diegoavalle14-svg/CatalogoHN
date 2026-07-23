@@ -40,7 +40,7 @@ function resolveCorsOrigin() {
 }
 
 app.use(cors({
-  origin: resolveCorsOrigin(),
+  origin: true,
   credentials: true
 }));
 app.use(express.json({ limit: '2mb' }));
