@@ -3370,6 +3370,9 @@ function AdminClientsSection({ clients, onNew, onOptions }) {
         )}
         {filteredClients.map((client) => (
           <article className="admin-client-row" key={client.id}>
+            <span className={`client-status-badge ${client.activo ? 'active' : 'inactive'}`}>
+              {client.activo ? 'Activo' : 'Inactivo'}
+            </span>
             <div className="admin-client-row-header">
               <div className="admin-client-row-info">
                 <span className={client.activo ? 'client-avatar' : 'client-avatar off'}>{client.iniciales}</span>
@@ -3378,9 +3381,6 @@ function AdminClientsSection({ clients, onNew, onOptions }) {
                   <small>{client.usuario}</small>
                 </span>
               </div>
-              <span className={`client-status-badge ${client.activo ? 'active' : 'inactive'}`}>
-                {client.activo ? 'Activo' : 'Inactivo'}
-              </span>
             </div>
             <span className="admin-client-actions">
               <button
