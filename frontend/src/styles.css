@@ -6022,6 +6022,27 @@ html:has(.landing-screen) body {
   cursor: pointer;
 }
 
+.global-offline-banner {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: #111827;
+  color: var(--yellow, #F5C200);
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(245, 194, 0, 0.3);
+  animation: slideDown 0.25s ease-out;
+  pointer-events: none;
+}
+
 .admin-client-card {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

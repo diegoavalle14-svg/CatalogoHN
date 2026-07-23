@@ -120,6 +120,32 @@ function resolveInitialView(session, uiState) {
   return defaultViewForRole(role);
 }
 
+function GlobalOfflineNotice() {
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
+
+  useEffect(() => {
+    function handleOffline() { setIsOffline(true); }
+    function handleOnline() { setIsOffline(false); }
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
+
+  if (!isOffline) return null;
+
+  return (
+    <div className="global-offline-banner">
+      <WifiOff size={15} />
+      <span>Conexión en pausa — Reanudando al detectar red</span>
+    </div>
+  );
+}
+
 function App() {
   bootstrapSessionFromUrl();
   const [session, setSession] = useState(() => loadSession());
@@ -181,10 +207,11 @@ function App() {
     updateUiState((current) => ({ ...current, appView: view }));
   }, [session, view]);
 
-  if (!session) return <Login onLogin={handleLogin} theme={theme} onThemeToggle={toggleTheme} />;
-
-  if (session.user.rol === 'superadmin') {
-    return <SuperAdminShell
+  let content = null;
+  if (!session) {
+    content = <Login onLogin={handleLogin} theme={theme} onThemeToggle={toggleTheme} />;
+  } else if (session.user.rol === 'superadmin') {
+    content = <SuperAdminShell
       session={session}
       onLogout={logout}
       onSessionChange={setSession}
@@ -192,10 +219,8 @@ function App() {
       theme={theme}
       onThemeToggle={toggleTheme}
     />;
-  }
-
-  if (session.user.rol === 'admin') {
-    return <Admin session={session} onLogout={logout} onAuthExpired={logout} onRestoreSuperadmin={session?.impersonated_from?.user?.rol === 'superadmin' ? () => {
+  } else if (session.user.rol === 'admin') {
+    content = <Admin session={session} onLogout={logout} onAuthExpired={logout} onRestoreSuperadmin={session?.impersonated_from?.user?.rol === 'superadmin' ? () => {
       const originalSession = session.impersonated_from;
       api.setTenantSlug(originalSession?.tenant?.slug || 'kolben');
       clearTemporarySession();
@@ -208,37 +233,44 @@ function App() {
       saveSession(nextSession);
       setSession(nextSession);
     }} />;
+  } else {
+    const updateClientSession = ({ tenant, user }) => {
+      if (!tenant && !user) return;
+      setSession((current) => {
+        if (!current) return current;
+        const previous = current.tenant || {};
+        const previousUser = current.user || {};
+        const tenantChanged = tenant && ['nombre', 'subnombre', 'slug', 'logo_url', 'color_primario', 'color_secundario', 'fuente']
+          .some((key) => String(previous[key] || '') !== String(tenant[key] || ''));
+        const userChanged = user && ['nombre', 'username', 'email', 'condicion_credito', 'cliente_activo', 'aplica_isv']
+          .some((key) => String(previousUser[key] || '') !== String(user[key] || ''));
+        const changed = tenantChanged || userChanged;
+        if (!changed) return current;
+        const nextSession = {
+          ...current,
+          tenant: tenant ? { ...previous, ...tenant } : previous,
+          user: user ? { ...previousUser, ...user } : previousUser
+        };
+        saveSession(nextSession);
+        api.setTenantSlug(nextSession.tenant?.slug || 'kolben');
+        return nextSession;
+      });
+    };
+
+    content = (
+      <Shell session={session} view={view} setView={setView} onLogout={logout} theme={theme} onThemeToggle={toggleTheme}>
+        {view === 'catalog' && <Catalog session={session} onSessionUpdated={updateClientSession} />}
+        {view === 'history' && <History session={session} />}
+        {view === 'admin' && <Admin session={session} />}
+      </Shell>
+    );
   }
 
-  const updateClientSession = ({ tenant, user }) => {
-    if (!tenant && !user) return;
-    setSession((current) => {
-      if (!current) return current;
-      const previous = current.tenant || {};
-      const previousUser = current.user || {};
-      const tenantChanged = tenant && ['nombre', 'subnombre', 'slug', 'logo_url', 'color_primario', 'color_secundario', 'fuente']
-        .some((key) => String(previous[key] || '') !== String(tenant[key] || ''));
-      const userChanged = user && ['nombre', 'username', 'email', 'condicion_credito', 'cliente_activo', 'aplica_isv']
-        .some((key) => String(previousUser[key] || '') !== String(user[key] || ''));
-      const changed = tenantChanged || userChanged;
-      if (!changed) return current;
-      const nextSession = {
-        ...current,
-        tenant: tenant ? { ...previous, ...tenant } : previous,
-        user: user ? { ...previousUser, ...user } : previousUser
-      };
-      saveSession(nextSession);
-      api.setTenantSlug(nextSession.tenant?.slug || 'kolben');
-      return nextSession;
-    });
-  };
-
   return (
-    <Shell session={session} view={view} setView={setView} onLogout={logout} theme={theme} onThemeToggle={toggleTheme}>
-      {view === 'catalog' && <Catalog session={session} onSessionUpdated={updateClientSession} />}
-      {view === 'history' && <History session={session} />}
-      {view === 'admin' && <Admin session={session} />}
-    </Shell>
+    <>
+      <GlobalOfflineNotice />
+      {content}
+    </>
   );
 }
 
