@@ -2672,6 +2672,8 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
           onSaveAccountPassword={saveAccountPassword}
           onDeleteBrand={deleteBrand}
           onDeleteCategory={deleteCategory}
+          theme={theme}
+          onThemeToggle={onThemeToggle}
         />
       )}
     </div>
@@ -4036,7 +4038,7 @@ function AdminSitePreview({ tenant }) {
   );
 }
 
-function AdminEditor({ editor, brands, categories, priceLists, priceProducts, clients, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onSaveSite, onSiteDraftChange, onSaveAccountPassword, onDeleteBrand, onDeleteCategory }) {
+function AdminEditor({ editor, brands, categories, priceLists, priceProducts, clients, onClose, onSaveProduct, onSaveClient, onSavePrice, onSaveBrand, onSaveCategory, onSaveSite, onSiteDraftChange, onSaveAccountPassword, onDeleteBrand, onDeleteCategory, theme, onThemeToggle }) {
   const [form, setForm] = useState(() => {
     const f = buildAdminEditorForm(editor, priceProducts);
     if (editor.type === 'product') {
@@ -4277,6 +4279,26 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
                     <code>{form.color_secundario || '#111111'}</code>
                   </div>
                 </label>
+              </div>
+
+              <div className="admin-site-theme-toggle">
+                <span>Modo visual del sitio / Tema</span>
+                <div className="admin-theme-switch-group">
+                  <button 
+                    type="button" 
+                    className={theme === 'light' ? 'active' : ''} 
+                    onClick={() => theme === 'dark' && onThemeToggle && onThemeToggle()}
+                  >
+                    <Sun size={15} /> Modo Claro
+                  </button>
+                  <button 
+                    type="button" 
+                    className={theme === 'dark' ? 'active' : ''} 
+                    onClick={() => theme === 'light' && onThemeToggle && onThemeToggle()}
+                  >
+                    <Moon size={15} /> Modo Oscuro
+                  </button>
+                </div>
               </div>
             </div>
           </>

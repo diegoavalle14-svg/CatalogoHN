@@ -6953,6 +6953,62 @@ html:has(.landing-screen) body {
   color: var(--text, #111);
 }
 
+.admin-site-theme-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-site-theme-toggle span {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted, #777);
+}
+
+.admin-theme-switch-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 9px;
+  background: var(--mist, #f0f1f3);
+  border: 1px solid var(--line, rgba(17, 17, 17, 0.08));
+}
+
+[data-theme="dark"] .admin-theme-switch-group {
+  background: #191c22;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.admin-theme-switch-group button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted, #666);
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-theme-switch-group button.active {
+  background: var(--paper, #ffffff);
+  color: var(--text, #111111);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+}
+
+[data-theme="dark"] .admin-theme-switch-group button.active {
+  background: #282c35;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.40);
+}
+
 .admin-form label,
 .admin-site-form label {
   display: flex;
