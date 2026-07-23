@@ -3608,7 +3608,7 @@ function AdminPricesSection({ lists, products, clients, categories, brands, sess
       </div>
 
       <div className="admin-filter-bar">
-        <label className="admin-category-filter">
+        <label className="admin-category-filter admin-client-selector-filter">
           <Users size={14} />
           <select value={selectedClientId} onChange={(e) => setSelectedClientId(e.target.value)}>
             <option value="">-- Seleccionar cliente --</option>

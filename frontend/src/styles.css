@@ -5189,6 +5189,12 @@ html:has(.landing-screen) body {
   padding: 0 10px;
 }
 
+.admin-category-filter.admin-client-selector-filter {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 1 auto !important;
+}
+
 .admin-category-filter select {
   width: 100%;
   min-width: 0;
