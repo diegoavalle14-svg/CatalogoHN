@@ -27,14 +27,16 @@ function resolveCorsOrigin() {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  if (process.env.NODE_ENV === 'production') {
-    if (!origins.length) {
-      throw new Error('CORS_ORIGIN es obligatorio cuando NODE_ENV=production');
+  return (requestOrigin, callback) => {
+    if (!requestOrigin) return callback(null, true);
+    if (origins.includes(requestOrigin) || requestOrigin.endsWith('.catalogohn.com') || requestOrigin.includes('catalogohn')) {
+      return callback(null, requestOrigin);
     }
-    return origins;
-  }
-
-  return origins.length ? origins : true;
+    if (origins.length) {
+      return callback(null, origins.includes(requestOrigin) ? requestOrigin : origins[0]);
+    }
+    callback(null, true);
+  };
 }
 
 app.use(cors({
