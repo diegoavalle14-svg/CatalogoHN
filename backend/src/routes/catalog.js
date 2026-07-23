@@ -57,10 +57,11 @@ router.get('/tenants/public', async (req, res) => {
       `SELECT id, nombre, subnombre, subnombre_size, slug, logo_url, color_primario, color_secundario, fuente, activa
        FROM empresas
        WHERE activa = true
-       ORDER BY created_at ASC`
+       ORDER BY id ASC`
     );
     res.json({ tenants: result.rows });
   } catch (error) {
+    console.error('Error cargando empresas:', error);
     res.status(500).json({ message: 'No se pudieron cargar las empresas' });
   }
 });
