@@ -7601,37 +7601,94 @@ html:has(.landing-screen) body {
 
 .admin-entity-crud {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+}
+
+.admin-file-picker-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px dashed var(--line, #ccc);
+  border-radius: 8px;
+  background: var(--surface-color, #f8f9fa);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .admin-file-picker-box {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.admin-file-picker-box input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.admin-file-picker-box small {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted, #666);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-entity-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  border: 1px solid #eeeeee;
-  border-radius: 8px;
-  padding: 10px;
+  border: 1px solid var(--line, #eeeeee);
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: var(--paper, #fff);
+}
+
+.admin-entity-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.admin-entity-main strong {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text, #111);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-entity-actions {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.admin-entity-row > strong:first-child {
-  grid-column: 1 / 3;
+  width: 100%;
+  border-top: 1px dashed var(--line, #eeeeee);
+  padding-top: 8px;
 }
 
 .admin-entity-order {
   display: inline-flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .admin-entity-order button {
   width: 28px;
+  min-height: 28px;
   padding: 0;
+  display: grid;
+  place-items: center;
 }
 
 .admin-entity-order button:disabled {
@@ -7639,15 +7696,16 @@ html:has(.landing-screen) body {
 }
 
 .admin-entity-thumb {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid #e4e7ec;
+  border: 1px solid var(--line, #e4e7ec);
   border-radius: 8px;
-  background: #f6f7f9;
-  color: #56606f;
+  background: var(--mist, #f6f7f9);
+  color: var(--muted, #56606f);
+  flex-shrink: 0;
 }
 
 .admin-entity-thumb img {
@@ -7657,13 +7715,18 @@ html:has(.landing-screen) body {
 }
 
 .admin-entity-row button {
-  min-height: 27px;
+  flex: 1;
+  min-height: 30px;
   border: 0;
   border-radius: 6px;
-  background: #f0f0f0;
-  padding: 0 9px;
+  background: var(--mist, #f0f0f0);
+  color: var(--text, #111);
+  padding: 0 8px;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .modal {

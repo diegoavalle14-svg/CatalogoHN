@@ -4876,26 +4876,36 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
     <div className="admin-entity-crud">
       <div className="admin-form">
         <label>{label}<input value={name} onChange={(event) => setName(event.target.value)} /></label>
-        {supportsImage && <label>{label === 'Marca' ? 'Logo' : 'Imagen'}<input type="file" accept="image/*" onChange={(event) => setLogoFile(event.target.files?.[0])} /></label>}
+        {supportsImage && (
+          <label className="admin-file-input-wrapper">
+            <span>{label === 'Marca' ? 'Logo' : 'Imagen'}</span>
+            <div className="admin-file-picker-box">
+              <input type="file" accept="image/*" onChange={(event) => setLogoFile(event.target.files?.[0])} />
+              <small>{logoFile ? logoFile.name : 'Seleccionar archivo...'}</small>
+            </div>
+          </label>
+        )}
         <button className="primary-button" onClick={() => { if (!name) return; onSave({ nombre: name, posicion: supportsOrdering ? orderedItems.length + 1 : 0, [label === 'Marca' ? 'logoFile' : 'imageFile']: logoFile }); setName(''); setLogoFile(null); }}>Agregar</button>
       </div>
       {orderedItems.map((item, index) => (
         <div className="admin-entity-row" key={item.id}>
-          {supportsImage && (
-            <span className="admin-entity-thumb">
-              {item[imageField] ? <img src={resolveMediaUrl(item[imageField])} alt="" /> : <Folder size={16} />}
-            </span>
-          )}
-          <strong>{item.nombre}</strong>
-          {supportsOrdering && (
-            <div className="admin-entity-order">
-              <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} aria-label={`Subir ${item.nombre}`}><ChevronUp size={14} /></button>
-              <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}><ChevronDown size={14} /></button>
-            </div>
-          )}
+          <div className="admin-entity-main">
+            {supportsImage && (
+              <span className="admin-entity-thumb">
+                {item[imageField] ? <img src={resolveMediaUrl(item[imageField])} alt="" /> : <Folder size={16} />}
+              </span>
+            )}
+            <strong>{item.nombre}</strong>
+            {supportsOrdering && (
+              <div className="admin-entity-order">
+                <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} aria-label={`Subir ${item.nombre}`}><ChevronUp size={14} /></button>
+                <button type="button" onClick={() => moveItem(index, 1)} disabled={index === orderedItems.length - 1} aria-label={`Bajar ${item.nombre}`}><ChevronDown size={14} /></button>
+              </div>
+            )}
+          </div>
           <div className="admin-entity-actions">
-            <button onClick={() => onSave({ ...item, nombre: window.prompt(`Editar ${label}`, item.nombre) || item.nombre })}>Editar</button>
-            {supportsImage && <button onClick={() => {
+            <button type="button" onClick={() => onSave({ ...item, nombre: window.prompt(`Editar ${label}`, item.nombre) || item.nombre })}>Editar</button>
+            {supportsImage && <button type="button" onClick={() => {
               const input = document.createElement('input');
               input.type = 'file';
               input.accept = 'image/*';
@@ -4905,7 +4915,7 @@ function AdminEntityCrud({ items, label, onSave, onDelete }) {
               };
               input.click();
             }}>Imagen</button>}
-            <button onClick={() => onDelete(item.id)}>Eliminar</button>
+            <button type="button" className="danger-icon-button" onClick={() => onDelete(item.id)}>Eliminar</button>
           </div>
         </div>
       ))}
