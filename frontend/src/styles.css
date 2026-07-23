@@ -3811,29 +3811,32 @@ html:has(.landing-screen) body {
   top: 0;
   left: 0;
   z-index: 80;
-  width: min(280px, 82vw);
+  width: min(290px, 85vw);
   height: 100dvh;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 8px;
-  padding: 80px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 80px 16px 20px;
   border-right: 1px solid rgba(17, 17, 17, .09);
-  background: #fff;
-  box-shadow: 0 14px 34px rgba(20, 24, 31, .08);
+  background: var(--paper, #ffffff);
+  color: var(--text, #111111);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.16);
   transform: translateX(-100%);
-  transition: transform .22s ease;
+  transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.superadmin-sidebar-main,
-.superadmin-sidebar-bottom {
-  display: grid;
-  align-content: start;
+[data-theme="dark"] .superadmin-sidebar {
+  background: #181a1f;
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.50);
+  color: #f1f2f4;
+}
+
+.superadmin-sidebar-main {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-}
-
-.superadmin-sidebar-bottom {
-  padding-top: 10px;
-  border-top: 1px solid rgba(17, 17, 17, .10);
+  width: 100%;
 }
 
 .superadmin-sidebar.is-open {
@@ -3845,7 +3848,9 @@ html:has(.landing-screen) body {
   inset: 0;
   z-index: 70;
   border: 0;
-  background: rgba(6, 9, 14, .36);
+  background: rgba(6, 9, 14, .45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .superadmin-menu-button {
@@ -3855,24 +3860,60 @@ html:has(.landing-screen) body {
   border-radius: 8px;
   background: rgba(255, 255, 255, .62);
   color: #222;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+[data-theme="dark"] .superadmin-menu-button {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f1f2f4;
 }
 
 .superadmin-sidebar button {
-  min-height: 38px;
-  border: 1px solid rgba(17, 17, 17, .12);
-  border-radius: 8px;
-  background: #fff;
+  min-height: 42px;
+  border: 1px solid rgba(17, 17, 17, .10);
+  border-radius: 9px;
+  background: #f7f8fa;
   color: #2a3038;
   font-size: 13px;
   font-weight: 800;
   text-align: left;
-  padding: 0 12px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.superadmin-sidebar button:hover {
+  background: #edeef2;
 }
 
 .superadmin-sidebar button.active {
   background: #111;
   border-color: #111;
   color: #fff;
+}
+
+[data-theme="dark"] .superadmin-sidebar button {
+  background: #20232a;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #c2c7d0;
+}
+
+[data-theme="dark"] .superadmin-sidebar button:hover {
+  background: #282c35;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .superadmin-sidebar button.active {
+  background: #f1f2f4;
+  border-color: #f1f2f4;
+  color: #101114;
 }
 
 .superadmin-dashboard .metric {

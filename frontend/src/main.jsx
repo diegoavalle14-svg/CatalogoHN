@@ -5763,19 +5763,16 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
         <aside className={`superadmin-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
           <div className="superadmin-sidebar-main">
             {[
-              ['companies', 'Empresas'],
-              ['stats', 'Estadísticas'],
-              ['history', 'Historiales']
-            ].map(([id, label]) => (
+              ['companies', 'Empresas', Building2],
+              ['stats', 'Estadísticas', Activity],
+              ['history', 'Historiales', ClipboardList],
+              ['password', 'Cambiar contraseña', Settings2]
+            ].map(([id, label, Icon]) => (
               <button key={id} type="button" className={superadminSection === id ? 'active' : ''} onClick={() => { setSuperadminSection(id); setSidebarOpen(false); }}>
-                {label}
+                <Icon size={17} />
+                <span>{label}</span>
               </button>
             ))}
-          </div>
-          <div className="superadmin-sidebar-bottom">
-            <button type="button" className={superadminSection === 'password' ? 'active' : ''} onClick={() => { setSuperadminSection('password'); setSidebarOpen(false); }}>
-              Cambiar contraseña
-            </button>
           </div>
         </aside>
 
