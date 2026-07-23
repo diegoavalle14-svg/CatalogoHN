@@ -9790,9 +9790,9 @@ html:has(.landing-screen) body {
 /* Unify admin-client-card to use grid layout (similar to admin-price-groups) */
 .admin-client-card {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   max-width: 100% !important;
-  margin: 20px 0 !important;
+  margin: 16px 0 !important;
   gap: 12px !important;
   background: transparent !important;
   box-shadow: none !important;
