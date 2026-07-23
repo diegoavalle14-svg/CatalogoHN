@@ -249,9 +249,6 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  grid-column: 3;
-  justify-self: end;
-  margin-left: auto;
 }
 
 .topbar-actions .theme-toggle-button {
@@ -8054,6 +8051,9 @@ html:has(.landing-screen) body {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     width: 100%;
     gap: 8px;
+    grid-column: auto !important;
+    justify-self: stretch !important;
+    margin-left: 0 !important;
   }
 
   .topbar-actions .theme-toggle-button,
