@@ -1,5 +1,4 @@
 const db = require('../config/database');
-const mock = require('./mockData');
 
 function slugFromHost(host = '') {
   const hostname = host.split(':')[0].toLowerCase();
@@ -13,9 +12,9 @@ async function resolveTenant(req, res, next) {
 
   try {
     const result = await db.query('SELECT * FROM empresas WHERE slug = $1 AND activa = true LIMIT 1', [requestedSlug]);
-    req.tenant = result.rows[0] || mock.empresa;
+    req.tenant = result.rows[0] || null;
   } catch (error) {
-    req.tenant = mock.empresa;
+    req.tenant = null;
     req.dbUnavailable = true;
   }
 

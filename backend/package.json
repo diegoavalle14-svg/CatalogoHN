@@ -6,9 +6,12 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "db:setup": "node src/models/setup.js"
+    "db:setup": "node src/models/setup.js",
+    "superadmin:ensure": "node src/models/ensureSuperadmin.js",
+    "user:reset-password": "node src/models/resetUserPassword.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.699.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -16,6 +19,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.13",
+    "pdfkit": "^0.15.0",
     "pg": "^8.11.5",
     "sharp": "^0.33.3"
   },

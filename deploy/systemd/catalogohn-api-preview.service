@@ -1,0 +1,18 @@
+[Unit]
+Description=CatalogoHN API Preview
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/catalogohn/backend
+EnvironmentFile=/etc/catalogohn/backend-preview.env
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+User=catalogohn
+Group=catalogohn
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
