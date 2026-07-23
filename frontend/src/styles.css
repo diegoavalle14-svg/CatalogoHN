@@ -6953,24 +6953,41 @@ html:has(.landing-screen) body {
   color: var(--text, #111);
 }
 
-.admin-form label {
-  display: grid;
+.admin-form label,
+.admin-site-form label {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  color: #8b8e98;
+  color: var(--muted, #777);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
-.admin-form input,
+.admin-form input:not([type="color"]):not([type="range"]):not([type="file"]),
 .admin-form select,
-.admin-form textarea {
+.admin-form textarea,
+.admin-site-form input:not([type="color"]):not([type="range"]):not([type="file"]),
+.admin-site-form select,
+.admin-site-form textarea {
   width: 100%;
-  min-height: 38px;
-  border: 1px solid #d7d7d7;
-  border-radius: 6px;
-  background: #fff;
-  color: #111;
-  padding: 0 10px;
+  min-height: 40px;
+  border: 1px solid var(--line, #d7d7d7);
+  border-radius: 8px;
+  background: var(--paper, #fff);
+  color: var(--text, #111);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-site-form input:focus,
+.admin-site-form select:focus {
+  border-color: var(--yellow-strong, #c59b00);
+  box-shadow: 0 0 0 3px rgba(245, 194, 0, 0.15);
 }
 
 .admin-form textarea:not(.admin-product-form textarea) {

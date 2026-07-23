@@ -4018,25 +4018,19 @@ function AdminBottomNav({ tab, setTab, pending, missingPrices }) {
 
 function AdminSitePreview({ tenant }) {
   return (
-    <section className="admin-site-preview" style={tenantBrandStyle(tenant)}>
-      <div className="admin-site-preview-light">
-        <header>
-          <TenantLogoMark tenant={tenant} size="small" />
-          <span>
-            <strong>{tenant?.nombre || 'Nombre de empresa'}</strong>
-            <small style={{ '--subnombre-size': `${tenant?.subnombre_size || 18}px` }}>{tenant?.subnombre || 'Subnombre del catálogo'}</small>
+    <section className="admin-site-preview-bar" style={tenantBrandStyle(tenant)}>
+      <div className="preview-brand-header">
+        <TenantLogoMark tenant={tenant} size="small" />
+        <div className="preview-brand-titles">
+          <strong>{tenant?.nombre || 'Nombre de empresa'}</strong>
+          <span style={{ fontSize: `${tenant?.subnombre_size || 18}px` }}>
+            {tenant?.subnombre || 'Subnombre del catálogo'}
           </span>
-        </header>
-        <div>
-          <span>Catálogo privado</span>
-          <strong>Productos destacados</strong>
-          <button type="button">Ver pedido</button>
         </div>
       </div>
-      <div className="admin-site-preview-dark">
-        <span>Modo oscuro</span>
-        <strong>{tenant?.nombre || 'Empresa'}</strong>
-        <small style={{ '--subnombre-size': `${tenant?.subnombre_size || 18}px` }}>Vista cliente con fondo oscuro</small>
+      <div className="preview-brand-colors">
+        <span className="preview-color-dot" style={{ background: tenant?.color_primario || '#F5C200' }} title="Color primario" />
+        <span className="preview-color-dot" style={{ background: tenant?.color_secundario || '#111111' }} title="Color secundario" />
       </div>
     </section>
   );
