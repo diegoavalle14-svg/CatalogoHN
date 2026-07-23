@@ -249,6 +249,9 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
+  grid-column: 3;
+  justify-self: end;
+  margin-left: auto;
 }
 
 .topbar-actions .theme-toggle-button {
@@ -8156,6 +8159,9 @@ html:has(.landing-screen) body {
     align-items: center !important;
     gap: 5px !important;
     width: auto !important;
+    grid-column: 3 !important;
+    justify-self: end !important;
+    margin-left: auto !important;
   }
 
   .topbar-actions .theme-toggle-button,
@@ -8270,6 +8276,9 @@ html:has(.landing-screen) body {
     align-items: center !important;
     gap: 8px !important;
     width: auto !important;
+    grid-column: 3 !important;
+    justify-self: end !important;
+    margin-left: auto !important;
   }
 
   .topbar-actions .theme-toggle-button,
@@ -8388,6 +8397,9 @@ html:has(.landing-screen) body {
     align-items: center !important;
     gap: 12px !important;
     width: auto !important;
+    grid-column: 3 !important;
+    justify-self: end !important;
+    margin-left: auto !important;
   }
 
   .topbar-actions .theme-toggle-button,
