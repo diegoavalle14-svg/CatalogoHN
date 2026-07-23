@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
-import { Activity, BadgeCheck, BadgeDollarSign, Bell, BellOff, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Edit2, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Trash2, Users, UserX, UserCheck, X } from 'lucide-react';
+import { Activity, AlertTriangle, BadgeCheck, BadgeDollarSign, Bell, BellOff, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Edit2, ExternalLink, Eye, EyeOff, Folder, LogOut, Menu, Moon, MoreVertical, Package, PackageSearch, Plus, RefreshCw, RotateCcw, Search, Settings2, ShoppingCart, Sun, Tags, Trash2, Users, UserX, UserCheck, WifiOff, X } from 'lucide-react';
 import { API_PUBLIC_ORIGIN, api } from './lib/api';
 import { bootstrapSessionFromUrl, clearSession, clearTemporarySession, clearUiState, loadSession, loadUiState, saveSession, updateUiState } from './lib/storage';
 import './styles.css';
@@ -1876,14 +1876,46 @@ function Admin({ session, onLogout, onAuthExpired, onRestoreSuperadmin, onTenant
     };
   }, [summary, tab, onRestoreSuperadmin]);
 
+  useEffect(() => {
+    function handleOnline() {
+      if (adminLoadError) {
+        setAdminLoadError('');
+        setAdminReloadKey((current) => current + 1);
+      }
+    }
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [adminLoadError]);
+
   if (adminLoadError) {
+    const isNetworkError = /failed to fetch|networkerror|internet|offline|disconnected/i.test(adminLoadError);
     return (
       <section className="admin-load-error">
-        <strong>No se pudo cargar el panel admin</strong>
-        <span>{adminLoadError}</span>
-        <div>
-          <button className="primary-button" type="button" onClick={() => setAdminReloadKey((current) => current + 1)}>Reintentar</button>
-          {onLogout && <button className="secondary-button" type="button" onClick={onLogout}>Salir</button>}
+        <div className="admin-error-icon-box">
+          {isNetworkError ? <WifiOff size={32} /> : <AlertTriangle size={32} />}
+        </div>
+        <strong>{isNetworkError ? 'Conexión en pausa' : 'No se pudo cargar el panel admin'}</strong>
+        <p>
+          {isNetworkError
+            ? 'Parece que tu equipo estuvo en modo reposo o se interrumpió la red. Reanudaremos automáticamente al detectar conexión.'
+            : adminLoadError}
+        </p>
+        <div className="admin-error-actions">
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => {
+              setAdminLoadError('');
+              setAdminReloadKey((current) => current + 1);
+            }}
+          >
+            <RefreshCw size={15} /> Reintentar ahora
+          </button>
+          {onLogout && (
+            <button className="secondary-button" type="button" onClick={onLogout}>
+              Salir
+            </button>
+          )}
         </div>
       </section>
     );
