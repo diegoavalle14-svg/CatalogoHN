@@ -8114,8 +8114,216 @@ html:has(.landing-screen) body {
   }
 }
 
-/* PC & Desktop Header Enhancements */
-@media (min-width: 641px) {
+/* PC & Desktop Header Enhancements (Fluid 3-Tier Responsiveness) */
+@media (min-width: 641px) and (max-width: 900px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    min-height: 64px !important;
+    padding: 10px 14px !important;
+    gap: 10px !important;
+    align-items: center !important;
+  }
+
+  .brand-lockup {
+    font-size: 16px !important;
+    gap: 8px !important;
+    padding-right: 10px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+    min-width: 0 !important;
+  }
+
+  .brand-lockup strong {
+    font-size: 14.5px !important;
+    line-height: 1.1 !important;
+  }
+
+  .brand-lockup > span:last-child small {
+    font-size: 11px !important;
+  }
+
+  .logo-mark {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .welcome-line {
+    display: none !important;
+  }
+
+  .topbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    width: auto !important;
+  }
+
+  .topbar-actions .theme-toggle-button,
+  .catalog-button,
+  .orders-button,
+  .checkout-button,
+  .logout-button {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 9px !important;
+    border-radius: 8px !important;
+    gap: 5px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    width: auto !important;
+  }
+
+  .topbar-actions svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .catalog-button span,
+  .orders-button span,
+  .checkout-button span,
+  .logout-button span {
+    display: inline !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    clip: auto !important;
+    white-space: nowrap !important;
+  }
+
+  .checkout-button b {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    font-size: 10.5px !important;
+    margin-left: 2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .catalog-page {
+    width: 100% !important;
+    padding: 16px 16px 36px !important;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    min-height: 74px !important;
+    padding: 12px 22px !important;
+    gap: 16px !important;
+    align-items: center !important;
+  }
+
+  .brand-lockup {
+    font-size: 20px !important;
+    gap: 12px !important;
+    padding-right: 16px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.14) !important;
+    min-width: 0 !important;
+  }
+
+  .brand-lockup strong {
+    font-size: 17.5px !important;
+    line-height: 1.15 !important;
+  }
+
+  .brand-lockup > span:last-child small {
+    font-size: max(12px, var(--subnombre-size, 16px)) !important;
+  }
+
+  .logo-mark {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .welcome-line {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 1px !important;
+    margin: 0 !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+  }
+
+  .welcome-line span {
+    font-size: 10.5px !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+  }
+
+  .welcome-line b {
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #ffffff !important;
+  }
+
+  .topbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+  }
+
+  .topbar-actions .theme-toggle-button,
+  .catalog-button,
+  .orders-button,
+  .checkout-button,
+  .logout-button {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 14px !important;
+    border-radius: 9px !important;
+    gap: 6px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    width: auto !important;
+  }
+
+  .topbar-actions svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .catalog-button span,
+  .orders-button span,
+  .checkout-button span,
+  .logout-button span {
+    display: inline !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    clip: auto !important;
+    white-space: nowrap !important;
+  }
+
+  .checkout-button b {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+    margin-left: 3px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .catalog-page {
+    width: min(100%, 1180px) !important;
+    padding: 20px 24px 40px !important;
+  }
+}
+
+@media (min-width: 1181px) {
   .topbar {
     display: grid !important;
     grid-template-columns: auto 1fr auto !important;
@@ -8158,7 +8366,6 @@ html:has(.landing-screen) body {
     margin: 0 !important;
     line-height: 1.15 !important;
     white-space: nowrap !important;
-    min-width: auto !important;
   }
 
   .welcome-line span {
@@ -8174,14 +8381,12 @@ html:has(.landing-screen) body {
     font-weight: 900 !important;
     color: #ffffff !important;
     white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
   }
 
   .topbar-actions {
     display: flex !important;
     align-items: center !important;
-    gap: clamp(6px, 1vw, 10px) !important;
+    gap: 12px !important;
     width: auto !important;
   }
 
@@ -8194,19 +8399,19 @@ html:has(.landing-screen) body {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    padding: 0 clamp(12px, 1.2vw, 18px) !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 20px !important;
     border-radius: 10px !important;
-    gap: 8px !important;
-    font-size: 13.5px !important;
+    gap: 10px !important;
+    font-size: 14px !important;
     font-weight: 900 !important;
     width: auto !important;
   }
 
   .topbar-actions svg {
-    width: 17px !important;
-    height: 17px !important;
+    width: 18px !important;
+    height: 18px !important;
   }
 
   .catalog-button span,
