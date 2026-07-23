@@ -5731,16 +5731,21 @@ html:has(.landing-screen) body {
 }
 
 .admin-product-top {
-  display: grid;
-  grid-template-columns: 58px 1fr auto;
-  align-items: start;
-  gap: 12px;
-  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 12px 10px;
 }
 
 .admin-product-top > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   min-width: 0;
-  overflow: hidden;
+  width: 100%;
 }
 
 .admin-product-top small {
@@ -9153,81 +9158,6 @@ html:has(.landing-screen) body {
   }
   .admin-category-filter {
     width: 100%;
-  }
-  .admin-product-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 6px !important;
-  }
-  .admin-product-top {
-    grid-template-columns: 1fr !important;
-    text-align: center;
-    justify-items: center;
-    gap: 4px !important;
-    padding: 8px !important;
-  }
-  .admin-product-top img,
-  .admin-product-top .product-thumb-fallback {
-    width: 56px !important;
-    height: 56px !important;
-  }
-  .admin-product-top > div:not(.admin-row-actions) {
-    display: grid !important;
-    justify-items: center !important;
-    align-items: center !important;
-    text-align: center !important;
-    gap: 2px !important;
-    width: 100%;
-  }
-  .admin-product-top .sku-code {
-    max-width: 100% !important;
-    min-height: 20px !important;
-    font-size: 12px !important;
-    padding: 3px 6px !important;
-    margin-inline: auto !important;
-    white-space: nowrap !important;
-  }
-  .admin-product-top small {
-    font-size: 9px !important;
-    max-width: 130px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .admin-product-top .admin-stock-badge {
-    font-size: 11px !important;
-    padding: 2px 5px !important;
-    margin-inline: auto !important;
-    display: inline-flex !important;
-  }
-  .admin-product-top .admin-row-actions {
-    justify-self: stretch !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
-    width: 100% !important;
-    gap: 4px !important;
-    margin-top: 2px;
-  }
-  .admin-product-top .admin-row-actions button,
-  .admin-product-top .admin-row-actions .danger-icon-button {
-    flex: 1 1 0% !important;
-    min-height: 26px !important;
-    padding: 0 4px !important;
-    font-size: 10px !important;
-    text-align: center !important;
-    justify-content: center !important;
-    display: inline-grid !important;
-    place-items: center !important;
-  }
-  .admin-product-row footer {
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    gap: 4px !important;
-    padding: 6px 8px !important;
-  }
-  .admin-product-row footer label {
-    font-size: 9px !important;
-    gap: 3px !important;
   }
   .admin-posicion-input {
     width: 50px !important;
