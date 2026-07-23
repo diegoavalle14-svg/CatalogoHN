@@ -5821,9 +5821,14 @@ function SuperAdmin({ token, onLogout, theme, onThemeToggle }) {
                   <strong><Activity size={16} /> Historial reciente</strong>
                 </div>
                 {activity.length === 0 && <small className="admin-muted-note">Sin acciones registradas todavía.</small>}
-                {activity.map((item) => (
-                  <p key={item.id}><span>{formatShortDate(item.created_at)}</span>{item.descripcion}</p>
-                ))}
+                <div className="superadmin-history-list">
+                  {activity.map((item) => (
+                    <div className="superadmin-history-item" key={item.id}>
+                      <span className="history-date">{formatShortDate(item.created_at)}</span>
+                      <span className="history-desc">{item.descripcion}</span>
+                    </div>
+                  ))}
+                </div>
               </article>
             </section>
           </div>

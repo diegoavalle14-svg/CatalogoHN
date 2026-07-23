@@ -3927,48 +3927,74 @@ html:has(.landing-screen) body {
 
 .superadmin-insights {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-@media (max-width: 980px) {
-  .superadmin-sidebar button {
-    text-align: left;
-  }
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
 }
 
 .superadmin-insights article {
   min-width: 0;
-  display: grid;
-  gap: 8px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   border: 1px solid rgba(17, 17, 17, .09);
-  border-radius: 8px;
+  border-radius: 10px;
   background: #ffffff;
   box-shadow: 0 16px 38px rgba(20, 24, 31, .08);
-  padding: 14px;
+  padding: 16px;
 }
 
 .superadmin-panel-head strong {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #151515;
-  font-size: 14px;
+  color: var(--text, #151515);
+  font-size: 15px;
 }
 
-.superadmin-insights p {
-  min-width: 0;
+.superadmin-history-list {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  margin: 0;
-  color: #4c535e;
-  font-size: 12px;
-  font-weight: 800;
+  width: 100%;
 }
 
-.superadmin-insights p span {
-  flex: 0 0 auto;
-  color: #8b93a0;
+.superadmin-history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(17, 17, 17, 0.03);
+  border: 1px solid rgba(17, 17, 17, 0.06);
+  font-size: 13px;
+  line-height: 1.45;
+  width: 100%;
+}
+
+[data-theme="dark"] .superadmin-history-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.superadmin-history-item .history-date {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: #d9a000;
+  background: rgba(245, 194, 0, 0.14);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.superadmin-history-item .history-desc {
+  color: var(--text, #111);
+  font-weight: 600;
+  word-break: break-word;
+  flex: 1;
+  min-width: 0;
 }
 
 .superadmin-controls {
