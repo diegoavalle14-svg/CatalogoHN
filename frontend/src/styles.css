@@ -9943,19 +9943,33 @@ html:has(.landing-screen) body {
 /* Admin product list card grid layout */
 .admin-product-list {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
-  gap: 16px !important;
-  margin-top: 18px !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+}
+
+@media (max-width: 860px) {
+  .admin-product-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
 }
 
 .admin-product-row {
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
-  min-height: 270px !important;
+  min-height: 0 !important;
   background: var(--paper) !important;
   border: 1px solid var(--line) !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.admin-product-row:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07) !important;
 }
 
 .admin-product-top {
@@ -9963,40 +9977,61 @@ html:has(.landing-screen) body {
   flex-direction: column !important;
   align-items: center !important;
   text-align: center !important;
-  gap: 10px !important;
-  padding: 16px !important;
+  gap: 6px !important;
+  padding: 10px 8px !important;
   flex: 1 !important;
   min-width: 0 !important;
 }
 
-.admin-product-top img {
-  width: 100px !important;
-  height: 100px !important;
+.admin-product-top img,
+.admin-product-top .product-thumb-fallback {
+  width: 105px !important;
+  height: 105px !important;
   object-fit: contain !important;
 }
 
-.admin-product-top .product-thumb-fallback {
-  width: 100px !important;
-  height: 100px !important;
-}
-
-.admin-product-top > div:not(.admin-row-actions) {
+.admin-product-top > div:not(.admin-row-actions):not(.admin-price-controls) {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 4px !important;
   width: 100% !important;
+}
+
+.admin-product-top .sku-code {
+  font-family: monospace !important;
+  font-weight: 900 !important;
+  font-size: 12px !important;
+  background: #111111 !important;
+  color: var(--yellow, #F5C200) !important;
+  padding: 3px 8px !important;
+  border-radius: 5px !important;
+  letter-spacing: 0.5px !important;
+  display: inline-block !important;
+}
+
+[data-theme="dark"] .admin-product-top .sku-code {
+  background: #000000 !important;
+  color: var(--yellow, #F5C200) !important;
 }
 
 .admin-product-top small {
   max-width: 100% !important;
   white-space: normal !important;
-  font-size: 11.5px !important;
-  line-height: 1.3 !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  color: var(--muted, #666) !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  margin-top: 2px !important;
 }
 
 .admin-product-top .admin-stock-badge {
-  margin-top: 4px !important;
+  margin-top: 2px !important;
+  font-size: 10px !important;
+  padding: 2px 7px !important;
 }
 
 .admin-row-actions {
@@ -10004,14 +10039,18 @@ html:has(.landing-screen) body {
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   width: 100% !important;
-  gap: 6px !important;
-  margin-top: 12px !important;
+  gap: 5px !important;
+  margin-top: 8px !important;
   justify-content: center !important;
 }
 
 .admin-row-actions button {
   flex: 1 !important;
-  min-width: 60px !important;
+  min-height: 28px !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  padding: 0 6px !important;
+  border-radius: 6px !important;
   text-align: center !important;
 }
 
@@ -10020,57 +10059,59 @@ html:has(.landing-screen) body {
   flex-direction: row !important;
   justify-content: space-between !important;
   align-items: center !important;
-  gap: 8px !important;
-  padding: 10px 14px !important;
+  gap: 6px !important;
+  padding: 6px 10px !important;
   border-top: 1px dashed var(--line) !important;
+  background: var(--mist, #fafafa) !important;
 }
 
 .admin-product-row footer label {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 4px !important;
   width: auto !important;
-  font-size: 11px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: var(--text, #333) !important;
 }
 
-@media (max-width: 560px) {
-  .admin-product-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
+.admin-price-controls {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  gap: 6px !important;
+  margin-top: 6px !important;
+  padding: 0 !important;
+}
 
-  .admin-product-row {
-    min-height: auto !important;
-  }
+.admin-price-controls .price-inputs-row {
+  display: flex !important;
+  gap: 4px !important;
+  width: 100% !important;
+}
 
-  .admin-price-controls {
-    padding: 0 4px !important;
-    min-width: unset !important;
-  }
+.admin-price-controls .price-inputs-row input {
+  height: 28px !important;
+  font-size: 11px !important;
+  padding: 0 4px !important;
+  border-radius: 5px !important;
+}
 
-  .admin-price-controls .price-inputs-row {
-    flex-direction: column !important;
-    gap: 4px !important;
-  }
+.admin-price-controls .price-actions-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 4px !important;
+  margin-top: 4px !important;
+}
 
-  .admin-price-controls .price-inputs-row input {
-    height: 26px !important;
-    font-size: 10px !important;
-    padding: 0 4px !important;
-  }
-
-  .admin-price-controls .price-actions-row {
-    flex-direction: column !important;
-    gap: 6px !important;
-    align-items: stretch !important;
-    margin-top: 8px !important;
-  }
-
-  .admin-price-controls .price-actions-row button {
-    font-size: 10px !important;
-    padding: 4px 8px !important;
-    min-height: 26px !important;
-  }
+.admin-price-controls .price-actions-row button {
+  min-height: 26px !important;
+  height: 26px !important;
+  padding: 0 8px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  border-radius: 5px !important;
 }
 
 .history-filter-row {
