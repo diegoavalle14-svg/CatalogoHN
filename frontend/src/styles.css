@@ -7870,21 +7870,21 @@ html:has(.landing-screen) body {
   }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 640px) {
   .topbar {
-    gap: 12px;
-    padding: 10px 16px;
+    gap: 10px;
+    padding: 10px 12px;
   }
 
   .brand-lockup {
-    font-size: 20px;
+    font-size: 18px;
     gap: 10px;
     padding-right: 12px;
     min-width: auto;
   }
   
   .brand-lockup strong {
-    font-size: 18px;
+    font-size: 16px;
   }
   
   .brand-lockup > span:last-child small {
@@ -7919,7 +7919,7 @@ html:has(.landing-screen) body {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 640px) {
   .admin-price-editor-header {
     display: none;
   }
@@ -8111,6 +8111,107 @@ html:has(.landing-screen) body {
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px;
+  }
+}
+
+/* PC & Desktop Header Enhancements */
+@media (min-width: 641px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    min-height: 72px !important;
+    padding: 12px 28px !important;
+    gap: 20px !important;
+    align-items: center !important;
+  }
+
+  .brand-lockup {
+    font-size: 22px !important;
+    gap: 14px !important;
+    padding-right: 20px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+    min-width: 200px !important;
+  }
+
+  .brand-lockup strong {
+    font-size: 18.5px !important;
+    line-height: 1.15 !important;
+  }
+
+  .brand-lockup > span:last-child small {
+    font-size: var(--subnombre-size, 18px) !important;
+  }
+
+  .logo-mark {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .welcome-line {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    font-size: 13.5px !important;
+    margin: 0 !important;
+  }
+
+  .topbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: auto !important;
+  }
+
+  .topbar-actions .theme-toggle-button,
+  .catalog-button,
+  .orders-button,
+  .checkout-button,
+  .logout-button {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 16px !important;
+    border-radius: 8px !important;
+    gap: 8px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    width: auto !important;
+  }
+
+  .catalog-button span,
+  .orders-button span,
+  .checkout-button span,
+  .logout-button span {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: nowrap !important;
+    display: inline !important;
+  }
+
+  .checkout-button b {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+    border-radius: 999px !important;
+    margin-left: 2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .catalog-page {
+    width: min(100%, 1180px) !important;
+    padding: 20px 24px 40px !important;
   }
 }
 
