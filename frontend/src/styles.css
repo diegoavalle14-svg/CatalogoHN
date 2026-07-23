@@ -5546,50 +5546,125 @@ html:has(.landing-screen) body {
   text-transform: capitalize;
 }
 .history-table-card {
-  overflow-x: auto;
-  border: 1px solid #dddddd;
-  border-radius: 8px;
-  background: #fff;
-  padding: 9px 14px;
+  width: 100%;
+  border: 1px solid var(--line, #dddddd);
+  border-radius: 10px;
+  background: var(--paper, #fff);
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
+
 .history-header-row,
 .history-item-row {
-  min-width: 480px;
   display: grid;
-  grid-template-columns: 80px 1fr 70px 90px 96px;
+  grid-template-columns: 75px minmax(130px, 1fr) 85px 105px 95px;
   align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #eeeeee;
+  gap: 10px;
+  border-bottom: 1px solid var(--soft-line, #eeeeee);
   padding: 11px 0;
+  width: 100%;
 }
+
 .history-header-row {
-  color: #8b8e98;
+  color: var(--muted, #8b8e98);
   font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: .5px;
 }
+
 .history-item-row {
   font-size: 12px;
 }
-.history-item-row b {
-  font-weight: 700;
+
+.history-client-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text, #111);
 }
+
 .history-ticket {
+  display: inline-block;
   font-family: monospace;
   font-weight: 700;
-  background: #f1f1f1;
-  padding: 2px 4px;
-  border-radius: 3px;
+  background: rgba(17, 17, 17, 0.06);
+  color: var(--text, #111);
+  padding: 2px 6px;
+  border-radius: 4px;
   font-size: 11px;
   text-align: center;
 }
+
+.history-total-cell {
+  font-weight: 800;
+  color: var(--text, #111);
+}
+
 .history-item-row .small-pill {
-  min-height: 24px;
-  height: 24px;
-  padding: 0 8px;
+  min-height: 26px;
+  height: 26px;
+  padding: 0 10px;
   font-size: 10px;
   font-weight: 900;
+}
+
+@media (max-width: 640px) {
+  .history-table-card {
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .history-header-row {
+    display: none;
+  }
+
+  .history-item-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "client total"
+      "meta action";
+    gap: 8px 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--line, #dddddd);
+    border-radius: 10px;
+    background: var(--paper, #ffffff);
+    margin-bottom: 8px;
+  }
+
+  .history-client-cell {
+    grid-area: client;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .history-total-cell {
+    grid-area: total;
+    font-size: 13px;
+    text-align: right;
+    color: var(--yellow-strong, #c59b00);
+  }
+
+  .history-meta-group {
+    grid-area: meta;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .history-date-cell {
+    font-size: 11px;
+    color: var(--muted, #777);
+  }
+
+  .history-action-btn {
+    grid-area: action;
+    justify-self: end;
+  }
 }
 
 .admin-ranking-card {

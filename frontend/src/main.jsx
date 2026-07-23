@@ -3089,14 +3089,16 @@ function AdminOrdersSection({ orders, pending, preparing, sentToday, clients = [
                   </div>
                   {orders.map((order) => (
                     <div key={order.id} className="history-item-row">
-                      <span>{formatShortDate(order.fecha)}</span>
-                      <strong style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={order.cliente_nombre}>{order.cliente_nombre || 'Cliente'}</strong>
-                      <span className="history-ticket">{order.numero}</span>
-                      <b>{money(order.total)}</b>
+                      <span className="history-date-cell">{formatShortDate(order.fecha)}</span>
+                      <strong className="history-client-cell" title={order.cliente_nombre}>{order.cliente_nombre || 'Cliente'}</strong>
+                      <div className="history-meta-group">
+                        <span className="history-ticket">{order.numero}</span>
+                      </div>
+                      <b className="history-total-cell">{money(order.total)}</b>
                       <button
                         type="button"
                         onClick={() => setSelectedHistoryOrder(order)}
-                        className="pill-blue small-pill"
+                        className="pill-blue small-pill history-action-btn"
                         style={{ cursor: 'pointer' }}
                       >
                         Ver Pedido
