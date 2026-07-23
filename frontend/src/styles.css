@@ -8151,7 +8151,31 @@ html:has(.landing-screen) body {
   }
 
   .welcome-line {
-    display: none !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+    grid-column: 2 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+  }
+
+  .welcome-line span {
+    font-size: 12px !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .welcome-line b {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
   }
 
   .topbar-actions {
@@ -8249,26 +8273,32 @@ html:has(.landing-screen) body {
 
   .welcome-line {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    justify-content: center !important;
-    gap: 1px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 5px !important;
     margin: 0 !important;
     line-height: 1.15 !important;
     white-space: nowrap !important;
+    grid-column: 2 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
 
   .welcome-line span {
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     color: rgba(255, 255, 255, 0.65) !important;
     font-weight: 700 !important;
-    text-transform: uppercase !important;
+    flex-shrink: 0 !important;
   }
 
   .welcome-line b {
-    font-size: 13px !important;
+    font-size: 13.5px !important;
     font-weight: 900 !important;
     color: #ffffff !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
   }
 
   .topbar-actions {
@@ -8368,28 +8398,32 @@ html:has(.landing-screen) body {
 
   .welcome-line {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    justify-content: center !important;
-    gap: 1px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
     margin: 0 !important;
     line-height: 1.15 !important;
     white-space: nowrap !important;
+    grid-column: 2 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
 
   .welcome-line span {
-    font-size: 11px !important;
+    font-size: 13px !important;
     color: rgba(255, 255, 255, 0.65) !important;
     font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+    flex-shrink: 0 !important;
   }
 
   .welcome-line b {
-    font-size: 14px !important;
+    font-size: 14.5px !important;
     font-weight: 900 !important;
     color: #ffffff !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    min-width: 0 !important;
   }
 
   .topbar-actions {
