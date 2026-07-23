@@ -4194,11 +4194,11 @@ function AdminEditor({ editor, brands, categories, priceLists, priceProducts, cl
 
   const isPasswordModal = editor.type === 'account-password';
   const isClientModal = editor.type === 'client';
-  const isCenteredModal = isPasswordModal || isClientModal || editor.type === 'site';
+  const isCenteredModal = true;
 
   return (
     <div className={`admin-modal-backdrop ${isCenteredModal ? 'modal-centered' : ''}`}>
-      <section className={`admin-modal ${isPasswordModal ? 'admin-password-modal' : ''} ${isClientModal ? 'admin-client-modal' : ''} ${editor.type === 'site' ? 'admin-site-modal' : ''}`}>
+      <section className={`admin-modal ${isPasswordModal ? 'admin-password-modal' : ''} ${isClientModal ? 'admin-client-modal' : ''} ${editor.type === 'site' ? 'admin-site-modal' : ''} ${editor.type === 'product' ? 'admin-product-modal' : ''} ${['brands', 'categories'].includes(editor.type) ? 'admin-crud-modal' : ''}`}>
         <header><h2>{editor.title}</h2><button onClick={onClose}><X size={18} /></button></header>
 
         {editor.type === 'site' && (

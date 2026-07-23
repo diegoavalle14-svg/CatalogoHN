@@ -9168,19 +9168,30 @@ html:has(.landing-screen) body {
 }
 
 .admin-modal-backdrop.modal-centered {
+  display: grid !important;
   place-items: center !important;
-  padding: 16px;
+  padding: 16px !important;
 }
 
 .admin-modal-backdrop.modal-centered .admin-modal {
-  border-radius: 16px !important;
-  width: min(560px, 100%);
-  max-height: 80vh;
+  border-radius: 14px !important;
+  width: min(580px, 94vw) !important;
+  max-height: min(88vh, 760px) !important;
+  margin: auto !important;
+}
+
+.admin-product-modal {
+  width: min(580px, 94vw) !important;
+}
+
+.admin-crud-modal {
+  width: min(500px, 94vw) !important;
 }
 
 .admin-password-modal {
-  max-width: 380px !important;
-  border-radius: 12px !important;
+  max-width: 400px !important;
+  width: min(400px, 94vw) !important;
+  border-radius: 14px !important;
   padding: 0 20px 20px !important;
 }
 
