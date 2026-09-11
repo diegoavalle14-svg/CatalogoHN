@@ -1,3 +1,10 @@
+# System / Archive / Temporary files
+*.tar.gz
+*.zip
+*.rar
+*.pdf
+scratch/
+
 # Dependency directories
 node_modules/
 jspm_packages/

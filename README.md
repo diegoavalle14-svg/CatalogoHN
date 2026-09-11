@@ -1,6 +1,15 @@
 # CatalogoHN
 
-Plataforma SaaS multi-tenant para distribuidoras en Honduras. El primer inquilino es **KOLBEN**, con una experiencia mobile-first para clientes mayoristas y un panel administrativo propio para gestionar el catalogo.
+[![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-Backend-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-Bundler-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Nginx](https://img.shields.io/badge/Nginx-Reverse_Proxy-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
+
+Plataforma SaaS multi-tenant diseñada para distribuidoras mayoristas en Honduras. Permite a múltiples empresas gestionar catálogos de repuestos y productos con experiencia mobile-first para sus clientes, control de inventario/sucursales y un panel administrativo integral con soporte multi-rol.
+
+---
 
 ## Estado Actual
 
