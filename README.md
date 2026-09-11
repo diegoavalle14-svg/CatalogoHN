@@ -11,6 +11,14 @@ Plataforma SaaS multi-tenant diseñada para distribuidoras mayoristas en Hondura
 
 ---
 
+## 📸 Vistas de la Plataforma
+
+| Portal Multi-Empresas (Landing / Tenants) | Catálogo de Productos y Pedidos (Kolben) |
+| :---: | :---: |
+| <img src="docs/screenshots/1.png" alt="Portal Multi-Inquilinos" width="460" /> | <img src="docs/screenshots/2.png" alt="Catálogo Digital de Productos" width="460" /> |
+
+---
+
 ## Estado Actual
 
 - Catalogo privado para clientes con buscador, marcas/categorias superiores, productos en 2 columnas en movil, cantidades por sucursal y pedido.
