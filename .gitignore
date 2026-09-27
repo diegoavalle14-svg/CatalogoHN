@@ -14,12 +14,15 @@ dist/
 build/
 .cache/
 
-# Environment variables
+# Environment variables & Local secrets
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.local.md
+*credentials.local*
+*credenciales.local*
 
 # Debug logs
 npm-debug.log*

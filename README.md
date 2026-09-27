@@ -22,7 +22,7 @@ Plataforma SaaS multi-tenant diseñada para distribuidoras mayoristas en Hondura
 ## Estado Actual
 
 - Catalogo privado para clientes con buscador, marcas/categorias superiores, productos en 2 columnas en movil, cantidades por sucursal y pedido.
-- Login por `usuario` y `contrasena`, con boton visual de recuperacion de contrasena.
+- Login por `usuario` y `contraseña`, con botón visual de recuperación de contraseña.
 - Panel Admin Kolben separado del catalogo del cliente.
 - Panel Admin con 4 secciones: `Pedidos`, `Catalogo`, `Clientes` y `C. Precios`.
 - Configuracion del inquilino desde admin: nombre, subnombre, logo, colores, fuente y vista previa.
@@ -139,7 +139,7 @@ Las imagenes se guardan en `backend/uploads/` y Git las ignora. En DigitalOcean 
 
 - Configurar DigitalOcean Droplet, Nginx, PostgreSQL local y Certbot.
 - Definir rutina de backups de PostgreSQL y `backend/uploads/`.
-- Crear flujo real de recuperacion de contrasena.
+- Crear flujo real de recuperación de contraseña.
 - Agregar gestion de admins de empresa desde superadmin.
 - Reemplazar datos seed por datos reales administrables desde UI.
 - Revisar permisos por rol en cada endpoint de admin.
