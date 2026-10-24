@@ -95,9 +95,9 @@ VITE_TENANT_SLUG=kolben
 VITE_DEMO_MODE=false
 ```
 
-## GitHub y DigitalOcean
+## Despliegue y Arquitectura
 
-La guia de publicacion esta en [DEPLOYMENT.md](DEPLOYMENT.md) y el runbook inicial para DigitalOcean esta en [docs/DIGITALOCEAN_DROPLET.md](docs/DIGITALOCEAN_DROPLET.md). El camino recomendado por ahora es:
+El esquema de despliegue sugerido para producción es:
 
 - GitHub para versionar el monorepo.
 - DigitalOcean Droplet para frontend, backend y PostgreSQL en una sola maquina.

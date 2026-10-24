@@ -23,6 +23,10 @@ build/
 *.local.md
 *credentials.local*
 *credenciales.local*
+DEPLOYMENT.md
+DEPLOYMENT*.md
+docs/DIGITALOCEAN_DROPLET.md
+docs/archive/
 
 # Debug logs
 npm-debug.log*
